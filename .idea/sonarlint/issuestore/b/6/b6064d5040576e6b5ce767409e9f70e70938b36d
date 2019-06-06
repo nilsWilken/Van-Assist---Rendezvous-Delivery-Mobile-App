@@ -1,0 +1,79 @@
+
+vkotlin:S3776]"RRefactor this method to reduce its Cognitive Complexity from 24 to the 15 allowed.(ë¹æñøÿÿÿÿ8×½å«-
+rkotlin:S3776Ä"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(›õú8ìïˆª-
+Hkotlin:S108„")Either remove or fill this block of code.(å¥‡8×½å«-
+wkotlin:S3776’"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(°æğ‘üÿÿÿÿ8×½å«-
+rkotlin:S3776ñ"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(„­ı‹8×½å«-
+>kotlin:S125¬"Remove this commented out code.(„ıÎ8Ó«Ãù«-
+lkotlin:S117Ä"MRename this parameter to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(›õú8ìïˆª-
+Hkotlin:S108ô")Either remove or fill this block of code.(å¥‡8×½å«-
+Akotlin:S108ÿ")Either remove or fill this block of code.(å¥‡
+okotlin:S117—	"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(Üğ‚…ùÿÿÿÿ
+Ukotlin:S1481 "0Remove this unused "loc_vehicle" local variable.(³ûâ·øÿÿÿÿ8ìïˆª-
+Hkotlin:S108ğ")Either remove or fill this block of code.(å¥‡8×½å«-
+okotlin:S117ß"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(Üğ‚…ùÿÿÿÿ
+7kotlin:S125Ğ"Remove this commented out code.(Óİùğ
+Akotlin:S108É")Either remove or fill this block of code.(å¥‡
+7kotlin:S125	"Remove this commented out code.(Óİùğ
+Akotlin:S108´")Either remove or fill this block of code.(å¥‡
+Lkotlin:S1481ß",Remove this unused "strResp" local variable.(ÀÄœ8Ó«Ãù«-
+pkotlin:S3776©"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(ÀÈõ¯øÿÿÿÿ
+Ikotlin:S1481¢"+Remove this unused "status" local variable.(ÜûÎùÿÿÿÿ
+7kotlin:S125æ"Remove this commented out code.(Óİùğ
+Akotlin:S108")Either remove or fill this block of code.(å¥‡
+okotlin:S117“"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(Üğ‚…ùÿÿÿÿ
+€kotlin:S1192ƒ"`Define a constant instead of duplicating this literal "Error with Parking Area Request" 3 times.(Ğû”8ŸÑ“‰ª-
+Bkotlin:S125u"Remove this commented out code.(Âéşûÿÿÿÿ8×½å«-
+Akotlin:S108‡	")Either remove or fill this block of code.(å¥‡
+Hkotlin:S108Ç")Either remove or fill this block of code.(å¥‡8×½å«-
+>kotlin:S125‰"Remove this commented out code.(Óİùğ8ìïˆª-
+>kotlin:S125Ğ"Remove this commented out code.(Óİùğ8ìïˆª-
+Jkotlin:S1481¡",Remove this unused "message" local variable.(©«·™øÿÿÿÿ
+pkotlin:S3776Ã"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(‹ŸŒøÿÿÿÿ
+wkotlin:S3776Ï"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(Ÿ÷Ò›ıÿÿÿÿ8Ó«Ãù«-
+vkotlin:S117 "RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(³ûâ·øÿÿÿÿ8ìïˆª-
+Akotlin:S108¾	")Either remove or fill this block of code.(å¥‡
+rkotlin:S3776½"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(êˆÁÅ8ŸÑ“‰ª-
+pkotlin:S3776‘	"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(¹ÃÓ¸ûÿÿÿÿ
+Hkotlin:S108é")Either remove or fill this block of code.(å¥‡8Ó«Ãù«-
+vkotlin:S117ƒ"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(Üğ‚…ùÿÿÿÿ8ìïˆª-
+Hkotlin:S108”")Either remove or fill this block of code.(å¥‡8×½å«-
+vkotlin:S117ï"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(Üğ‚…ùÿÿÿÿ8ìïˆª-
+okotlin:S117É"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(Üğ‚…ùÿÿÿÿ
+wkotlin:S3776Å"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(ó¿±Çşÿÿÿÿ8×½å«-
+vkotlin:S117Ê"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(Üğ‚…ùÿÿÿÿ8ìïˆª-
+Hkotlin:S108‡")Either remove or fill this block of code.(å¥‡8ìïˆª-
+Hkotlin:S108¸")Either remove or fill this block of code.(å¥‡8ìïˆª-
+Lkotlin:S1481€",Remove this unused "strResp" local variable.(ÀÄœ8ìïˆª-
+Akotlin:S108ò")Either remove or fill this block of code.(å¥‡
+Hkotlin:S108")Either remove or fill this block of code.(å¥‡8×½å«-
+Hkotlin:S108³")Either remove or fill this block of code.(å¥‡8×½å«-
+wkotlin:S3776ò"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(Ïô¬óÿÿÿÿÿ8×½å«-
+@kotlin:S1481ö"'Remove this unused "jo" local variable.(ÕÃøš
+wkotlin:S3776¤"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(“ï¿üøÿÿÿÿ8×½å«-
+vkotlin:S117í"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(³ûâ·øÿÿÿÿ8ìïˆª-
+@kotlin:S1481®	"'Remove this unused "jo" local variable.(ÕÃøš
+wkotlin:S3776…"RRefactor this method to reduce its Cognitive Complexity from 31 to the 15 allowed.(Ó¿†Ûşÿÿÿÿ8×½å«-
+Hkotlin:S108²")Either remove or fill this block of code.(å¥‡8×½å«-
+kkotlin:S3776Œ"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(Õ³­ú
+Bkotlin:S125G"Remove this commented out code.(×ÍÁûûÿÿÿÿ8×½å«-
+rkotlin:S3776ı"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(ÕØ‰ó8ìïˆª-
+Fkotlin:S108§")Either remove or fill this block of code.(¡»¢üùÿÿÿÿ
+Hkotlin:S108²")Either remove or fill this block of code.(å¥‡8ìïˆª-
+pkotlin:S3776ÿ"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(Ô§¢üÿÿÿÿ
+Hkotlin:S108ã")Either remove or fill this block of code.(å¥‡8×½å«-
+wkotlin:S3776Á"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(Ì¹Î¥ùÿÿÿÿ8×½å«-
+lkotlin:S117Ä"MRename this parameter to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(›õú8ìïˆª-
+Akotlin:S108™")Either remove or fill this block of code.(å¥‡
+wkotlin:S3776’"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(ò†ı¹ûÿÿÿÿ8ìïˆª-
+Mkotlin:S108à")Either remove or fill this block of code.(¡»¢üùÿÿÿÿ8Ó«Ãù«-
+@kotlin:S1481à"'Remove this unused "jo" local variable.(ÕÃøš
+rkotlin:S3776Ö"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(§…ì8×½å«-
+jkotlin:S1192Ü"LDefine a constant instead of duplicating this literal "All parcels" 3 times.(´ŒËŸüÿÿÿÿ
+7kotlin:S125›"Remove this commented out code.(Óİùğ
+Hkotlin:S108¶")Either remove or fill this block of code.(å¥‡8×½å«-
+Hkotlin:S108à")Either remove or fill this block of code.(å¥‡8ŸÑ“‰ª-
+Ukotlin:S1481í"0Remove this unused "loc_vehicle" local variable.(³ûâ·øÿÿÿÿ8ìïˆª-
+kkotlin:S3776Ù"RRefactor this method to reduce its Cognitive Complexity from 18 to the 15 allowed.(êË¾´
+Hkotlin:S108â")Either remove or fill this block of code.(å¥‡8×½å«-
+Hkotlin:S108ó")Either remove or fill this block of code.(å¥‡8ìïˆª-

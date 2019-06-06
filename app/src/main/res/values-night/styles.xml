@@ -1,0 +1,100 @@
+<!--styles defined for Dark Theme-->
+
+<resources>
+
+    <!--<style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">-->
+    <!--&lt;!&ndash; Customize your theme here. &ndash;&gt;-->
+    <!--<item name="colorPrimary">@color/colorAccent</item>-->
+    <!--<item name="colorPrimaryDark">@color/colorPrimaryDark</item>-->
+    <!--<item name="colorAccent">@color/colorAccent</item>-->
+    <!--</style>-->
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
+        <item name="colorPrimary">@color/logoRed</item>
+        <item name="colorPrimaryDark">@color/logoGrey</item>
+        <item name="colorAccent">@color/logoRed</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
+
+        <!--<item name="android:buttonStyle">@style/ButtonStyle</item>-->
+
+        <!--<item name="android:textColorPrimary">@color/logoRed</item>-->
+        <!--<item name="android:textColorSecondary">@color/logoRed</item>-->
+        <!--<item name="android:textColorTertiary">@color/logoRed</item>-->
+
+        <!--<item name="alertDialogTheme">@style/AlertDialogTheme</item>-->
+    </style>
+
+
+    <!--Button style-->
+    <!--<style name="ButtonStyle" parent="Base.Widget.AppCompat.Button">-->
+        <!--<item name="android:backgroundTint">#484848</item>-->
+    <!--</style>-->
+
+
+    <!--Login theme-->
+    <style name="LoginTheme" parent="Widget.Design.TextInputLayout">
+        <item name="android:textColor">@color/textColor</item>
+        <item name="android:textColorHint">@color/hintText</item>
+        <item name="android:colorAccent">@color/logoRed</item>
+        <item name="android:colorControlNormal">@color/logoRed</item>
+        <item name="android:colorControlActivated">@color/logoRed</item>
+        <item name="android:colorControlHighlight">@color/logoRed</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <!--<style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>-->
+    <!--<style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>-->
+
+    <!--<style name="VanAssistTheme" parent="Theme.AppCompat.Light.DarkActionBar" >-->
+    <!--<item name="colorPrimary">@color/logoRed</item>-->
+    <!--<item name="colorPrimaryDark">@color/logoGrey</item>-->
+    <!--<item name="colorAccent">@color/logoRed</item>-->
+    <!--<item name="android:windowNoTitle">true</item>-->
+    <!--... .-->
+    <!--</style>-->
+
+
+
+    <style name="SwitchCompatTheme" >
+        <item name="colorControlActivated">@color/logoRed</item>
+    </style>
+
+    <!-- Custom (Rounded) Theme for Sliding up Card -->
+    <style name="AppBottomSheetDialogTheme"
+        parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/AppModalStyle</item>
+    </style>
+
+    <style name="AppModalStyle"
+        parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/rounded_dialog</item>
+    </style>
+
+
+    <!--style for AlertDialog-->
+    <!--<style name="AlertDialogTheme" parent="Theme.AppCompat.DayNight.Dialog.Alert">-->
+        <!--<item name="android:buttonBarNegativeButtonStyle">@style/NegativeButtonStyle</item>-->
+        <!--<item name="android:buttonBarPositiveButtonStyle">@style/PositiveButtonStyle</item>-->
+        <!--<item name="colorAccent">@color/logoRed</item>-->
+        <!--<item name="colorPrimary">@color/logoRed</item>-->
+    <!--</style>-->
+
+
+    <!--<style name="NegativeButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">-->
+    <!--<item name="android:textColor">@color/logoRed</item>-->
+    <!--<item name="colorAccent">@color/logoRed</item>-->
+    <!--<item name="colorPrimary">@color/logoRed</item>-->
+    <!--</style>-->
+
+    <!--<style name="PositiveButtonStyle" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">-->
+    <!--<item name="android:textColor">@color/logoRed</item>-->
+    <!--<item name="colorAccent">@color/logoRed</item>-->
+    <!--<item name="colorPrimary">@color/logoRed</item>-->
+    <!--</style>-->
+</resources>

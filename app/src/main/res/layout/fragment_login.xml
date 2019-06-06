@@ -1,0 +1,104 @@
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/activity_login"
+    >
+
+
+    <ImageView
+        android:id="@+id/logo"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintVertical_bias="0.024"
+        android:src="@mipmap/vanassist_300dpi"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_marginTop="50dp"
+        android:contentDescription="AppLogo"/>
+
+    <android.support.design.widget.TextInputLayout
+
+        android:id="@+id/userNameLayout"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/logo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:gravity="center"
+        android:theme="@style/LoginTheme"
+        app:layout_constraintHorizontal_bias="0.0" app:layout_constraintVertical_bias="0.596">
+
+        <EditText
+            android:id="@+id/userNameField"
+            android:layout_width="300dp"
+            android:layout_height="50dp"
+            android:inputType="textPersonName"
+            android:fontFamily="@font/orbitronmedium"
+            android:hint="@string/username"
+            />
+
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:id="@+id/passwordLayout"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/userNameLayout"
+        app:passwordToggleEnabled="true"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintVertical_bias="0.307"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:theme="@style/LoginTheme"
+        >
+
+        <EditText
+            android:id="@+id/passwordField"
+            android:layout_width="300dp"
+            android:layout_height="50dp"
+            android:fontFamily="@font/orbitronmedium"
+            android:hint="@string/password"
+            />
+
+    </android.support.design.widget.TextInputLayout>
+
+
+    <Button
+        android:id="@+id/logInButton"
+        android:text="@string/log_in"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/userNameLayout"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:background="@color/logoRed"
+        android:textSize="20sp"
+        android:fontFamily="@font/orbitronbold"
+        android:textColor="@color/logoLightGrey"
+        app:layout_constraintHorizontal_bias="0.495" app:layout_constraintVertical_bias="0.658"/>
+
+    <TextView
+        android:id="@+id/impressum"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/logInButton"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_marginTop="55dp"
+        android:fontFamily="@font/orbitronbold"
+        android:textSize="15sp"
+        android:textColor="@color/logoGrey"
+        android:gravity="center"
+        />
+
+
+</android.support.constraint.ConstraintLayout>

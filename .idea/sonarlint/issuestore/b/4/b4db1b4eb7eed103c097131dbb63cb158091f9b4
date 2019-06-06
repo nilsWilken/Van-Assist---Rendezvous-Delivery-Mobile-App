@@ -1,0 +1,5 @@
+
+jkotlin:S101b"SRename class "insertAsyncTask" to match the regular expression ^[A-Z][a-zA-Z0-9]*$.(ÍÁŽÜ
+jkotlin:S101X"SRename class "getAllAsyncTask" to match the regular expression ^[A-Z][a-zA-Z0-9]*$.(ãìÓ©
+hkotlin:S1192W"KDefine a constant instead of duplicating this literal "Do not use" 3 times.(°ï±–üÿÿÿÿ
+mkotlin:S101j"QRename class "findAsyncTask" to match the regular expression ^[A-Z][a-zA-Z0-9]*$.(·Åž˜üÿÿÿÿ

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--Colors dark-->
+<resources>
+    <!--<color name="colorPrimary">#E3042F</color>-->
+    <!--<color name="colorPrimaryDark">#E3042F</color>-->
+    <!--<color name="colorAccent">#E3042F</color>-->
+    <color name="logoRed">#E3042F</color>
+    <color name="logoGrey">#6F6F6F</color>
+    <color name="logoLightGrey">#ECECEC</color>
+    <color name="hintText">#A9A9A9</color>
+    <color name="textColor">#202020</color>
+    <color name="backgroundColor">#303030</color>
+    <color name="widget_edittext_dark">@android:color/primary_text_dark</color>
+    <color name="parcelBoxColor">@android:color/secondary_text_dark</color>
+    <color name="launchpadButtonColor">#454545</color>
+</resources>

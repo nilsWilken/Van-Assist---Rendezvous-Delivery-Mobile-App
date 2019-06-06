@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- GENERAL VALUES -->
+    <string name="app_name">VanAssist</string>
+    <string name="title_activity_map">MapActivity</string>
+    <string name="additional_information">Informații adiționale</string>
+    <string name="username">Nume utilizator</string>
+    <string name="password">Parolă</string>
+    <string name="log_in">Logare</string>
+    <string name="authenticating...">Autentificare...</string>
+    <string name="start_day">Începe ziua</string>
+    <string name="delivered_not_delivered">Livrat/nelivrat</string>
+    <string name="open_deliveries">Livrări curente</string>
+    <string name="settings">Setări</string>
+    <string name="help_and_support">Ajutor &amp; suport</string>
+    <string name="finish_day">Încheie ziua</string>
+    <string name="back_to_map">Înapoi la hartă</string>
+    <string name="next_delivery_address">Următoarea adresă de livrare</string>
+    <string name="delivery_address">Adresa livrării</string>
+    <string name="no_data_available">Informație indisponibilă</string>
+    <string name="customer_information">Informație despre client</string>
+    <string name="recipient_name">Numele destinatarului</string>
+    <string name="delivered">Livrat</string>
+    <string name="not_delivered">Nelivrat</string>
+    <string name="dark_mode">Mod întunecat</string>
+    <string name="help_mode">Mod ajutor</string>
+    <string name="terms_and_privacy_settings">Termeni și condiții</string>
+    <string name="log_out">Ieșire</string>
+    <string name="locate_delivery_destination">Localizeaza destinația livrării</string>
+    <string name="locate_van">Localizează camionul</string>
+    <string name="summon_van">Apelați camionul</string>
+    <string name="next_parking_location">Găsește următorul loc de parcare</string>
+    <string name="authentication_failed">Autentificare eșuată</string>
+    <string name="yes">Da</string>
+    <string name="no">Nu</string>
+    <string name="cancel">Anulează</string>
+    <string name="ok">OK</string>
+    <string name="language">Limbă</string>
+    <string name="not_available">Indisponibil</string>
+    <string name="loading_map___">Harta se încarcă...</string>
+    <string name="start_simulation___">Starting simulation...</string>
+
+
+
+
+    <!-- SPECIFIC VALUES -->
+    <string name="permission_part_1">Salut</string>
+    <string name="permission_part_2">, \n Pentru a utiliza aplicația trebuie să acceptați următoarele permisiuni. \n\n - Locație \n - Telefon \n - Memorie externă</string>
+    <string name="permission_alert_title">Alertă de permisiuni</string>
+    <string name="permission_alert_message">Unele permisiuni sunt în prezent interzise. Doriți să le modificați în setări?</string>
+    <string name="log_out_message">Sigur doriți să vă deconectați?</string>
+    <string name="enter_username_message">Introduceți numele</string>
+    <string name="language_alert_title">Alertă de limbă</string>
+    <string name="language_alert_message">Modificarea limbii va reporni aplicația. Doriți să continuați?</string>
+    <string name="dark_mode_alert_title">Alertă de design</string>
+    <string name="dark_mode_alert_message">Modificarea temei va reporni aplicația. Doriți să continuați?</string>
+    <string name="logout_alert_title">Alertă de deconectare</string>
+    <string name="logout_alert_message">Sigur doriți să vă deconectați?</string>
+    <string name="successful_deliveries_in_dialog">Livrate</string>
+    <string name="open_deliveries_in_dialog">Livrări curente</string>
+    <string name="unsuccessful_deliveries_in_dialog">Nelivrate</string>
+    <string name="deliveries_dialog_title">Alertă de Undo</string>
+    <string name="deliveries_dialog_message">Where do you want to move the undone parcel?</string>
+    <!-- TODO Translate -->
+    <string name="parking_area_confirmation">Please adjust or directly confirm with Parking Button</string>
+    <string name="select_next_parking_area">Do you want to select this as next parking location and show Route?</string>
+
+
+
+    <!-- TODO translate -->
+    <!-- ERROR HANDLING -->
+    <string name="error_parcel_loading">Loading parcel failed</string>
+    <string name="error_parcel_delivery_confirmation">Parcel delivery confirmation failed</string>
+    <string name="error_undo_parcel_delivery">Undo parcel delivery failed</string>
+    <string name="error_dark_mode_activation">Darkmode activation failed</string>
+    <string name="error_dark_mode_deactivation">Darkmode deactivation failed</string>
+    <string name="error_change_language">Change language failed</string>
+    <string name="error_help_label_activation">Help label activation failed</string>
+    <string name="error_help_label_deactivation">Help label deactivation failed</string>
+    <string name="error_start_simulation">Simulation start failed</string>
+    <string name="error_stop_simulation">Simulation stop failed</string>
+    <string name="error_update_parcel_position">Parcel position update failed</string>
+    <string name="error_load_parking_location">Load parking location failed</string>
+    <string name="error_set_next_parking_location">Set next parking location failed</string>
+    <string name="error_no_parcel_available">No parcel information available</string>
+
+</resources>

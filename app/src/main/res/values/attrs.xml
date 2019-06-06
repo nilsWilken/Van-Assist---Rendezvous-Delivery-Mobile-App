@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="MessageState">
+        <attr name="state_swiping_left" format="boolean"/>
+        <attr name="state_swiping_right" format="boolean"/>
+        <attr name="state_slider_in_the_middle" format="boolean"/>
+    </declare-styleable>
+</resources>

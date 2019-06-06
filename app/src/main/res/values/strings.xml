@@ -1,0 +1,82 @@
+<resources>
+
+    <!-- GENERAL VALUES -->
+    <string name="app_name">VanAssist</string>
+    <string name="title_activity_map">MapActivity</string>
+    <string name="additional_information">Additional Information</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="log_in">Log In</string>
+    <string name="authenticating...">Authenticating...</string>
+    <string name="start_day">Start Day</string>
+    <string name="delivered_not_delivered">Delivered/not delivered</string>
+    <string name="open_deliveries">Open Deliveries</string>
+    <string name="settings">Settings</string>
+    <string name="help_and_support">Help &amp; support</string>
+    <string name="finish_day">Finish day</string>
+    <string name="back_to_map">Back to map</string>
+    <string name="next_delivery_address">Next Delivery Address</string>
+    <string name="delivery_address">Delivery Address</string>
+    <string name="no_data_available">No data available</string>
+    <string name="customer_information">Customer Information</string>
+    <string name="recipient_name">Recipient Name</string>
+    <string name="delivered">Delivered</string>
+    <string name="not_delivered">Not Delivered</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="help_mode">Help Mode</string>
+    <string name="terms_and_privacy_settings">Terms and Privacy Settings</string>
+    <string name="log_out">Log out</string>
+    <string name="locate_delivery_destination">Locate Delivery Destination</string>
+    <string name="locate_van">Locate Van</string>
+    <string name="summon_van">Summon Van</string>
+    <string name="next_parking_location">Find Next Parking Location</string>
+    <string name="authentication_failed">Authentication failed</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="language">Language</string>
+    <string name="not_available">Not available</string>
+    <string name="loading_map___">Loading map...</string>
+    <string name="start_simulation___">Starting simulation...</string>
+
+
+    <!-- SPECIFIC VALUES -->
+    <string name="permission_part_1">Hi</string>
+    <string name="permission_part_2">, \n The following permissions must be accepted in order to use the app. \n\n - Location \n - Phone \n - External Storage</string>
+    <string name="permission_alert_title">Permission Alert</string>
+    <string name="permission_alert_message">Some permissions are currently denied. Do you want to change them in the settings?</string>
+    <string name="log_out_message">Are you sure you want to log out?</string>
+    <string name="enter_username_message">Enter your name</string>
+    <string name="language_alert_title">Language Alert</string>
+    <string name="language_alert_message">Changing the language will restart the application. Do you want to continue?</string>
+    <string name="dark_mode_alert_title">Dark Mode Alert</string>
+    <string name="dark_mode_alert_message">Changing the Theme will restart the application. Do you want to continue?</string>
+    <string name="logout_alert_title">Logout Alert</string>
+    <string name="logout_alert_message">Are you sure you want to log out?</string>
+    <string name="successful_deliveries_in_dialog">Successful deliveries</string>
+    <string name="open_deliveries_in_dialog">Open deliveries</string>
+    <string name="unsuccessful_deliveries_in_dialog">Unsuccessful deliveries</string>
+    <string name="deliveries_dialog_title">Undo Parcel Alert</string>
+    <string name="deliveries_dialog_message">Where do you want to move the undone parcel?</string>
+    <string name="parking_area_confirmation">Please adjust or directly confirm with Parking Button</string>
+    <string name="select_next_parking_area">Do you want to select this as next parking location and show Route?</string>
+
+    <!-- ERROR HANDLING -->
+    <string name="error_parcel_loading">Loading parcel failed</string>
+    <string name="error_parcel_delivery_confirmation">Parcel delivery confirmation failed</string>
+    <string name="error_undo_parcel_delivery">Undo parcel delivery failed</string>
+    <string name="error_dark_mode_activation">Darkmode activation failed</string>
+    <string name="error_dark_mode_deactivation">Darkmode deactivation failed</string>
+    <string name="error_change_language">Change language failed</string>
+    <string name="error_help_label_activation">Help label activation failed</string>
+    <string name="error_help_label_deactivation">Help label deactivation failed</string>
+    <string name="error_start_simulation">Simulation start failed</string>
+    <string name="error_stop_simulation">Simulation stop failed</string>
+    <string name="error_update_parcel_position">Parcel position update failed</string>
+    <string name="error_load_parking_location">Load parking location failed</string>
+    <string name="error_set_next_parking_location">Set next parking location failed</string>
+    <string name="error_no_parcel_available">No parcel information available</string>
+
+
+</resources>

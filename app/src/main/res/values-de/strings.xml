@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- GENERAL VALUES -->
+    <string name="app_name">VanAssist</string>
+    <string name="additional_information">Zusätzliche Informationen</string>
+    <string name="username">Nutzername</string>
+    <string name="password">Passwort</string>
+    <string name="log_in">Anmelden</string>
+    <string name="authenticating...">Authentifizieren...</string>
+    <string name="start_day">Tag starten</string>
+    <string name="delivered_not_delivered">Zugestellt/Nicht zugestellt</string>
+    <string name="open_deliveries">Offene Zugestellungen</string>
+    <string name="settings">Einstellungen</string>
+    <string name="help_and_support">Hilfe &amp; Support</string>
+    <string name="finish_day">Tag beenden</string>
+    <string name="back_to_map">Zurück zur Karte</string>
+    <string name="next_delivery_address">Nächste Lieferadresse</string>
+    <string name="delivery_address">Liederadresse</string>
+    <string name="no_data_available">Keine Daten verfügbar</string>
+    <string name="customer_information">Kundeninformationen</string>
+    <string name="recipient_name">Name des Empfängers</string>
+    <string name="delivered">Zugestellt</string>
+    <string name="not_delivered">Nicht zugestellt</string>
+    <string name="dark_mode">Nachtmodus</string>
+    <string name="help_mode">Hilfemodus</string>
+    <string name="terms_and_privacy_settings">Nutzungsbedingung und Datenschutz</string>
+    <string name="log_out">Abmelden</string>
+    <string name="locate_delivery_destination">Zustellort anzeigen</string>
+    <string name="locate_van">Van orten</string>
+    <string name="summon_van">Van herbeirufen</string>
+    <string name="next_parking_location">Nächsten Parkplatz finden</string>
+    <string name="authentication_failed">Authentifizierung fehlgeschlagen</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nein</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="ok">Ok</string>
+    <string name="language">Sprache</string>
+    <string name="not_available">Nicht verfügbar</string>
+    <string name="loading_map___">Lade Karte...</string>
+    <string name="start_simulation___">Starte Simulation...</string>
+
+
+
+    <!-- SPECIFIC VALUES -->
+    <string name="permission_part_1">Hi</string>
+    <string name="permission_part_2">, \n für die Nutzung der App müssen folgende Genehmigungen erteilt werden. \n\n - Standort \n - Telefon \n - Externer Speicher</string>
+    <string name="permission_alert_title">Berechtigungswarnung</string>
+    <string name="permission_alert_message">Einige Berechtigungen werden derzeit verweigert. Möchtest du sie in den Einstellungen ändern?</string>
+    <string name="log_out_message">Bist du sicher, dass du dich abmelden möchstest?</string>
+    <string name="enter_username_message">Gib deinen Namen ein</string>
+    <string name="language_alert_title">Sprachenwarnung</string>
+    <string name="language_alert_message">Durch die Umstellung der Sprache wird die Anwendung neugestartet. Willst du fortfahren?</string>
+    <string name="dark_mode_alert_title">Design Warnung</string>
+    <string name="dark_mode_alert_message">Durch die Umstellung des Designs wird die Anwendung neugestartet. Willst du fortfahren?</string>
+
+    <string name="logout_alert_title">Abmelden</string>
+    <string name="logout_alert_message">Bist du sicher dass du dich abmelden möchtest?</string>
+    <string name="successful_deliveries_in_dialog">Zugestellt</string>
+    <string name="open_deliveries_in_dialog">Offene Zugestellungen</string>
+    <string name="unsuccessful_deliveries_in_dialog">Nicht zugestellt</string>
+    <string name="deliveries_dialog_title">Paket Information</string>
+    <string name="deliveries_dialog_message">Auf welchen Zutand möchtest du das Paket setzen?</string>
+    <string name="parking_area_confirmation">Bitte bestätige oder verändere den Parkplatz</string>
+    <string name="select_next_parking_area">Willst du diesen Parkplatz auswählen und die Route anzeigen lassen?</string>
+
+    <!-- ERROR HANDLING -->
+    <string name="error_parcel_loading">Bei dem Laden der Pakete ist ein Fehler aufgetreten</string>
+    <string name="error_parcel_delivery_confirmation">Bei der Zustellbestätitgung ist ein Fehler aufgereten</string>
+    <string name="error_undo_parcel_delivery">Bei dem Zurücksetzen des Paketstatus ist ein Fehler aufgereten</string>
+    <string name="error_dark_mode_activation">Bei der Aktivierung des Nachtmodus ist ein Fehler aufgetreten</string>
+    <string name="error_dark_mode_deactivation">Bei der Deaktivierung des Nachtmodus ist ein Fehler aufgetreten</string>
+    <string name="error_change_language">Bei der Umstellung der Sprache ist ein Fehler aufgetreten</string>
+    <string name="error_help_label_activation">Bei der Aktivierung des Nachtmodus ist ein Fehler aufgetreten</string>
+    <string name="error_help_label_deactivation">Bei der Deaktivierung des Nachtmodus ist ein Fehler aufgetreten</string>
+    <string name="error_start_simulation">Bei dem Starten der Simulation ist ein Fehler aufgetreten</string>
+    <string name="error_stop_simulation">Bei dem Stoppen der Simulation ist ein Fehler aufgetreten</string>
+    <string name="error_update_parcel_position">Bei dem Änderung der Paketposition ist ein Fehler aufgetreten</string>
+    <string name="error_load_parking_location">Bei dem Laden der Parkplätze ist ein Fehler aufgetreten</string>
+    <string name="error_set_next_parking_location">Bei dem Setzen des nächsten Parkplatzes ist ein Fehler aufgetreten</string>
+    <string name="error_no_parcel_available">Keine Paketinformationen verfügbar</string>
+
+
+
+
+</resources>

@@ -1,0 +1,29 @@
+
+Nkotlin:S1066…".Merge this "if" statement with the nested one.(°ôŞõ8Ü³€æ«-
+Mkotlin:S108š")Either remove or fill this block of code.(¶É»ûøÿÿÿÿ8¢øÿå«-
+wkotlin:S100ç"XRename function "OnSwipeButtonFaded" to match the regular expression ^[a-z][a-zA-Z0-9]*$(ÍíÎ8Ü³€æ«-
+Hkotlin:S108×")Either remove or fill this block of code.(òŸÜÚ8Ü³€æ«-
+Hkotlin:S108Û")Either remove or fill this block of code.(å¥‡8Ü³€æ«-
+pkotlin:S117Í"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(ì—ù	8¢øÿå«-
+Wkotlin:S1135‹"2Complete the task associated to this TODO comment.(™İ“‹úÿÿÿÿ8Ü³€æ«-
+rkotlin:S3776„"RRefactor this method to reduce its Cognitive Complexity from 20 to the 15 allowed.(ğ„”˜8Ü³€æ«-
+wkotlin:S3776Î"RRefactor this method to reduce its Cognitive Complexity from 56 to the 15 allowed.(­şâîøÿÿÿÿ8Ü³€æ«-
+[kotlin:S1144";Remove this unused private "startTriggerNavigation" method.(•æ²ƒ8Ü³€æ«-
+Hkotlin:S108©")Either remove or fill this block of code.(òŸÜÚ8âÄå«-
+>kotlin:S125"Remove this commented out code.(®ÇôŞ8Ü³€æ«-
+qkotlin:S117‚"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(ööÔ8Ü³€æ«-
+Hkotlin:S108")Either remove or fill this block of code.(ŞÄ8Ü³€æ«-
+ykotlin:S100Û"ZRename function "OnSwipeButtonDecline" to match the regular expression ^[a-z][a-zA-Z0-9]*$(ŒæÁÛ8Ü³€æ«-
+vkotlin:S117Î"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(Øå­¼ûÿÿÿÿ8Ü³€æ«-
+rkotlin:S3776¿"RRefactor this method to reduce its Cognitive Complexity from 19 to the 15 allowed.(“‘¨‘8Ü³€æ«-
+qkotlin:S117¦"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(œ˜ÒÉ8Ü³€æ«-
+vkotlin:S117¥"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(ÑŞ›Êûÿÿÿÿ8Ü³€æ«-
+Mkotlin:S108")Either remove or fill this block of code.(¶É»ûøÿÿÿÿ8¢øÿå«-
+qkotlin:S117"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(¾ïñ8¢øÿå«-
+Wkotlin:S1135¦"2Complete the task associated to this TODO comment.(–¦°¢üÿÿÿÿ8Ü³€æ«-
+Qkotlin:S1481„",Remove this unused "request" local variable.(Şå‡²øÿÿÿÿ8Ü³€æ«-
+~kotlin:S100Ô"ZRename function "OnSwipeButtonConfirm" to match the regular expression ^[a-z][a-zA-Z0-9]*$(¶­°°ıÿÿÿÿ8Ü³€æ«-
+Qkotlin:S1481Á",Remove this unused "latlong" local variable.(Çùş¦úÿÿÿÿ8Ü³€æ«-
+Ckotlin:S125‰"Remove this commented out code.(ñ¥ùšøÿÿÿÿ8Ü³€æ«-
+^kotlin:S1144Ó"9Remove this unused private "finishGetVanLocation" method.( ø¨ıÿÿÿÿ8Ü³€æ«-
+qkotlin:S117Ï"RRename this local variable to match the regular expression "^[_a-z][a-zA-Z0-9]*$".(îëå8¢øÿå«-
