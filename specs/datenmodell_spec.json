@@ -1,0 +1,193 @@
+{
+    "definitions": {},
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://example.com/root.json",
+    "type": "object",
+    "title": "The Root Schema",
+    "required": [
+        "id",
+        "verification_token",
+        "longitude",
+        "latitude",
+        "postal_code",
+        "city",
+        "address"
+    ],
+    "properties": {
+        "id": {
+            "$id": "#/properties/id",
+            "type": "string",
+            "title": "The Id Schema",
+            "default": "",
+            "examples": [
+                "197bf760-cbce-4b72-a89b-c3871647bd35"
+            ],
+            "pattern": "^(.*)$"
+        },
+        "state": {
+            "$id": "#/properties/state",
+            "type": "integer",
+            "title": "The State Schema",
+            "default": 0,
+            "examples": [
+                0
+            ]
+        },
+        "longitude": {
+            "$id": "#/properties/longitude",
+            "type": "number",
+            "title": "The Longitude Schema",
+            "default": 0.0,
+            "examples": [
+                203.238908023
+            ]
+        },
+        "latitude": {
+            "$id": "#/properties/latitude",
+            "type": "number",
+            "title": "The Latitude Schema",
+            "default": 0.0,
+            "examples": [
+                20.9028390832
+            ]
+        },
+        "postal_code": {
+            "$id": "#/properties/postal_code",
+            "type": "string",
+            "title": "The Postal_code Schema",
+            "default": "",
+            "examples": [
+                "69120"
+            ],
+            "pattern": "^(.*)$"
+        },
+        "city": {
+            "$id": "#/properties/city",
+            "type": "string",
+            "title": "The City Schema",
+            "default": "",
+            "examples": [
+                "Heidelberg"
+            ],
+            "pattern": "^(.*)$"
+        },
+        "address": {
+            "$id": "#/properties/address",
+            "type": "string",
+            "title": "The Address Schema",
+            "default": "",
+            "examples": [
+                "Berliner Straße 41"
+            ],
+            "pattern": "^(.*)$"
+        },
+        "name_of_recipient": {
+            "$id": "#/properties/name_of_recipient",
+            "type": "string",
+            "title": "The Name_of_recipient Schema",
+            "default": "",
+            "examples": [
+                "Felix Dörschner"
+            ],
+            "pattern": "^(.*)$"
+        },
+        "package_count": {
+            "$id": "#/properties/package_count",
+            "type": "integer",
+            "title": "The Package_count Schema",
+            "default": 0,
+            "examples": [
+                1
+            ]
+        },
+        "verification_token": {
+            "$id": "#/properties/verification_token",
+            "type": "string",
+            "title": "The Verification_token Schema",
+            "default": "",
+            "examples": [
+                "197bf760-cbce-4b72-a89b-c3871647bd35"
+            ],
+            "pattern": "^(.*)$"
+        },
+        "floor": {
+            "$id": "#/properties/floor",
+            "type": "integer",
+            "title": "The floor number on which the recipient is waiting. starting with 0 for the ground floor",
+            "default": 0,
+            "examples": [
+                4
+            ]
+        },
+        "phone_number": {
+            "$id": "#/properties/phone_number",
+            "type": "string",
+            "title": "The phone number of the recepient",
+            "default": "",
+            "examples": [
+                "+49 123-4567890",
+                "0123/4567890",
+                "+49123/4567890",
+                "+49 123 4567890",
+                "+49 123/4567890"
+            ],
+            "pattern": "(([+][0-9]{1,3} ?)|0)[0-9]*[-/ ]?[0-9]*"
+        },
+        "additional_recipient_information": {
+            "$id": "#/properties/additional_recipient_information",
+            "type": "string",
+            "title": "The Additional_recipient_information Schema",
+            "default": "",
+            "examples": [
+                ""
+            ],
+            "pattern": "^(.*)$"
+        },
+        "additional_address_information": {
+            "$id": "#/properties/additional_address_information",
+            "type": "string",
+            "title": "The Additional_address_information Schema",
+            "default": "",
+            "examples": [
+                ""
+            ],
+            "pattern": "^(.*)$"
+        },
+        "weight": {
+            "$id": "#/properties/weight",
+            "type": "integer",
+            "title": "The Weight Schema",
+            "default": 0,
+            "examples": [
+                500
+            ]
+        },
+        "width": {
+            "$id": "#/properties/width",
+            "type": "integer",
+            "title": "The Width Schema",
+            "default": 0,
+            "examples": [
+                500
+            ]
+        },
+        "height": {
+            "$id": "#/properties/height",
+            "type": "integer",
+            "title": "The Height Schema",
+            "default": 0,
+            "examples": [
+                500
+            ]
+        },
+        "length": {
+            "$id": "#/properties/length",
+            "type": "integer",
+            "title": "The Length Schema",
+            "default": 0,
+            "examples": [
+                500
+            ]
+        }
+    }
+}
