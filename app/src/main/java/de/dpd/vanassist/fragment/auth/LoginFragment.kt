@@ -2,9 +2,9 @@ package de.dpd.vanassist.fragment.auth
 
 import android.graphics.Typeface
 import android.os.Bundle
-import android.support.design.widget.TextInputLayout
-import android.support.v4.app.Fragment
-import android.support.v7.app.AppCompatActivity
+import com.google.android.material.textfield.TextInputLayout
+import androidx.fragment.app.Fragment
+import androidx.appcompat.app.AppCompatActivity
 import android.text.Html
 import android.text.InputType
 import android.text.method.LinkMovementMethod
@@ -16,15 +16,17 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
+import com.google.android.material.snackbar.Snackbar
 
 import de.dpd.vanassist.R
 import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.config.Path
 import kotlinx.android.synthetic.main.fragment_login.view.*
 
-class LoginFragment : Fragment() {
+class LoginFragment : androidx.fragment.app.Fragment() {
 
-    private var api:VanAssistAPIController? = null
+    private var api: VanAssistAPIController? = null
 
     companion object {
         fun newInstance(): LoginFragment {
@@ -37,7 +39,7 @@ class LoginFragment : Fragment() {
      * Handles Login Activity and Authentication on enter keypress
      */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val v =  inflater.inflate(R.layout.fragment_login, container, false)
+        val v = inflater.inflate(R.layout.fragment_login, container, false)
 
         this.api = VanAssistAPIController(activity as AppCompatActivity)
 
@@ -60,8 +62,12 @@ class LoginFragment : Fragment() {
             val username = userNameField.text.toString().trim().toLowerCase()
             val password = passwordField.text.toString().trim()
 
-            this.api!!.userAuthentication(activity as AppCompatActivity, username, password)
-
+            if (username.isNotEmpty() && password.isNotEmpty())
+                this.api!!.userAuthentication(activity as AppCompatActivity, username, password)
+            else
+                context?.let {
+                    Toast.makeText(it, "Login cannot be empty", Toast.LENGTH_SHORT)
+                }
         }
 
         passwordField.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->

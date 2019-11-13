@@ -2,18 +2,18 @@ package de.dpd.vanassist.util.location
 
 import android.location.Location
 import android.os.Build
-import android.support.annotation.RequiresApi
+import androidx.annotation.RequiresApi
 import android.util.Log
 import com.mapbox.android.core.location.LocationEngineCallback
 import com.mapbox.android.core.location.LocationEngineResult
-import de.dpd.vanassist.fragment.main.MapFragment
+import de.dpd.vanassist.fragment.main.MapFragmentOld
 import java.lang.Exception
 
-class LocationListeningCallback (fragment: MapFragment) :
+class LocationListeningCallback (fragmentOld: MapFragmentOld) :
     LocationEngineCallback<LocationEngineResult> {
 
     lateinit var lastLocation: Location
-    private val act = fragment
+    private val act = fragmentOld
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onSuccess(result: LocationEngineResult) {

@@ -8,15 +8,15 @@ import de.dpd.vanassist.database.repository.ParcelRepository
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
-import android.support.v4.app.Fragment
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.fragment.app.Fragment
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.support.v7.widget.helper.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper
 import android.util.Log
 import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.util.FragmentRepo
@@ -31,13 +31,13 @@ import kotlin.collections.ArrayList
  *
  */
 @SuppressLint("ValidFragment")
-class ParcelListFragment: Fragment() {
+class ParcelListFragment: androidx.fragment.app.Fragment() {
 
     var fab : FloatingActionButton? = null
     private var targetState: Int = 0
     private lateinit var parcelRepo: ParcelRepository
     lateinit var parcelAdapter:ParcelInformationAdapter
-    lateinit var recyclerView: RecyclerView
+    lateinit var recyclerView: androidx.recyclerview.widget.RecyclerView
 
 
     companion object {
@@ -79,7 +79,8 @@ class ParcelListFragment: Fragment() {
 
         //adding recycler view to fragment
         this.recyclerView = v.deliveryparcel_recyclerview
-        this.recyclerView.layoutManager = LinearLayoutManager(this.context)
+        this.recyclerView.layoutManager =
+            androidx.recyclerview.widget.LinearLayoutManager(this.context)
         this.recyclerView.setHasFixedSize(true)
 
         this.parcelAdapter = ParcelInformationAdapter(this)

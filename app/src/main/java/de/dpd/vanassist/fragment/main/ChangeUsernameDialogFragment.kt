@@ -4,13 +4,13 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
+import androidx.fragment.app.DialogFragment
 import de.dpd.vanassist.R
 
 /**
  * Fragment that represents the Dialog Box for changing username
  */
-class ChangeUsernameDialogFragment : DialogFragment() {
+class ChangeUsernameDialogFragment : androidx.fragment.app.DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return activity?.let {

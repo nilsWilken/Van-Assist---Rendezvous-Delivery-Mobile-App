@@ -1,7 +1,7 @@
 package de.dpd.vanassist.cloud
 
 import android.app.ProgressDialog
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.TextView
 import org.json.JSONException
@@ -17,7 +17,7 @@ import de.dpd.vanassist.util.Vehicle
 import de.dpd.vanassist.database.repository.CourierRepository
 import de.dpd.vanassist.database.repository.ParcelRepository
 import de.dpd.vanassist.database.repository.ParkingAreaRepository
-import de.dpd.vanassist.fragment.main.MapFragment
+import de.dpd.vanassist.fragment.main.MapFragmentOld
 import de.dpd.vanassist.util.*
 import de.dpd.vanassist.util.date.DateParser
 import de.dpd.vanassist.util.json.CourierJSONParser
@@ -31,8 +31,6 @@ import java.io.IOException
 import kotlin.collections.HashMap
 
 
-
-
 class VanAssistAPIController(act: AppCompatActivity) {
 
     private val service = ServiceVolley()
@@ -41,8 +39,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
     val main = act
     lateinit var parcelRepo: ParcelRepository
     lateinit var courierRepo: CourierRepository
-    lateinit var  parkingAreaRepo: ParkingAreaRepository
-
+    lateinit var parkingAreaRepo: ParkingAreaRepository
 
 
     private lateinit var auth: FirebaseAuth
@@ -61,6 +58,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
         courierRepo = CourierRepository(main)
         val dialog = ProgressDialog.show(act, "", act.getString(R.string.authenticating___), true)
         auth = FirebaseAuth.getInstance()
+
+
         auth.signInWithEmailAndPassword(userName, password)
             .addOnCompleteListener(act) { task ->
                 if (task.isSuccessful) {
@@ -71,7 +70,11 @@ class VanAssistAPIController(act: AppCompatActivity) {
                     //getAllParkingLocations()
                 } else {
                     dialog.dismiss()
-                    android.widget.Toast.makeText(act.baseContext, act.getString(R.string.authentication_failed), android.widget.Toast.LENGTH_SHORT).show()
+                    android.widget.Toast.makeText(
+                        act.baseContext,
+                        act.getString(R.string.authentication_failed),
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
     }
@@ -90,46 +93,46 @@ class VanAssistAPIController(act: AppCompatActivity) {
      * @param activity, dialog
      * @return Void
      **/
-    private fun loadAndSaveCourierInformation(act: AppCompatActivity, dialog: ProgressDialog, userName:String) {
+    private fun loadAndSaveCourierInformation(act: AppCompatActivity, dialog: ProgressDialog, userName: String) {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
             .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
+                if (!task.isSuccessful) {
+                    return@addOnCompleteListener
+                }
 
-                        val params = CourierJSONParser.createHeaderCourierInformationRequest(uid, userName)
-                        val path = Path.COURIER_INFORMATION
+                val uid = task.result!!.token ?: return@addOnCompleteListener
 
-                        apiController.get(path, params) { response ->
-                            if (response != null) {
-                                val strResp = response.toString()
-                                try {
-                                    val jsonObject =  JSONObject(strResp)
-                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
-                                    Log.wtf("courier info","->" + courier.languageCode)
-                                    courierRepo.insert(courier)
+                val params = CourierJSONParser.createHeaderCourierInformationRequest(uid, userName)
+                val path = Path.COURIER_INFORMATION
 
-                                    if (courierRepo.getAll().count() == 1) {
-                                        loadAndSaveAllParcel()
-                                        dialog.dismiss()
-                                        MapActivity.start(act)
-//                                        if(PermissionHandler.permissionGranted(act))  {
-//                                            MapActivity.start(act)
-//                                        } else {
-//                                            PermissionActivity.start(act)
-//                                        }
-                                    }
-
-                                } catch (e: JSONException) {
-                                    e.printStackTrace()
-                                }
-                            } else {
-                                Log.d("Error", "catch load and save courier")
-                            }
-                        }
+                apiController.get(path, params) { response ->
+                    if (response == null) {
+                        Log.d("Error", "catch load and save courier")
+                        return@get
                     }
-                } else {
+
+                    val strResp = response.toString()
+                    try {
+                        val jsonObject = JSONObject(strResp)
+                        val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                        Log.wtf("courier info", "->" + courier.languageCode)
+                        courierRepo.insert(courier)
+
+                        if (courierRepo.getAll().count() == 1) {
+                            loadAndSaveAllParcel()
+                            dialog.dismiss()
+                            MapActivity.start(act)
+                            //                                        if(PermissionHandler.permissionGranted(act))  {
+                            //                                            MapActivity.start(act)
+                            //                                        } else {
+                            //                                            PermissionActivity.start(act)
+                            //                                        }
+                        }
+
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                    }
                 }
             }
     }
@@ -143,10 +146,10 @@ class VanAssistAPIController(act: AppCompatActivity) {
      * @param
      * @return void
      **/
-     fun loadAndSaveAllParcel() {
+    fun loadAndSaveAllParcel() {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
-            .addOnCompleteListener{ task ->
+            .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val uid = task.result!!.token
                     if (uid != null) {
@@ -215,8 +218,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                     val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
                                     parcelRepo = ParcelRepository(main)
                                     parcelRepo.insert(parcel)
-                                    FragmentRepo.mapFragment?.setParcelInformation()
-                                    if(FragmentRepo.parcelListFragmentDeliverySuccess != null) {
+                                    FragmentRepo.mapFragmentOld?.setParcelInformation()
+                                    if (FragmentRepo.parcelListFragmentDeliverySuccess != null) {
                                         FragmentRepo.parcelListFragmentDeliverySuccess!!.updateAdapter()
                                     }
 
@@ -234,8 +237,6 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 }
             }
     }
-
-
 
 
     /*
@@ -265,8 +266,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                     val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
                                     parcelRepo = ParcelRepository(main)
                                     parcelRepo.insert(parcel)
-                                    FragmentRepo.mapFragment?.setParcelInformation()
-                                    if(FragmentRepo.parcelListFragmentDeliveryFailure != null) {
+                                    FragmentRepo.mapFragmentOld?.setParcelInformation()
+                                    if (FragmentRepo.parcelListFragmentDeliveryFailure != null) {
                                         FragmentRepo.parcelListFragmentDeliveryFailure!!.updateAdapter()
                                     }
                                 } catch (e: JSONException) {
@@ -383,7 +384,6 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-
     /**
      * Created by Axel Herbstreith and Jasmin Weimüller
      *
@@ -445,7 +445,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
      * @param languageCode
      * @return void
      **/
-    fun changeLanguage(languageCode:String) {
+    fun changeLanguage(languageCode: String) {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
             .addOnCompleteListener { task ->
@@ -482,8 +482,6 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 }
             }
     }
-
-
 
 
     /**
@@ -608,13 +606,13 @@ class VanAssistAPIController(act: AppCompatActivity) {
 
 
 
-                            client.newCall(request).enqueue(object: Callback {
-                                override fun onFailure(call:Call, e:IOException) {
+                            client.newCall(request).enqueue(object : Callback {
+                                override fun onFailure(call: Call, e: IOException) {
                                     e.printStackTrace();
                                 }
 
                                 @Throws(IOException::class)
-                                override fun onResponse(call:Call, response:Response) {
+                                override fun onResponse(call: Call, response: Response) {
                                     if (response.isSuccessful) {
                                         if (response != null) {
                                             val strResp = response.body()!!.string()
@@ -623,10 +621,10 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                                 val data = jsonObject.getJSONObject("data")
                                                 val simulationIsRunning = data.getBoolean("simulation_is_running")
 
-                                                if(simulationIsRunning) {
+                                                if (simulationIsRunning) {
 
                                                     FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
-                                                    val mapFragment = MapFragment.newInstance()
+                                                    val mapFragment = MapFragmentOld.newInstance()
                                                     FragmentRepo.launchPadFragment!!.activity!!.supportFragmentManager
                                                         ?.beginTransaction()
                                                         ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
@@ -654,8 +652,6 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 }
         }
     }
-
-
 
 
     /**
@@ -698,14 +694,12 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-
-
     /*
      *
      * Parcel ... Update Parcel Order
      *
      */
-    fun updateParcelPosition(parcelId:String, newPos:Int) {
+    fun updateParcelPosition(parcelId: String, newPos: Int) {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
             .addOnCompleteListener { task ->
@@ -719,12 +713,13 @@ class VanAssistAPIController(act: AppCompatActivity) {
                         val body = ParcelJSONParser.createRequestBodyUpdateParcelPosition(parcelId, newPos)
 
                         val path = Path.PARCEL_ORDER
-                        apiController.put(path, header , body) { response ->
+                        apiController.put(path, header, body) { response ->
                             if (response != null) {
                                 val strResp = response.toString()
                                 try {
                                     val jsonObject = JSONObject(strResp)
-                                    val parcelList = ParcelJSONParser.parseResponseToParcelListWithoutVerificationToken(jsonObject)
+                                    val parcelList =
+                                        ParcelJSONParser.parseResponseToParcelListWithoutVerificationToken(jsonObject)
                                     parcelRepo.insertAll(parcelList)
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_update_parcel_position))
@@ -757,7 +752,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                         val courierRepo = CourierRepository(main)
                         val courierId = courierRepo.getCourierId()!!
                         val path = Path.PARKING_ALL
-                        val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid,courierId)
+                        val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
 
                         apiController.get(path, params) { response ->
                             if (response != null) {
@@ -766,8 +761,9 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 try {
                                     parkingAreaRepo = ParkingAreaRepository(main)
                                     val jsonObject = JSONObject(strResp)
-                                    val parkingAreaResponseObject = ParkingAreaJSONParser.parseResponseToParkingAreaObject(jsonObject)
-                                    Log.d("PARKING",parkingAreaResponseObject.toString())
+                                    val parkingAreaResponseObject =
+                                        ParkingAreaJSONParser.parseResponseToParkingAreaObject(jsonObject)
+                                    Log.d("PARKING", parkingAreaResponseObject.toString())
                                     parkingAreaRepo.insertAll(parkingAreaResponseObject)
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_load_parking_location))
@@ -803,7 +799,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                         val pA = parkingAreaRepo.getParcelById(paID)
                         val courierId = courierRepo.getCourierId()!!
                         val path = Path.PARKING_NEXT
-                        val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid,courierId)
+                        val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
                         val body = ParkingAreaJSONParser.createBodyPostNextParkingLocation(pA)
                         apiController.post(path, params, body) { response ->
                             if (response != null) {
@@ -811,8 +807,9 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 val strResp = response.toString()
                                 try {
                                     val jsonObject = JSONObject(strResp)
-                                    val parkingAreaResponseObject = ParkingAreaJSONParser.parseResponseToParkingAreaObjectSingle(jsonObject)
-                                    Log.d("SINGLE PARKING",parkingAreaResponseObject.toString())
+                                    val parkingAreaResponseObject =
+                                        ParkingAreaJSONParser.parseResponseToParkingAreaObjectSingle(jsonObject)
+                                    Log.d("SINGLE PARKING", parkingAreaResponseObject.toString())
                                     //parkingAreaRepo.insertAll(parkingAreaResponseObject)
 
                                     //Do something with this object
@@ -835,8 +832,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-
- /*********************************************NOT_IMPLEMENTED**************************************************/
+    /*********************************************NOT_IMPLEMENTED**************************************************/
 
 
     fun getCurrentUid() {
@@ -1045,10 +1041,6 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 }
             })
     }
-
-
-
-
 
 
     /*

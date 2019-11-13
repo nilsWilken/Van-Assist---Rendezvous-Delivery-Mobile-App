@@ -2,11 +2,11 @@ package de.dpd.vanassist.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.AppCompatDelegate
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate
 import com.google.firebase.auth.FirebaseAuth
 import de.dpd.vanassist.R
-import de.dpd.vanassist.fragment.main.MapFragment
+import de.dpd.vanassist.fragment.main.MapFragmentOld
 import android.view.MotionEvent
 import com.mapbox.mapboxsdk.Mapbox
 import de.dpd.vanassist.cloud.VanAssistAPIController
@@ -139,7 +139,7 @@ class MapActivity : AppCompatActivity() {
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
             val f = supportFragmentManager.findFragmentByTag(FragmentTag.MAP)
-            if (f is MapFragment) {
+            if (f is MapFragmentOld) {
                 f.hideBottomSheetFromOutSide(event)
             }
         }

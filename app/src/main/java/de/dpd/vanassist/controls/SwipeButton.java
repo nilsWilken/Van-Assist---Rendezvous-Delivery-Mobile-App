@@ -3,7 +3,7 @@ package de.dpd.vanassist.controls;
 import android.animation.*;
 import android.content.Context;
 import android.graphics.drawable.*;
-import android.support.v4.content.ContextCompat;
+import androidx.core.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.*;
 import android.view.animation.AccelerateDecelerateInterpolator;

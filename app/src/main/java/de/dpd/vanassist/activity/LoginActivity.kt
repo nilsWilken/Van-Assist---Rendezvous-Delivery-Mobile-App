@@ -2,7 +2,7 @@ package de.dpd.vanassist.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import de.dpd.vanassist.R
 import de.dpd.vanassist.fragment.auth.LoginFragment
 

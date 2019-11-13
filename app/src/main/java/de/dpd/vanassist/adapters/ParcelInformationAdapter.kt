@@ -8,10 +8,10 @@ import de.dpd.vanassist.util.parcel.ParcelStatus
 import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.graphics.Color
-import android.support.v4.app.Fragment
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
+import androidx.fragment.app.Fragment
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.ItemTouchHelper
 import android.transition.AutoTransition
 import android.transition.TransitionManager
 import android.view.*
@@ -25,7 +25,7 @@ import de.dpd.vanassist.database.repository.CourierRepository
 
 import kotlinx.android.synthetic.main.parcel_information_card.view.*
 
-class ParcelInformationAdapter(private val fragment: Fragment) : RecyclerView.Adapter<ParcelInformationAdapter.ParcelInformationHolder>(){
+class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragment) : androidx.recyclerview.widget.RecyclerView.Adapter<ParcelInformationAdapter.ParcelInformationHolder>(){
 
     private lateinit var parcels: ArrayList<Parcel>
     private var expandedPosition = -1
@@ -47,7 +47,7 @@ class ParcelInformationAdapter(private val fragment: Fragment) : RecyclerView.Ad
         this.state = state
     }
 
-    fun getFragment(): Fragment{
+    fun getFragment(): androidx.fragment.app.Fragment {
 
         return this.fragment
     }
@@ -92,7 +92,7 @@ class ParcelInformationAdapter(private val fragment: Fragment) : RecyclerView.Ad
             val inflater = fragment.layoutInflater
             if (state == 1) {
                 val dialogView = inflater.inflate(R.layout.undo_dialog_delivered, null)
-                val builder1 = android.support.v7.app.AlertDialog.Builder(fragment.context!!)
+                val builder1 = androidx.appcompat.app.AlertDialog.Builder(fragment.context!!)
                 builder1.setView(dialogView)
                 builder1.setTitle(fragment.getString(R.string.deliveries_dialog_title))
                 builder1.setMessage(fragment.getString(R.string.deliveries_dialog_message))
@@ -128,7 +128,7 @@ class ParcelInformationAdapter(private val fragment: Fragment) : RecyclerView.Ad
             }
             else if (state == 2) {
                 val dialogView = inflater.inflate(R.layout.undo_dialog_undelivered, null)
-                val builder1 = android.support.v7.app.AlertDialog.Builder(fragment.context!!)
+                val builder1 = androidx.appcompat.app.AlertDialog.Builder(fragment.context!!)
                 builder1.setView(dialogView)
                 builder1.setTitle(fragment.getString(R.string.deliveries_dialog_title))
                 builder1.setMessage(fragment.getString(R.string.deliveries_dialog_message))
@@ -252,7 +252,7 @@ class ParcelInformationAdapter(private val fragment: Fragment) : RecyclerView.Ad
     }
 
 
-    class ParcelInformationHolder constructor(val view: View) : RecyclerView.ViewHolder(view) {
+    class ParcelInformationHolder constructor(val view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view) {
 
         lateinit var parcel: Parcel
         var address = view.findViewById<TextView>(R.id.address)!!

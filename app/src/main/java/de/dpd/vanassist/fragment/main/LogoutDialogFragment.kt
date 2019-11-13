@@ -4,7 +4,7 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
+import androidx.fragment.app.DialogFragment
 
 import com.google.firebase.auth.FirebaseAuth
 import de.dpd.vanassist.R
@@ -12,7 +12,7 @@ import de.dpd.vanassist.activity.LoginActivity
 import de.dpd.vanassist.config.VanAssistConfig
 import de.dpd.vanassist.database.AppDatabase
 
-class LogoutDialogFragment : DialogFragment() {
+class LogoutDialogFragment : androidx.fragment.app.DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
 
@@ -21,7 +21,7 @@ class LogoutDialogFragment : DialogFragment() {
         val parcelDao = appDatabase.parcelDao()
         val parkingAreaDao = appDatabase.parkingAreaDao()
 
-        val builder1 = android.support.v7.app.AlertDialog.Builder(context!!)
+        val builder1 = androidx.appcompat.app.AlertDialog.Builder(context!!)
         builder1.setTitle(getString(R.string.logout_alert_title))
         builder1.setMessage(getString(R.string.logout_alert_message))
         builder1.setCancelable(true)

@@ -1,7 +1,7 @@
 package de.dpd.vanassist.controls
 
-import android.support.v7.widget.helper.ItemTouchHelper
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import de.dpd.vanassist.adapters.ParcelInformationAdapter
 import de.dpd.vanassist.fragment.main.ParcelListFragment
 import de.dpd.vanassist.util.FragmentRepo
@@ -17,12 +17,12 @@ class DragCallback constructor(private val adapter: ParcelInformationAdapter) : 
     var dragToPosition = -1
     var sourcePosition = -1
 
-    override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+    override fun getMovementFlags(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder): Int {
         val dragFlags = ItemTouchHelper.UP or ItemTouchHelper.DOWN
         return ItemTouchHelper.Callback.makeMovementFlags(dragFlags, 0)
     }
 
-    override fun onMove(recyclerView: RecyclerView, source: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+    override fun onMove(recyclerView: androidx.recyclerview.widget.RecyclerView, source: androidx.recyclerview.widget.RecyclerView.ViewHolder, target: androidx.recyclerview.widget.RecyclerView.ViewHolder): Boolean {
         if (source.itemViewType != target.itemViewType) {
             return false
         }
@@ -35,7 +35,7 @@ class DragCallback constructor(private val adapter: ParcelInformationAdapter) : 
     }
 
 
-    override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+    override fun onSelectedChanged(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder?, actionState: Int) {
         super.onSelectedChanged(viewHolder, actionState)
 
         when (actionState) {
@@ -57,7 +57,7 @@ class DragCallback constructor(private val adapter: ParcelInformationAdapter) : 
         }
     }
 
-    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, i: Int) {
+    override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, i: Int) {
         // Notify the adapter of the dismissal
         //adapter.onItemDismiss(viewHolder.adapterPosition)
     }
@@ -66,7 +66,7 @@ class DragCallback constructor(private val adapter: ParcelInformationAdapter) : 
         return false
     }
 
-    override fun interpolateOutOfBoundsScroll(recyclerView: RecyclerView, viewSize: Int, viewSizeOutOfBounds: Int, totalSize: Int, msSinceStartScroll: Long): Int {
+    override fun interpolateOutOfBoundsScroll(recyclerView: androidx.recyclerview.widget.RecyclerView, viewSize: Int, viewSizeOutOfBounds: Int, totalSize: Int, msSinceStartScroll: Long): Int {
         return super.interpolateOutOfBoundsScroll(recyclerView, viewSize, viewSizeOutOfBounds, totalSize, msSinceStartScroll)
     }
 }

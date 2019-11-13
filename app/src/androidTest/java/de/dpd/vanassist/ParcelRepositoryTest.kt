@@ -1,6 +1,6 @@
 package de.dpd.vanassist
 
-import android.support.test.InstrumentationRegistry
+import androidx.test.platform.app.InstrumentationRegistry
 import de.dpd.vanassist.database.repository.ParcelRepository
 import org.junit.Before
 import org.junit.Test

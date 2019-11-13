@@ -2,18 +2,18 @@ package de.dpd.vanassist.fragment.main
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 
-import android.support.v4.app.FragmentStatePagerAdapter
-import android.support.v4.view.ViewPager
+import androidx.fragment.app.FragmentStatePagerAdapter
+import androidx.viewpager.widget.ViewPager
 import de.dpd.vanassist.R
 import kotlinx.android.synthetic.main.fragment_tabbed.view.*
-import android.support.design.widget.TabLayout
+import com.google.android.material.tabs.TabLayout
 import android.view.animation.Animation
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.ScaleAnimation
@@ -25,10 +25,10 @@ import de.dpd.vanassist.util.parcel.ParcelStatus
  * A simple [Fragment] subclass.
  *
  */
-class TabbedFragment : Fragment() {
+class TabbedFragment : androidx.fragment.app.Fragment() {
 
     lateinit var parcelAdapter: PagerAdapter
-    private lateinit var viewPager: ViewPager
+    private lateinit var viewPager: androidx.viewpager.widget.ViewPager
 
     private lateinit var delivered : ParcelListFragment
     private lateinit var notDelivered : ParcelListFragment
@@ -87,7 +87,7 @@ class TabbedFragment : Fragment() {
     /**
      * helper class for managing TabbedView
      */
-    inner class PagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
+    inner class PagerAdapter(fm: androidx.fragment.app.FragmentManager) : androidx.fragment.app.FragmentStatePagerAdapter(fm) {
 
         private val tabTitles = arrayOf(getString(R.string.delivered), getString(R.string.not_delivered))
 
@@ -95,7 +95,7 @@ class TabbedFragment : Fragment() {
             return tabTitles[position]
         }
 
-        override fun getItem(position: Int): Fragment? {
+        override fun getItem(position: Int): androidx.fragment.app.Fragment? {
 
             return when (position) {
                 0 -> delivered

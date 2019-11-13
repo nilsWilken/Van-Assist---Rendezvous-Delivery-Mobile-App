@@ -2,8 +2,8 @@ package de.dpd.vanassist.fragment.main
 
 import android.app.ProgressDialog
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.appcompat.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,7 +25,7 @@ import de.dpd.vanassist.util.FragmentRepo
  * Launchpad Fragment
  *
  */
-class LaunchpadFragment : Fragment() {
+class LaunchpadFragment : androidx.fragment.app.Fragment() {
 
     var dialog:ProgressDialog? = null
 
@@ -62,7 +62,7 @@ class LaunchpadFragment : Fragment() {
             if(courierId == "474ccac0-92d2-4f3f-8d39-b79557a455f5") {
 
                 if(VanAssistConfig.simulation_running) {
-                    val mapFragment = MapFragment.newInstance()
+                    val mapFragment = MapFragmentOld.newInstance()
 
                     activity?.supportFragmentManager
                         ?.beginTransaction()
@@ -79,7 +79,7 @@ class LaunchpadFragment : Fragment() {
                 }
 
             } else {
-                val mapFragment = MapFragment.newInstance()
+                val mapFragment = MapFragmentOld.newInstance()
 
                 activity?.supportFragmentManager
                     ?.beginTransaction()
@@ -135,7 +135,7 @@ class LaunchpadFragment : Fragment() {
 
         v.back_to_map.setOnClickListener {
 
-            val mapFragment = MapFragment.newInstance()
+            val mapFragment = MapFragmentOld.newInstance()
 
             activity?.supportFragmentManager
                 ?.beginTransaction()

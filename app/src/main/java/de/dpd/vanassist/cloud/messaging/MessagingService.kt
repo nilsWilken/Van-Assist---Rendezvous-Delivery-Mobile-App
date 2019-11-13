@@ -1,12 +1,11 @@
 package de.dpd.vanassist.cloud.messaging
 
-import android.util.Log
 import android.widget.Toast
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import de.dpd.vanassist.R
 import de.dpd.vanassist.config.VanAssistConfig
-import de.dpd.vanassist.fragment.main.MapFragment
+import de.dpd.vanassist.fragment.main.MapFragmentOld
 import de.dpd.vanassist.util.FragmentRepo
 import de.dpd.vanassist.util.cloud.CloudMessage
 import com.mapbox.geojson.Point
@@ -26,7 +25,7 @@ class MessagingService: FirebaseMessagingService() {
                 val launchpadFragment = FragmentRepo.launchPadFragment
                 launchpadFragment!!.dialog!!.dismiss()
                 VanAssistConfig.simulation_running = true
-                val mapFragment = MapFragment.newInstance()
+                val mapFragment = MapFragmentOld.newInstance()
                 launchpadFragment.activity!!.supportFragmentManager
                     ?.beginTransaction()
                     ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
@@ -40,11 +39,11 @@ class MessagingService: FirebaseMessagingService() {
         }
 
         if(name == CloudMessage.VEHICLE_IS_IN_NEXT_PARKING_AREA) {
-            FragmentRepo.mapFragment!!.activity!!.runOnUiThread {
-                Toast.makeText(FragmentRepo.mapFragment!!.context!!, "Vehicle arrived", Toast.LENGTH_LONG).show()
-                val mapFragment = FragmentRepo.mapFragment!!
-                mapFragment.removeParkingLocationWhenVanHasParked()
-                mapFragment.updateVanLocation(mapFragment.destination, mapFragment.mapboxMap.maxZoomLevel - 3)
+            FragmentRepo.mapFragmentOld!!.activity!!.runOnUiThread {
+                Toast.makeText(FragmentRepo.mapFragmentOld!!.context!!, "Vehicle arrived", Toast.LENGTH_LONG).show()
+                val mapFragment = FragmentRepo.mapFragmentOld!!
+//                mapFragment.removeParkingLocationWhenVanHasParked()
+//                mapFragment.updateVanLocation(mapFragment.destination, mapFragment.mapboxMap.maxZoomLevel - 3)
             }
         }
         
@@ -56,11 +55,11 @@ class MessagingService: FirebaseMessagingService() {
             val longitude = data[CloudMessage.LATITUDE]!!.toDouble()
             val destination = Point.fromLngLat(longitude, latitude)!!
 
-            if(FragmentRepo.mapFragment != null) {
-                FragmentRepo.mapFragment!!.activity!!.runOnUiThread {
-                    val mapFragment = FragmentRepo.mapFragment!!
-                    mapFragment.addParkingLocationWhenVanStartDriving()
-                    mapFragment.updateVanLocationWithoutZoom(destination)
+            if(FragmentRepo.mapFragmentOld != null) {
+                FragmentRepo.mapFragmentOld!!.activity!!.runOnUiThread {
+                    val mapFragment = FragmentRepo.mapFragmentOld!!
+//                    mapFragment.addParkingLocationWhenVanStartDriving()
+//                    mapFragment.updateVanLocationWithoutZoom(destination)
                 }
             }
         }

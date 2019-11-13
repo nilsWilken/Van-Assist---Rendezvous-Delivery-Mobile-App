@@ -4,9 +4,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import android.support.v4.content.ContextCompat
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.ItemTouchHelper
 import de.dpd.vanassist.R
 import de.dpd.vanassist.adapters.ParcelInformationAdapter
 
@@ -19,15 +19,15 @@ class SwipeCallback constructor(private val pAdapter: ParcelInformationAdapter) 
      * method that sets the available movements
      */
 
-    override fun getMovementFlags(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+    override fun getMovementFlags(recyclerView: androidx.recyclerview.widget.RecyclerView, viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder): Int {
 
         return makeMovementFlags(0, ItemTouchHelper.LEFT)
     }
 
     override fun onMove(
-        recyclerView: RecyclerView,
-        source: RecyclerView.ViewHolder,
-        target: RecyclerView.ViewHolder
+        recyclerView: androidx.recyclerview.widget.RecyclerView,
+        source: androidx.recyclerview.widget.RecyclerView.ViewHolder,
+        target: androidx.recyclerview.widget.RecyclerView.ViewHolder
     ): Boolean {
         return false
     }
@@ -35,7 +35,7 @@ class SwipeCallback constructor(private val pAdapter: ParcelInformationAdapter) 
     /**
      * notifies the adapter that a remove has been made
      */
-    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+    override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
 
         pAdapter.onItemDismiss(viewHolder.adapterPosition)
         //pAdapter.apiCtrl.undoParcelDeliveryConfirmation()
@@ -53,8 +53,8 @@ class SwipeCallback constructor(private val pAdapter: ParcelInformationAdapter) 
 
     override fun onChildDraw(
         canvas: Canvas,
-        recyclerView: RecyclerView,
-        viewHolder: RecyclerView.ViewHolder,
+        recyclerView: androidx.recyclerview.widget.RecyclerView,
+        viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
         dX: Float,
         dY: Float,
         actionState: Int,
