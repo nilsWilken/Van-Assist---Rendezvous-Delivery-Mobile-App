@@ -5,7 +5,8 @@ class Path {
 
         /* Base Path */
         const val PORT = "8000"
-        const val BASE_PATH = "http://134.155.108.94:" + PORT + "/"
+        //const val BASE_PATH = "http://134.155.108.94:" + PORT + "/"
+        const val BASE_PATH = "http://134.155.108.132:" + PORT + "/"
 
         /* Backend paths */
         const val COURIER_INFORMATION = "courier"
