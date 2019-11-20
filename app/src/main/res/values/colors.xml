@@ -14,4 +14,6 @@
     <color name="widget_edittext_dark">@android:color/widget_edittext_dark</color>
     <color name="parcelBoxColor">#80000000</color>
     <color name="launchpadButtonColor">#D7D7D7</color>
+    <color name="black">#000000</color>
+    <color name="intelligence_settings_disabled">#C1C1C1</color>
 </resources>

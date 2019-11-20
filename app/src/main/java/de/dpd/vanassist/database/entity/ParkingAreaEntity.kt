@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 import androidx.room.ColumnInfo
 
 @Entity(tableName = "ParkingArea")
-data class ParkingArea(
+data class ParkingAreaEntity(
         @PrimaryKey(autoGenerate = false)
         var id : String,
 
@@ -41,7 +41,7 @@ data class ParkingArea(
 
         @ColumnInfo(name = "y")
         var y : Float
-    )
+)
 {
         constructor() : this("", "", 0f, "", "",1, 0f, 0f, 0f, 0f, 0f, 0f)
 }

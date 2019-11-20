@@ -1,12 +1,17 @@
 package de.dpd.vanassist.util.json
 
-import de.dpd.vanassist.database.entity.Courier
+import de.dpd.vanassist.database.entity.CourierEntity
 import de.dpd.vanassist.util.TypeParser
 import org.json.JSONObject
 
-class CourierJSONParser {
+class CourierJSONParser: JSONParser() {
 
     companion object {
+
+        fun createDefaultHeader(uid:String, courierId:String): JSONObject {
+            return JSONParser.createDefaultHeader(uid, courierId)
+        }
+
 
         fun createHeaderCourierInformationRequest(uid:String, userName:String): JSONObject {
             val params = JSONObject()
@@ -15,18 +20,6 @@ class CourierJSONParser {
             return params
         }
 
-        fun createHeaderStartSimulation(uid:String, courierId:String, startTimeInSeconds:Long): JSONObject {
-            val params = JSONObject()
-            params.put("uid", uid)
-            params.put("courier_id", courierId)
-            params.put("start_time_in_seconds", startTimeInSeconds)
-            return params
-
-        }
-
-        fun createRequestEmptyBody():JSONObject {
-            return JSONObject()
-        }
 
         fun createRequestBodyChangeLanguage(languageCode:String):JSONObject {
             val params = JSONObject()
@@ -35,7 +28,8 @@ class CourierJSONParser {
         }
 
 
-        fun parseResponseToCourierObject(response: JSONObject): Courier {
+        fun parseResponseToCourierObject(response: JSONObject): CourierEntity {
+            println(response)
             val status = response.get("status")
             val message = TypeParser.optString(response, "message")
             val data = response.getJSONObject("data")
@@ -46,17 +40,29 @@ class CourierJSONParser {
             val userName = TypeParser.optString(data, "user_name")
             val phoneNumber = TypeParser.optString(data, "phone_number")
             val darkMode = TypeParser.parseIntToBoolean(data.getInt("dark_mode"))
-            val mapLabel = TypeParser.parseIntToBoolean(data.getInt("map_label"))
+            val helpMode = TypeParser.parseIntToBoolean(data.getInt("help_mode"))
+            val ambientIntelligenceMode = TypeParser.parseIntToBoolean(data.getInt("ambient_intelligence_mode"))
+            val intelligentDrivingMode = TypeParser.parseIntToBoolean(data.getInt("intelligent_driving_mode"))
+            val timeBasedDarkMode = TypeParser.parseIntToBoolean(data.getInt("time_based_dark_mode"))
+            val sizeDependentWaitingMode = TypeParser.parseIntToBoolean(data.getInt("size_dependent_waiting_mode"))
+            val dynamicContentMode = TypeParser.parseIntToBoolean(data.getInt("dynamic_content_mode"))
+            val gamificationMode = TypeParser.parseIntToBoolean(data.getInt("gamification_mode"))
             val languageCode = TypeParser.optString(data,"language_code")
             val verificationToken = ""
-            return Courier(
+            return CourierEntity(
                 courierId,
                 firstName,
                 lastName,
                 userName,
                 phoneNumber,
                 darkMode,
-                mapLabel,
+                helpMode,
+                ambientIntelligenceMode,
+                intelligentDrivingMode,
+                sizeDependentWaitingMode,
+                timeBasedDarkMode,
+                gamificationMode,
+                dynamicContentMode,
                 languageCode,
                 verificationToken
             )

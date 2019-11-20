@@ -29,7 +29,6 @@
     <string name="log_out">Ieșire</string>
     <string name="locate_delivery_destination">Localizeaza destinația livrării</string>
     <string name="locate_van">Localizează camionul</string>
-    <string name="summon_van">Apelați camionul</string>
     <string name="next_parking_location">Găsește următorul loc de parcare</string>
     <string name="authentication_failed">Autentificare eșuată</string>
     <string name="yes">Da</string>
@@ -40,7 +39,9 @@
     <string name="not_available">Indisponibil</string>
     <string name="loading_map___">Harta se încarcă...</string>
     <string name="start_simulation___">Starting simulation...</string>
-
+    <string name="ambient_intelligence_menu_title">Ambient Intelligence</string>
+    <string name="park_here_title">Park here</string>
+    <string name="permission_alert">Writing and Location Services Permission required for this app. Do you want to change Permissions?</string>
 
 
 
@@ -62,13 +63,10 @@
     <string name="unsuccessful_deliveries_in_dialog">Nelivrate</string>
     <string name="deliveries_dialog_title">Alertă de Undo</string>
     <string name="deliveries_dialog_message">Where do you want to move the undone parcel?</string>
-    <!-- TODO Translate -->
     <string name="parking_area_confirmation">Please adjust or directly confirm with Parking Button</string>
     <string name="select_next_parking_area">Do you want to select this as next parking location and show Route?</string>
 
 
-
-    <!-- TODO translate -->
     <!-- ERROR HANDLING -->
     <string name="error_parcel_loading">Loading parcel failed</string>
     <string name="error_parcel_delivery_confirmation">Parcel delivery confirmation failed</string>
@@ -84,5 +82,24 @@
     <string name="error_load_parking_location">Load parking location failed</string>
     <string name="error_set_next_parking_location">Set next parking location failed</string>
     <string name="error_no_parcel_available">No parcel information available</string>
+    <string name="error_courier_information_loading">Loading courier information failed</string>
+    <string name="ambient_intelligence_activation_failed">Activation of the Ambient Intelligence Mode failed</string>
+    <string name="ambient_intelligence_deactivation_failed">Deactivation of the Ambient Intelligence Mode failed</string>
+    <string name="time_dependent_darkmode_activation_failed">Activation of the Time dependent Darkmode failed</string>
+    <string name="time_dependent_darkmode_deactivation_failed">Deactivation of the Time dependent Darkmode failed</string>
+    <string name="size_dependent_waiting_mode_activation_failed">Activation of the Size Dependent Waiting Mode failed</string>
+    <string name="size_dependent_waiting_mode_deactivation_failed">Deactivation of the Size Dependent Waiting Mode failed</string>
+    <string name="dynamic_content_activation_failed">Activation of the Dynamic Content Mode failed</string>
+    <string name="dynamic_content_deactivation_failed">Deactivation of the Dynamic Content Mode failed</string>
+    <string name="gamification_activation_failed">Activation of the Gamification Mode failed</string>
+    <string name="gamification_deactivation_failed">Deactivation of the Gamification Mode failed</string>
+    <string name="intelligent_driving_activation_failed">Activation of the Intelligent Driving Mode failed</string>
+    <string name="intelligent_driving_deactivation_failed">Deactivation of the Intelligent Driving Mode failed</string>
+
+    <!-- AMBIENT INTELLIGENCE -->
+    <string name="ai_gamification_message_1">Only</string>
+    <string name="ai_gamification_message_2">parcel left</string>
+    <string name="ai_timeenableddarkmodeTitle">Theme Swap necessary</string>
+    <string name="ai_timeenableddarkmode_message">Intelligent mode recommends to switch themes. Want to do this now?</string>
 
 </resources>

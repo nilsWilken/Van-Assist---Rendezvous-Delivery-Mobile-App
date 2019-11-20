@@ -19,30 +19,24 @@ import android.view.animation.AccelerateInterpolator
 import android.view.animation.ScaleAnimation
 import android.view.animation.DecelerateInterpolator
 import de.dpd.vanassist.util.FragmentRepo
-import de.dpd.vanassist.util.parcel.ParcelStatus
+import de.dpd.vanassist.util.parcel.ParcelState
 
-/**
- * A simple [Fragment] subclass.
- *
- */
-class TabbedFragment : androidx.fragment.app.Fragment() {
+/* A simple [Fragment] subclass.*/
+class TabbedFragment : Fragment() {
 
-    lateinit var parcelAdapter: PagerAdapter
-    private lateinit var viewPager: androidx.viewpager.widget.ViewPager
+    private lateinit var parcelAdapter: PagerAdapter
+    private lateinit var viewPager: ViewPager
 
     private lateinit var delivered : ParcelListFragment
     private lateinit var notDelivered : ParcelListFragment
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val v = inflater.inflate(R.layout.fragment_tabbed, container, false)
 
-        //initialize parcel lists
-        this.delivered = ParcelListFragment.newInstance(ParcelStatus.DELIVERY_SUCCESS)
-        this.notDelivered = ParcelListFragment.newInstance(ParcelStatus.DELIVERY_FAILURE)
+        /* initialize parcel lists */
+        this.delivered = ParcelListFragment.newInstance(ParcelState.DELIVERY_SUCCESS)
+        this.notDelivered = ParcelListFragment.newInstance(ParcelState.DELIVERY_FAILURE)
 
         FragmentRepo.parcelListFragmentDeliverySuccess = this.delivered
         FragmentRepo.parcelListFragmentDeliveryFailure = this.notDelivered
@@ -84,10 +78,8 @@ class TabbedFragment : androidx.fragment.app.Fragment() {
     }
 
 
-    /**
-     * helper class for managing TabbedView
-     */
-    inner class PagerAdapter(fm: androidx.fragment.app.FragmentManager) : androidx.fragment.app.FragmentStatePagerAdapter(fm) {
+    /* Helper class for managing TabbedView */
+    inner class PagerAdapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
 
         private val tabTitles = arrayOf(getString(R.string.delivered), getString(R.string.not_delivered))
 
@@ -95,7 +87,7 @@ class TabbedFragment : androidx.fragment.app.Fragment() {
             return tabTitles[position]
         }
 
-        override fun getItem(position: Int): androidx.fragment.app.Fragment? {
+        override fun getItem(position: Int): Fragment? {
 
             return when (position) {
                 0 -> delivered
@@ -110,20 +102,19 @@ class TabbedFragment : androidx.fragment.app.Fragment() {
     }
 
 
-    /**
-     * method for animating the FAB on tab switch
-     */
+    /* Method for animating the FAB on tab switch */
     private fun animateFab(fab : FloatingActionButton) {
         fab.clearAnimation()
-        // Scale down animation
+        /* Scale down animation */
         val shrink = ScaleAnimation(1f, 0.2f, 1f, 0.2f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
-        shrink.duration = 150     // animation duration in milliseconds
+        /* animation duration in milliseconds */
+        shrink.duration = 150
         shrink.interpolator = DecelerateInterpolator()
         shrink.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(animation: Animation) {}
 
             override fun onAnimationEnd(animation: Animation) {
-                // Scale up animation
+                /* Scale up animation */
                 val expand = ScaleAnimation(
                     0.2f,
                     1f,
@@ -134,7 +125,8 @@ class TabbedFragment : androidx.fragment.app.Fragment() {
                     Animation.RELATIVE_TO_SELF,
                     0.5f
                 )
-                expand.duration = 100     // animation duration in milliseconds
+                /* animation duration in milliseconds */
+                expand.duration = 100
                 expand.interpolator = AccelerateInterpolator()
                 fab.startAnimation(expand)
             }

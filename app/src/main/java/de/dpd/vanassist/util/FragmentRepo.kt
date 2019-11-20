@@ -7,11 +7,13 @@ class FragmentRepo {
 
     companion object {
         var mapActivity: MapActivity? = null
-        var mapFragmentOld: MapFragment? = null
+        var mapFragmentOld: MapFragmentOld? = null
         var launchPadFragment: LaunchpadFragment? = null
         var parcelListFragment: ParcelListFragment? = null
         var tabbedFragment: TabbedFragment? = null
         var parcelListFragmentDeliverySuccess: ParcelListFragment? = null
         var parcelListFragmentDeliveryFailure: ParcelListFragment? = null
+
+
     }
 }

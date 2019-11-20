@@ -28,7 +28,6 @@
     <string name="log_out">Abmelden</string>
     <string name="locate_delivery_destination">Zustellort anzeigen</string>
     <string name="locate_van">Van orten</string>
-    <string name="summon_van">Van herbeirufen</string>
     <string name="next_parking_location">Nächsten Parkplatz finden</string>
     <string name="authentication_failed">Authentifizierung fehlgeschlagen</string>
     <string name="yes">Ja</string>
@@ -39,6 +38,10 @@
     <string name="not_available">Nicht verfügbar</string>
     <string name="loading_map___">Lade Karte...</string>
     <string name="start_simulation___">Starte Simulation...</string>
+    <string name="ambient_intelligence_menu_title">Ambient Intelligence</string>
+    <string name="park_here_title">Hier parken</string>
+    <string name="permission_alert">Die App benötigt Schreib- und Standortzugriff. Möchtest du die Zugriffsrechte ändern?</string>
+
 
 
 
@@ -79,6 +82,27 @@
     <string name="error_load_parking_location">Bei dem Laden der Parkplätze ist ein Fehler aufgetreten</string>
     <string name="error_set_next_parking_location">Bei dem Setzen des nächsten Parkplatzes ist ein Fehler aufgetreten</string>
     <string name="error_no_parcel_available">Keine Paketinformationen verfügbar</string>
+    <string name="error_courier_information_loading">Bei dem Laden der Informationen des Zustellers ist ein Fehler aufgetreten</string>
+    <string name="ambient_intelligence_activation_failed">Bei der Aktivierung des Ambient Intelligence Modes ist ein Fehler aufgetreten</string>
+    <string name="ambient_intelligence_deactivation_failed">Bei der Deaktivierung des Ambient Intelligence Modes ist ein Fehler aufgetreten</string>
+    <string name="time_dependent_darkmode_activation_failed">Bei der Aktivierung des zeitbasierten Nachtmodus ist ein Fehler aufgetreten</string>
+    <string name="time_dependent_darkmode_deactivation_failed">Bei der Deaktivierung des zeitbasierten Nachtmodus ist ein Fehler aufgetreten</string>
+    <string name="size_dependent_waiting_mode_activation_failed">Bei der Aktivierung des Size Dependent Waiting Mode ist ein Fehler aufgetreten</string>
+    <string name="size_dependent_waiting_mode_deactivation_failed">Bei der Deaktivierung des Size Dependent Waiting Modes ist ein Fehler aufgetreten</string>
+    <string name="dynamic_content_activation_failed">Bei der Aktivierung des Dynamic Content Modes ist ein Fehler aufgetreten</string>
+    <string name="dynamic_content_deactivation_failed">Bei der Deaktivierung des Dynamic Conent Modes ist ein Fehler aufgetreten</string>
+    <string name="gamification_activation_failed">Bei der Aktivierung des Gamification Modes ist ein Fehler aufgetreten</string>
+    <string name="gamification_deactivation_failed">Bei der Deaktivierung des Gamification Modes ist ein Fehler aufgetreten</string>
+    <string name="intelligent_driving_activation_failed">Bei der Aktivierung des Intelligent Driving Modes ist ein Fehler aufgetreten</string>
+    <string name="intelligent_driving_deactivation_failed">Bei der Deaktivierung des Intelligent Driving Modes ist ein Fehler aufgetreten</string>
+
+
+    <!-- AMBIENT INTELLIGENCE -->
+    <string name="ai_gamification_message_1">Nur noch</string>
+    <string name="ai_gamification_message_2">Pakete</string>
+    <string name="ai_timeenableddarkmodeTitle">Design-Wechsel empfohlen</string>
+    <string name="ai_timeenableddarkmode_message">Der intelligente Modus empfiehlt das Design zu wechseln. Möchten Sie jetzt wechseln?</string>
+
 
 
 

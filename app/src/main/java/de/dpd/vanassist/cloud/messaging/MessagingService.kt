@@ -10,6 +10,9 @@ import de.dpd.vanassist.util.FragmentRepo
 import de.dpd.vanassist.util.cloud.CloudMessage
 import com.mapbox.geojson.Point
 import de.dpd.vanassist.config.FragmentTag
+import de.dpd.vanassist.config.SimulationConfig
+import de.dpd.vanassist.database.entity.VanEntity
+import de.dpd.vanassist.database.repository.VanRepository
 
 
 class MessagingService: FirebaseMessagingService() {
@@ -19,12 +22,15 @@ class MessagingService: FirebaseMessagingService() {
         val data = remoteMessage!!.data
         val name = data["name"]
 
+        /* Handles response when simulation is successfully started */
         if(name == CloudMessage.SIMULATION_START) {
             if(FragmentRepo.launchPadFragment != null) {
 
+                SimulationConfig.isFirstVanLocationAfterSimulationStart = true
+
                 val launchpadFragment = FragmentRepo.launchPadFragment
                 launchpadFragment!!.dialog!!.dismiss()
-                VanAssistConfig.simulation_running = true
+                SimulationConfig.simulation_running = true
                 val mapFragment = MapFragmentOld.newInstance()
                 launchpadFragment.activity!!.supportFragmentManager
                     ?.beginTransaction()
@@ -34,32 +40,46 @@ class MessagingService: FirebaseMessagingService() {
             }
         }
 
-        if(name == CloudMessage.SIMULATION_STOP) {
-            VanAssistConfig.simulation_running = false
+        /* Handles response when simulation is successfully stopped */
+        if (name == CloudMessage.SIMULATION_STOP) {
+            SimulationConfig.simulation_running = false
         }
 
+        /* Handles response when vehicle is arrived in next parking area */
         if(name == CloudMessage.VEHICLE_IS_IN_NEXT_PARKING_AREA) {
-            FragmentRepo.mapFragmentOld!!.activity!!.runOnUiThread {
-                Toast.makeText(FragmentRepo.mapFragmentOld!!.context!!, "Vehicle arrived", Toast.LENGTH_LONG).show()
-                val mapFragment = FragmentRepo.mapFragmentOld!!
-//                mapFragment.removeParkingLocationWhenVanHasParked()
-//                mapFragment.updateVanLocation(mapFragment.destination, mapFragment.mapboxMap.maxZoomLevel - 3)
+            val mapFragment = FragmentRepo.mapFragmentOld
+            if(mapFragment != null) {
+                if(mapFragment.activity != null) {
+                    mapFragment.activity!!.runOnUiThread {
+                        Toast.makeText(FragmentRepo.mapFragmentOld!!.context!!, "Vehicle arrived", Toast.LENGTH_LONG).show()
+                        val mapFragment = FragmentRepo.mapFragmentOld!!
+                        //mapFragment.removeParkingLocationWhenVanHasParked()
+                        val destination = mapFragment.destination
+                        //mapFragment.updateVanLocation(destination, mapFragment.mapBoxMap.maxZoomLevel - 3)
+
+                        VanRepository.shared.insert(VanEntity(VanAssistConfig.VAN_ID, destination.latitude(), destination.longitude(), true))
+                    }
+                }
             }
         }
-        
 
+
+        /* Handles response and updated the current van location on the map */
         if(name == CloudMessage.CURRENT_VAN_LOCATION) {
 
-            //TODO Check this --> Longitude to latitude and vice versa
             val latitude = data[CloudMessage.LONGITUDE]!!.toDouble()
             val longitude = data[CloudMessage.LATITUDE]!!.toDouble()
             val destination = Point.fromLngLat(longitude, latitude)!!
 
-            if(FragmentRepo.mapFragmentOld != null) {
-                FragmentRepo.mapFragmentOld!!.activity!!.runOnUiThread {
-                    val mapFragment = FragmentRepo.mapFragmentOld!!
-//                    mapFragment.addParkingLocationWhenVanStartDriving()
-//                    mapFragment.updateVanLocationWithoutZoom(destination)
+            VanRepository.shared.insert(VanEntity(VanAssistConfig.VAN_ID, latitude, longitude, false))
+            val mapFragment = FragmentRepo.mapFragmentOld
+            if(mapFragment != null) {
+                if(mapFragment.activity != null) {
+                    mapFragment.activity!!.runOnUiThread {
+                        val mapFragment = FragmentRepo.mapFragmentOld!!
+                        //mapFragment.addParkingLocationWhenVanStartDriving()
+                        //mapFragment.updateVanLocationWithoutZoom(destination)
+                    }
                 }
             }
         }

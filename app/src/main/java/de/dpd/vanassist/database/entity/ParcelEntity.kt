@@ -3,8 +3,8 @@ package de.dpd.vanassist.database.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity
-data class Parcel(
+@Entity(tableName = "Parcel")
+data class ParcelEntity(
 
     @PrimaryKey(autoGenerate = false)
     val id: String,

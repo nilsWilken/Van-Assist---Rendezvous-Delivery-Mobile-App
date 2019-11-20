@@ -2,7 +2,6 @@ package de.dpd.vanassist.fragment.main
 
 import android.app.ProgressDialog
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AppCompatActivity
 import android.view.LayoutInflater
 import android.view.View
@@ -10,21 +9,16 @@ import android.view.ViewGroup
 import android.view.animation.Animation
 
 import de.dpd.vanassist.R
-import de.dpd.vanassist.util.parcel.ParcelStatus
 import kotlinx.android.synthetic.main.fragment_launchpad.view.*
 import android.view.animation.AnimationUtils
 import android.view.animation.Animation.AnimationListener
-import android.widget.Toast
 import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.config.FragmentTag
-import de.dpd.vanassist.config.VanAssistConfig
-import de.dpd.vanassist.database.repository.CourierRepository
+import de.dpd.vanassist.config.SimulationConfig
 import de.dpd.vanassist.util.FragmentRepo
+import de.dpd.vanassist.util.parcel.ParcelState
 
-/**
- * Launchpad Fragment
- *
- */
+/* Launchpad Fragment */
 class LaunchpadFragment : androidx.fragment.app.Fragment() {
 
     var dialog:ProgressDialog? = null
@@ -35,50 +29,29 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+
+        (activity as AppCompatActivity).supportActionBar?.title = "VanAssist"
+
         val v = inflater.inflate(R.layout.fragment_launchpad, container, false)
 
-        if (VanAssistConfig.dayStarted) {
-            //Hide start_day button. show back_to_map and finish_day
+        if (SimulationConfig.dayStarted) {
+            /* Hide start_day button. show back_to_map and finish_day */
             v.start_day.visibility = View.INVISIBLE
             v.back_to_map.visibility = View.VISIBLE
             v.finish_day.visibility = View.VISIBLE
-        }
-        else {
-            //Show start_day button. hide back_to_map and finish_day
+        } else {
+            /* Show start_day button. hide back_to_map and finish_day */
             v.start_day.visibility = View.VISIBLE
             v.back_to_map.visibility = View.INVISIBLE
             v.finish_day.visibility = View.INVISIBLE
         }
 
-        //Declare Button Listeners
+        /* Declare Button Listeners */
         v.start_day.setOnClickListener {
             val apiController = VanAssistAPIController(activity as AppCompatActivity)
 
-            val courierId = CourierRepository(context!!).getCourierId()
-            if(courierId == "474ccac0-92d2-4f3f-8d39-b79557a455f5") {
-
-                if(VanAssistConfig.simulation_running) {
-                    val mapFragment = MapFragmentOld.newInstance()
-
-                    activity?.supportFragmentManager
-                        ?.beginTransaction()
-                        ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
-                        ?.addToBackStack(FragmentTag.MAP)
-                        ?.commit()
-                } else {
-                    apiController.startSimulation()
-
-                    //apiController.startMapIfSimulationIsRunning(activity as AppCompatActivity)
-                    this.dialog = ProgressDialog.show(context, "", getString(R.string.start_simulation___), true)
-                    FragmentRepo.launchPadFragment = this
-                    VanAssistConfig.dayStarted = true
-                }
-
-            } else {
+            if(SimulationConfig.simulation_running) {
                 val mapFragment = MapFragmentOld.newInstance()
 
                 activity?.supportFragmentManager
@@ -86,27 +59,28 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
                     ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
                     ?.addToBackStack(FragmentTag.MAP)
                     ?.commit()
-
-                VanAssistConfig.dayStarted = true
+            } else {
+                apiController.startSimulation()
+                this.dialog = ProgressDialog.show(context, "", getString(R.string.start_simulation___), true)
+                FragmentRepo.launchPadFragment = this
+                SimulationConfig.dayStarted = true
             }
-
-
         }
 
+
         v.finish_day.setOnClickListener {
-            VanAssistConfig.dayStarted = false
-            //Show start_day button. hide back_to_map and finish_day
-            //Buttons will fadeOut and then start_btn will fadeIn
+            SimulationConfig.dayStarted = false
+            /* Show start_day button. hide back_to_map and finish_day
+             * Buttons will fadeOut and then start_btn will fadeIn */
             val fadeOut = AnimationUtils.loadAnimation(activity, R.anim.btn_fade_out)
 
-            val courierId = CourierRepository(context!!).getCourierId()
-            if(courierId == "474ccac0-92d2-4f3f-8d39-b79557a455f5") {
-                val apiController = VanAssistAPIController(activity as AppCompatActivity)
-                apiController.stopSimulation()
-            }
+            val apiController = VanAssistAPIController(activity as AppCompatActivity)
+            apiController.stopSimulation()
 
             val fadeIn = AnimationUtils.loadAnimation(activity, R.anim.btn_fade_in)
+
             fadeOut.setAnimationListener(object : AnimationListener {
+
                 override fun onAnimationRepeat(animation: Animation?) {}
 
                 override fun onAnimationStart(animation: Animation?) {}
@@ -133,6 +107,7 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
             v.finish_day.startAnimation(fadeOut)
         }
 
+        /* Handles click on Back To Map Button */
         v.back_to_map.setOnClickListener {
 
             val mapFragment = MapFragmentOld.newInstance()
@@ -144,18 +119,18 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
                 ?.commit()
         }
 
+        /* Handles click on Open Delivery Button */
         v.open_deliveries.setOnClickListener{
 
             activity
                 ?.supportFragmentManager
                 ?.beginTransaction()
-                ?.replace(R.id.map_activity, ParcelListFragment.newInstance(ParcelStatus.PLANNED), FragmentTag.OPEN_DELIVERY)
+                ?.replace(R.id.map_activity, ParcelListFragment.newInstance(ParcelState.PLANNED), FragmentTag.OPEN_DELIVERY)
                 ?.addToBackStack(FragmentTag.OPEN_DELIVERY)
                 ?.commit()
-
-
         }
 
+        /* Handles click on Delivered/Not Delivered Button */
         v.delivered_not_delivered.setOnClickListener{
 
             activity
@@ -166,6 +141,7 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
                 ?.commit()
         }
 
+        /* Handles click on Settings Button */
         v.settings.setOnClickListener{
 
             activity
@@ -176,12 +152,15 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
                 ?.commit()
         }
 
-        v.help_and_support.setOnClickListener{
+        /* Handles click on Ambient Intelligence Button */
+        v.ambient_intelligence.setOnClickListener{
 
-            Toast.makeText(context,getString(R.string.not_available), Toast.LENGTH_LONG).show()
-
-            /*val intent = Intent(context, MainActivity::class.java)
-            startActivity(intent) */
+            activity
+                ?.supportFragmentManager
+                ?.beginTransaction()
+                ?.replace(R.id.map_activity, IntelligenceFragment(), FragmentTag.INTELLIGENCE)
+                ?.addToBackStack(FragmentTag.INTELLIGENCE)
+                ?.commit()
         }
 
         return v

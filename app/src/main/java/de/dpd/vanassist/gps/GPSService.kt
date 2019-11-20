@@ -11,10 +11,10 @@ import android.os.IBinder
 import android.provider.Settings
 import androidx.annotation.Nullable
 import android.util.Log
+import de.dpd.vanassist.config.VanAssistConfig
 
-/**
- * Created by axelherbstreith on 09.03.18.
- */
+/* Created by axel Herbstreith
+ * Handle GPS */
 class GPSService: Service() {
 
     private var listener: LocationListener? = null
@@ -35,28 +35,19 @@ class GPSService: Service() {
                 sendBroadcast(intent)
             }
 
-            override fun onStatusChanged(s: String, i: Int, bundle: Bundle) {
-            }
+            override fun onStatusChanged(s: String, i: Int, bundle: Bundle) {}
 
-            override fun onProviderEnabled(s: String) {
-            }
+            override fun onProviderEnabled(s: String) {}
 
             override fun onProviderDisabled(s: String) {
-                val i:Intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val i = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                i.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 startActivity(i)
             }
         }
-
-
         locationManager = applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
         try {
-            if(locationManager == null) {
-                Log.i("Location Manager", "is null")
-            }
-            locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, 300, 0f, listener)
-            Log.wtf("location manager", "was called")
+            locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, VanAssistConfig.BROADCAST_TIME, VanAssistConfig.BROADCAST_DISTANCE, listener)
         } catch (se: SecurityException) {
             se.printStackTrace()
         }
@@ -65,7 +56,6 @@ class GPSService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.i("Service", "destroyed")
         try {
             if (locationManager != null) {
                 locationManager?.removeUpdates(listener)
@@ -73,8 +63,5 @@ class GPSService: Service() {
         } catch(se: SecurityException) {
             se.printStackTrace()
         }
-
     }
-
-
 }

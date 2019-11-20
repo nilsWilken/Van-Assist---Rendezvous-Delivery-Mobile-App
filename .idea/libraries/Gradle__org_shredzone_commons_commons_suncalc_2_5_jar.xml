@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.shredzone.commons:commons-suncalc:2.5@jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.shredzone.commons/commons-suncalc/2.5/1d138c3360b56da81c3919e6bca9d84e410c9ead/commons-suncalc-2.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.shredzone.commons/commons-suncalc/2.5/9d26bb89c3506c386fef1ac2e93089798def031e/commons-suncalc-2.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/fragment_intelligence"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/intelligenceModeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#E9E9E9"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/ambientIntelligenceSeparator"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintLeft_toRightOf="parent">
+
+        <Button
+            android:id="@+id/intelligenceModeButton"
+            android:text="Ambient Intelligence"
+            android:textAlignment="textStart"
+            android:textAllCaps="false"
+            android:textStyle="normal"
+            android:textSize="16dp"
+            android:background="@android:color/transparent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="18dp"
+            android:paddingStart="24dp"
+            android:drawableStart="@drawable/ic_brightness_medium_red_24dp"
+            android:drawablePadding="24dp"/>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/intelligenceModeSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:theme="@style/SwitchCompatTheme"
+            android:checked="false"
+            android:layout_marginEnd="16dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:minHeight="18dp"
+            android:minWidth="32dp"
+            />
+    </RelativeLayout>
+
+    <View
+        android:id="@+id/ambientIntelligenceSeparator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        app:layout_constraintTop_toBottomOf="@id/intelligenceModeContainer"
+        app:layout_constraintBottom_toTopOf="@id/timeBasedDarkModeContainer"
+        android:background="@android:color/darker_gray"/>
+
+
+    <RelativeLayout
+        android:id="@+id/timeBasedDarkModeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        app:layout_constraintTop_toBottomOf="@id/ambientIntelligenceSeparator"
+        app:layout_constraintBottom_toTopOf="@id/intelligentDrivingContainer"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintLeft_toRightOf="parent">
+
+        <Button
+            android:id="@+id/timeBasedDarkModeButton"
+            android:text="Time based Darkmode"
+            android:textAlignment="textStart"
+            android:textAllCaps="false"
+            android:textStyle="normal"
+            android:textSize="16dp"
+            android:background="@android:color/transparent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="18dp"
+            android:paddingStart="24dp"
+            android:drawableStart="@drawable/ic_brightness_medium_red_24dp"
+            android:drawablePadding="24dp"/>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/timeBasedDarkModeSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:theme="@style/SwitchCompatTheme"
+            android:checked="false"
+            android:layout_marginEnd="16dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:minHeight="18dp"
+            android:minWidth="32dp"
+            />
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/intelligentDrivingContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        app:layout_constraintTop_toBottomOf="@id/timeBasedDarkModeContainer"
+        app:layout_constraintBottom_toTopOf="@id/sizeDependentWaitingContainer"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintLeft_toRightOf="parent">
+
+        <Button
+            android:id="@+id/intelligentDrivingButton"
+            android:text="Intelligent Driving"
+            android:textAlignment="textStart"
+            android:textAllCaps="false"
+            android:textStyle="normal"
+            android:textSize="16dp"
+            android:background="@android:color/transparent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="18dp"
+            android:paddingStart="24dp"
+            android:drawableStart="@drawable/ic_info_red_24dp"
+            android:drawablePadding="24dp"/>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/intelligentDrivingSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:theme="@style/SwitchCompatTheme"
+            android:checked="true"
+            android:layout_marginEnd="16dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:minHeight="18dp"
+            android:minWidth="32dp"
+            />
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/sizeDependentWaitingContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp"
+        app:layout_constraintTop_toBottomOf="@id/intelligentDrivingContainer"
+        app:layout_constraintBottom_toTopOf="@id/gamificationContainer"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintLeft_toRightOf="parent">
+
+        <Button
+            android:id="@+id/sizeDependentWaitingButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:drawableStart="@drawable/ic_info_red_24dp"
+            android:drawablePadding="24dp"
+            android:paddingStart="24dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="18dp"
+            android:text="Size dependent Waiting"
+            android:textAlignment="textStart"
+            android:textAllCaps="false"
+            android:textSize="16dp"
+            android:textStyle="normal"/>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/sizeDependentWaitingSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:theme="@style/SwitchCompatTheme"
+            android:checked="true"
+            android:layout_marginEnd="16dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:minHeight="18dp"
+            android:minWidth="32dp"
+            />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/gamificationContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        app:layout_constraintTop_toBottomOf="@id/sizeDependentWaitingContainer"
+        app:layout_constraintBottom_toTopOf="@id/dynamicContentContainer"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintLeft_toRightOf="parent">
+
+        <Button
+            android:id="@+id/gamificationButton"
+            android:text="Gamification"
+            android:textAlignment="textStart"
+            android:textAllCaps="false"
+            android:textStyle="normal"
+            android:textSize="16dp"
+            android:background="@android:color/transparent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="18dp"
+            android:paddingStart="24dp"
+            android:drawableStart="@drawable/ic_info_red_24dp"
+            android:drawablePadding="24dp"/>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/gamificationSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:theme="@style/SwitchCompatTheme"
+            android:checked="true"
+            android:layout_marginEnd="16dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:minHeight="18dp"
+            android:minWidth="32dp"
+            />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/dynamicContentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
+        app:layout_constraintTop_toBottomOf="@id/gamificationContainer"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintLeft_toRightOf="parent">
+
+        <Button
+            android:id="@+id/dynamicContentButton"
+            android:text="Dynamic Content"
+            android:textAlignment="textStart"
+            android:textAllCaps="false"
+            android:textStyle="normal"
+            android:textSize="16dp"
+            android:background="@android:color/transparent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="18dp"
+            android:paddingStart="24dp"
+            android:drawableStart="@drawable/ic_info_red_24dp"
+            android:drawablePadding="24dp"/>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/dynamicContentSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:theme="@style/SwitchCompatTheme"
+            android:checked="true"
+            android:layout_marginEnd="16dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:minHeight="18dp"
+            android:minWidth="32dp"
+            />
+    </RelativeLayout>
+
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    android:id="@+id/goto_launchpad_from_intelligence_menu"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom|end"
+    android:layout_margin="16dp"
+    app:srcCompat="@drawable/ic_home_black_24dp"
+    android:tint="@android:color/white"
+    android:backgroundTint="@color/logoRed"
+    app:maxImageSize="36dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

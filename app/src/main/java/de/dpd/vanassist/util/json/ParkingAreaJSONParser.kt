@@ -1,22 +1,20 @@
 package de.dpd.vanassist.util.json
 
-import de.dpd.vanassist.database.entity.ParkingArea
+import de.dpd.vanassist.database.entity.ParkingAreaEntity
 
 import de.dpd.vanassist.util.TypeParser
 import org.json.JSONObject
 import java.util.ArrayList
 
-class ParkingAreaJSONParser {
+class ParkingAreaJSONParser: JSONParser() {
     companion object {
 
         fun createHeaderGetAllParkingAreasRequest(uid: String, courierId: String): JSONObject {
-            val params = JSONObject()
-            params.put("uid", uid)
-            params.put("courier_id", courierId)
-            return params
+            return createDefaultHeader(uid, courierId)
         }
 
-        fun createBodyPostNextParkingLocation(pA: ParkingArea): JSONObject {
+
+        fun createBodyPostNextParkingLocation(pA: ParkingAreaEntity): JSONObject {
             val params = JSONObject()
             val parkingArea = JSONObject()
             parkingArea.put("id", pA.id)
@@ -25,12 +23,13 @@ class ParkingAreaJSONParser {
             return params
         }
 
-        fun parseResponseToParkingAreaObject(response: JSONObject): ArrayList<ParkingArea> {
+
+        fun parseResponseToParkingAreaObject(response: JSONObject): ArrayList<ParkingAreaEntity> {
             val status = response.get("status")
             val message = TypeParser.optString(response, "message")
             val dataList = response.getJSONArray("data")
 
-            val parkingAreaList = ArrayList<ParkingArea>()
+            val parkingAreaList = ArrayList<ParkingAreaEntity>()
             for (i in 0..(dataList.length() - 1)) {
                 val data = dataList.getJSONObject(i)
 
@@ -47,7 +46,7 @@ class ParkingAreaJSONParser {
                 val x = TypeParser.optFloat(data, "x")
                 val y = TypeParser.optFloat(data, "y")
 
-                val pA = ParkingArea(
+                val pA = ParkingAreaEntity(
                     parkingAreaId,
                     name!!,
                     length!!,
@@ -63,12 +62,11 @@ class ParkingAreaJSONParser {
                 )
                 parkingAreaList.add(pA)
             }
-
-
             return parkingAreaList
         }
 
-        fun parseResponseToParkingAreaObjectSingle(response: JSONObject): ParkingArea {
+
+        fun parseResponseToParkingAreaObjectSingle(response: JSONObject): ParkingAreaEntity {
             val status = response.get("status")
             val message = TypeParser.optString(response, "message")
             val data = response.getJSONObject("data")
@@ -86,7 +84,7 @@ class ParkingAreaJSONParser {
             val x = TypeParser.optFloat(data, "x")
             val y = TypeParser.optFloat(data, "y")
 
-            val pA = ParkingArea(
+            val parkingArea = ParkingAreaEntity(
                 parkingAreaId,
                 name!!,
                 length!!,
@@ -100,8 +98,7 @@ class ParkingAreaJSONParser {
                 x!!,
                 y!!
             )
-
-            return pA
+            return parkingArea
         }
 
     }

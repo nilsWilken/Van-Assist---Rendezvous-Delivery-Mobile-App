@@ -17,13 +17,21 @@ class Toast {
                 val launchpadFragment = FragmentRepo.mapActivity!!.supportFragmentManager.findFragmentByTag(FragmentTag.LAUNCHPAD)
 
                 if(mapFragment != null && mapFragment.isVisible) {
-                    Toast.makeText(mapFragment.context, message, Toast.LENGTH_SHORT).show()
+                    mapFragment.activity!!.runOnUiThread {
+                        Toast.makeText(mapFragment.context, message, Toast.LENGTH_SHORT).show()
+                    }
                 } else if(parcelListFragment != null && parcelListFragment.isVisible) {
-                    Toast.makeText(parcelListFragment.context, message, Toast.LENGTH_SHORT).show()
+                    parcelListFragment.activity!!.runOnUiThread {
+                        Toast.makeText(parcelListFragment.context, message, Toast.LENGTH_SHORT).show()
+                    }
                 } else if(settingsFragment != null && settingsFragment.isVisible) {
-                    Toast.makeText(settingsFragment.context, message, Toast.LENGTH_SHORT).show()
+                    settingsFragment.activity!!.runOnUiThread {
+                        Toast.makeText(settingsFragment.context, message, Toast.LENGTH_SHORT).show()
+                    }
                 } else if(launchpadFragment != null && launchpadFragment.isVisible) {
-                    Toast.makeText(launchpadFragment.context, message, Toast.LENGTH_SHORT).show()
+                    launchpadFragment.activity!!.runOnUiThread {
+                        Toast.makeText(launchpadFragment.context, message, Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }

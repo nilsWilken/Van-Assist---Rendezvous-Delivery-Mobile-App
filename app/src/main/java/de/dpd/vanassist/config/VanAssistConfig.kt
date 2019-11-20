@@ -1,33 +1,22 @@
 package de.dpd.vanassist.config
 
-import de.dpd.vanassist.R
-import de.dpd.vanassist.util.language.CountryItem
-import java.util.*
 
 class VanAssistConfig {
 
     companion object {
-        /* General Codes */
-        const val MAP_BOX_ACCESS_TOKEN = "pk.eyJ1IjoidmFuYXNzaXN0IiwiYSI6ImNqdTl2eDM0czJjaHY0M2xsYzg1bjFtMmYifQ.YkAR1cSNtoEbI_SSNKcrlg"
 
-        /* Custom Locales */
-        val GERMANY_LOCALE = Locale("de","DE")
-        val AMERICA_LOCALE = Locale("en","US")
-        val ROMANIA_LOCALE = Locale("ro","RO")
+        const val DISTANCE_TO_DELIVERY_LOCATION_IN_METER = 10
+        const val DISTANCE_TO_VAN_IN_METER = 10
+        const val BROADCAST_DISTANCE = 5f
+        const val BROADCAST_TIME = 10000L
 
-        /* Language Codes */
-        val GERMANY = CountryItem(R.drawable.de, GERMANY_LOCALE)
-        val AMERICA = CountryItem(R.drawable.us, AMERICA_LOCALE)
-        val ROMANIA = CountryItem(R.drawable.ro, ROMANIA_LOCALE)
+        const val TARGET_API = 23
 
-        const val MAP_BOX_LIGHT_STYLE = "mapbox://styles/vanassist/cju9ygw3o1pzi1fml5x9kcbdw"
-        const val MAP_BOX_DARK_STYLE = "mapbox://styles/vanassist/cjv68g5pc0o7v1fqqqq86cma8"
+        const val VAN_ARRIVAL_ZOOM_DURATION = 5500
 
-        var simulation_running = false
-        var dayStarted : Boolean = false
+        const val VAN_ID = "b62dfb80-c124-4e88-b7a9-9c6bce73c1d7"
 
-
-
+        const val CHAR_SET = "UTF-8"
 
     }
 }

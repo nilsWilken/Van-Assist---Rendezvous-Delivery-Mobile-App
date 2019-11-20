@@ -2,13 +2,11 @@ package de.dpd.vanassist.cloud
 
 import org.json.JSONObject
 
-/**
- * Created by Jasmin Weimüller
+/* Created by Jasmin Weimüller
  * Abstracts from Service Interface (right now Volley Framework)
- * Set Completeion Handlers as wished
+ * Set Completion Handlers as wished
  * Set Headers and Body
- * Inspired by https://www.varvet.com/blog/kotlin-with-volley/
- */
+ * Inspired by https://www.varvet.com/blog/kotlin-with-volley */
 interface ServiceInterface {
 
     fun get(path: String, header: JSONObject, completionHandler: (response: JSONObject?) -> Unit)

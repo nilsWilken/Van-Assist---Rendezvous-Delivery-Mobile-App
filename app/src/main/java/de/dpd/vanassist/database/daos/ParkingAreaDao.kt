@@ -5,24 +5,31 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
-import de.dpd.vanassist.database.entity.ParkingArea
+import de.dpd.vanassist.database.entity.ParkingAreaEntity
 
 
+/* Data Access Object for ParkingAreaEntity */
 @Dao
 interface ParkingAreaDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertParkingArea(parkingArea: ParkingArea)
 
+    /* insert new parkingArea -> Replace ParkingAreaEntity if there already exists an record with the same id */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertParkingArea(parkingArea: ParkingAreaEntity)
+
+    /* Get ParkingAreaEntity by id */
     @Query("SELECT * FROM ParkingArea WHERE id == :id")
-    fun getParkingAreaInformation(id: String): ParkingArea
+    fun getParkingAreaInformation(id: String): ParkingAreaEntity
 
+    /* Inser list of parkingAreas -> Replace ParkingAreaEntity if there already exists an record with the same id */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAll(vararg parkingArea: ParkingArea)
+    fun insertAll(vararg parkingArea: ParkingAreaEntity)
 
+    /* Delete all records from table */
     @Query("DELETE FROM ParkingArea")
     fun deleteAllFromTable()
 
+    /* Get all parkingAreas */
     @Query("SELECT * FROM ParkingArea")
-    fun getAll(): List<ParkingArea>
+    fun getAll(): List<ParkingAreaEntity>
 
 }

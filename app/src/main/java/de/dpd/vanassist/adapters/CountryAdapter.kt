@@ -11,7 +11,7 @@ import de.dpd.vanassist.util.language.CountryItem
 import kotlinx.android.synthetic.main.country_spinner_row.view.*
 
 
-class CountryAdapter(context: Context,var items : List<CountryItem>): ArrayAdapter<CountryItem>(context, 0, items) {
+class CountryAdapter(context: Context, items : List<CountryItem>): ArrayAdapter<CountryItem>(context, 0, items) {
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         return initView(position, convertView, parent)

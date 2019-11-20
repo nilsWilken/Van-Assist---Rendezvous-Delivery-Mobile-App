@@ -1,90 +1,89 @@
 package de.dpd.vanassist.database.repository
 
-import android.content.Context
-import android.os.AsyncTask
 import de.dpd.vanassist.database.daos.ParcelDao
 import de.dpd.vanassist.database.AppDatabase
-import de.dpd.vanassist.database.entity.Parcel
-import de.dpd.vanassist.util.parcel.ParcelStatus
+import de.dpd.vanassist.database.entity.ParcelEntity
+import de.dpd.vanassist.util.parcel.ParcelState
 
-class ParcelRepository(context : Context) {
+class ParcelRepository {
 
-    private val parcelDao : ParcelDao
+    companion object {
 
-    init {
-        val appDatabase = AppDatabase.getDatabase(context)
-        parcelDao = appDatabase.parcelDao()
-    }
+        private var instance: ParcelRepository? = null
+        private var parcelDao : ParcelDao? = null
 
-    // Load whole parcel list
-    fun insert(parcel: Parcel) {
-        parcelDao.insertParcel(parcel)
-    }
-
-    fun insertAll(parcelList:List<Parcel>) {
-        for(parcel in parcelList) {
-            parcelDao.insertParcel(parcel)
-        }
-    }
-
-    fun getAll(): List<Parcel> {
-        return parcelDao.getAll()
-    }
-
-    fun getByState(state: Int): List<Parcel> {
-        return parcelDao.getParcelsByState(state)
-    }
-
-
-    private fun find(id: String) : Parcel {
-        return findAsyncTask(parcelDao).execute(id).get()
-    }
-
-    fun deleteAll(){
-        parcelDao.deleteAllFromTable()
-    }
-
-    fun getNextParcelToDeliver(): Parcel? {
-        val parcelList = getAll()
-        var position = -1
-        var nextParcel: Parcel? = null
-        for(parcel in parcelList) {
-            if(parcel.state == ParcelStatus.PLANNED) {
-                if(position == -1 || position > parcel.deliveryPosition) {
-                    position = parcel.deliveryPosition
-                    nextParcel = parcel
+        /* Access variable for ParcelRepository */
+        val shared: ParcelRepository
+            get() {
+                if (instance == null) {
+                    parcelDao = AppDatabase.shared.parcelDao()
+                    instance = ParcelRepository()
                 }
+                return instance!!
+            }
+    }
+
+    /* Get parcel with lowest delivery position */
+    fun getCurrentParcel(): ParcelEntity? {
+        val parcelList = getAll()
+        var position = parcelList.size +1
+        var currentParcel: ParcelEntity? = null
+        for(parcel in parcelList) {
+            if(parcel.state == ParcelState.PLANNED) {
+                if(position == parcelList.size +1 || position > parcel.deliveryPosition) {
+                    position = parcel.deliveryPosition
+                    currentParcel = parcel
+                }
+            }
+        }
+        return currentParcel
+    }
+
+    /* Get parcel with second lowest delivery position*/
+    fun getNextParcel(): ParcelEntity? {
+        val parcelList = getAll()
+        var position = parcelList.size +1
+        val currentParcel = getCurrentParcel()
+        if(currentParcel == null) {
+            return null
+        }
+        var nextParcel: ParcelEntity? = null
+        for(parcel in parcelList) {
+            if(parcel.state == ParcelState.PLANNED) {
+                if(position == parcelList.size +1 || position > parcel.deliveryPosition)
+                    if(parcel.id != currentParcel.id) {
+                        position = parcel.deliveryPosition
+                        nextParcel = parcel
+                    }
             }
         }
         return nextParcel
     }
 
-
-    fun getParcelById(parcelId:String): Parcel {
-        return find(parcelId)
+    /* Loads all parcel from parcel table */
+    fun getAll(): List<ParcelEntity> {
+        return parcelDao!!.getAll()
     }
 
+    /* get parcel with specific state */
+    fun getByState(state: Int): List<ParcelEntity> {
+        return parcelDao!!.getParcelsByState(state)
+    }
 
+    /* Load whole parcel list */
+    fun insert(parcel: ParcelEntity) {
+        parcelDao!!.insertParcel(parcel)
+    }
 
-
-
-
-
-
-    /*********** DO NOT USE ANYMORE *********/
-
-    @Deprecated("Do not use")
-    private class findAsyncTask internal constructor(private val mAsyncTaskDao: ParcelDao) : AsyncTask<String, Void, Parcel>() {
-        override fun doInBackground(vararg params: String): Parcel {
-            return mAsyncTaskDao.getParcelInformation(params[0])
+    /* insert a list of parcel */
+    fun insertAll(parcelList:List<ParcelEntity>) {
+        for(parcel in parcelList) {
+            parcelDao!!.insertParcel(parcel)
         }
     }
 
-    @Deprecated("Do not use")
-    private class insertAsyncTask internal constructor(private val mAsyncTaskDao: ParcelDao) : AsyncTask<Parcel, Void, Void>() {
-        override fun doInBackground(vararg params: Parcel): Void? {
-            mAsyncTaskDao.insertParcel(params[0])
-            return null
-        }
+    /* delete all parcel records from parcel list */
+    fun deleteAll(){
+        parcelDao!!.deleteAllFromTable()
     }
 }

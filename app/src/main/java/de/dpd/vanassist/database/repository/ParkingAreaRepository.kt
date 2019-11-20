@@ -1,64 +1,51 @@
 package de.dpd.vanassist.database.repository
 
-import android.content.Context
-import android.os.AsyncTask
 import de.dpd.vanassist.database.AppDatabase
 import de.dpd.vanassist.database.daos.ParkingAreaDao
-import de.dpd.vanassist.database.entity.ParkingArea
+import de.dpd.vanassist.database.entity.ParkingAreaEntity
 
-class ParkingAreaRepository(context : Context) {
+class ParkingAreaRepository {
 
-    private val parkingAreaDao : ParkingAreaDao
+    companion object {
 
-    init {
-        val appDatabase = AppDatabase.getDatabase(context)
-        parkingAreaDao = appDatabase.parkingAreaDao()
+        private var instance: ParkingAreaRepository? = null
+        private var parkingAreaDao : ParkingAreaDao? = null
+
+        /* Access variable for ParkingAreaRepository */
+        val shared: ParkingAreaRepository
+            get() {
+                if (instance == null) {
+                    parkingAreaDao = AppDatabase.shared.parkingAreaDao()
+                    instance = ParkingAreaRepository()
+                }
+                return instance!!
+            }
     }
 
-    // Load whole parcel list
-    fun insert(parkingArea: ParkingArea) {
-        parkingAreaDao.insertParkingArea(parkingArea)
+    /* Get parkingArea by id */
+    fun getParkingAreaById(paId:String): ParkingAreaEntity {
+        return parkingAreaDao!!.getParkingAreaInformation(paId)
     }
 
-    fun insertAll(parkingAreaList:List<ParkingArea>) {
+    /* Get all parkingAreas */
+    fun getAll(): List<ParkingAreaEntity> {
+        return  parkingAreaDao!!.getAll()
+    }
+
+    /* Load whole parcel list */
+    fun insert(parkingArea: ParkingAreaEntity) {
+        parkingAreaDao!!.insertParkingArea(parkingArea)
+    }
+
+    /* Insert a list of ParkingAreas */
+    fun insertAll(parkingAreaList:List<ParkingAreaEntity>) {
         for(pA in parkingAreaList) {
-            parkingAreaDao.insertParkingArea(pA)
+            parkingAreaDao!!.insertParkingArea(pA)
         }
     }
 
-    fun getAll(): List<ParkingArea> {
-        return  parkingAreaDao.getAll()
-    }
-
-
-    private fun find(id: String) : ParkingArea {
-        return findAsyncTask( parkingAreaDao).execute(id).get()
-    }
-
+    /* delete all records from parkingAreas */
     fun deleteAll(){
-        parkingAreaDao.deleteAllFromTable()
-    }
-
-
-    fun getParcelById(paId:String): ParkingArea {
-        return find(paId)
-    }
-
-
-    /*********** DO NOT USE ANYMORE *********/
-
-    @Deprecated("Do not use")
-    private class findAsyncTask internal constructor(private val mAsyncTaskDao: ParkingAreaDao) : AsyncTask<String, Void, ParkingArea>() {
-        override fun doInBackground(vararg params: String): ParkingArea {
-            return mAsyncTaskDao.getParkingAreaInformation(params[0])
-        }
-    }
-
-    @Deprecated("Do not use")
-    private class insertAsyncTask internal constructor(private val mAsyncTaskDao: ParkingAreaDao) : AsyncTask<ParkingArea, Void, Void>() {
-        override fun doInBackground(vararg params: ParkingArea): Void? {
-            mAsyncTaskDao.insertParkingArea(params[0])
-            return null
-        }
+        parkingAreaDao!!.deleteAllFromTable()
     }
 }

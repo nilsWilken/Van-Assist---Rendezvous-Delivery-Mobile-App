@@ -15,9 +15,7 @@ import android.widget.TextView;
 import de.dpd.vanassist.R;
 
 
-/**
- * Custom view for Sliding Button (Confirm or Decline parcel delivery)
- */
+/* Custom view for Sliding Button (Confirm or Decline parcel delivery) */
 public class SwipeButton extends RelativeLayout {
     private OnSwipeButtonListener listener;
 
@@ -46,34 +44,17 @@ public class SwipeButton extends RelativeLayout {
 
     public SwipeButton(Context context) {
         super(context);
-        init(context, null, -1, -1);
+        init(context);
     }
 
     public SwipeButton(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context, attrs, -1, -1);
+        init(context);
     }
 
-    public SwipeButton(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs);
-        init(context, attrs, defStyleAttr, -1);
-    }
-
-    public SwipeButton(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        init(context, attrs, defStyleAttr, defStyleRes);
-    }
-
-
-    /**
-     * method to initialize SwipeButton
-     * @param context
-     * @param attrs
-     * @param defStyleAttr
-     * @param defStyleRes
-     */
-    private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        // add background of slider
+    /* Initialize SwipeButton */
+    private void init(Context context) {
+        /*  add background of slider */
         RelativeLayout background = new RelativeLayout(context);
 
         LayoutParams layoutParamsView = new LayoutParams(
@@ -85,7 +66,7 @@ public class SwipeButton extends RelativeLayout {
 
         addView(background, layoutParamsView);
 
-        //left arrows
+        /* left arrows */
         final TextView leftArrowsText = new TextView(context);
         this.leftArrowsText = leftArrowsText;
         leftArrowsText.setGravity(Gravity.CENTER);
@@ -99,7 +80,7 @@ public class SwipeButton extends RelativeLayout {
         leftArrowsText.setTextSize(25);
         background.addView(leftArrowsText, lLayoutParams);
 
-        //right arrows
+        /* right arrows */
         final TextView rightArrowsText = new TextView(context);
         this.rightArrowsText = rightArrowsText;
         rightArrowsText.setGravity(Gravity.CENTER);
@@ -114,7 +95,7 @@ public class SwipeButton extends RelativeLayout {
         rightArrowsText.setTextSize(25);
         background.addView(rightArrowsText, rLayoutParams);
 
-        //add the moving icon
+        /* add the moving icon */
         ImageView swipeButton = new ImageView(context);
         slidingButton = swipeButton;
 
@@ -145,7 +126,7 @@ public class SwipeButton extends RelativeLayout {
             }
         });
 
-        //set Touch listener
+        /* set Touch listener */
         setOnTouchListener(getButtonTouchListener());
     }
 
@@ -155,8 +136,7 @@ public class SwipeButton extends RelativeLayout {
     }
 
 
-    /**
-     * Touch listener for swipe button interaction
+    /* Touch listener for swipe button interaction
      * @return TouchListener
      */
     private OnTouchListener getButtonTouchListener() {
@@ -168,12 +148,12 @@ public class SwipeButton extends RelativeLayout {
                         downX = event.getX();
                         return true;
                     case MotionEvent.ACTION_MOVE:
-                        //button follows the finger and textView is disappearing (opacity -> 0)
+                        /* button follows the finger and textView is disappearing (opacity -> 0) */
                         if (event.getX() > slidingButton.getWidth() / 2 &&
                                 event.getX() + slidingButton.getWidth() / 2 < getWidth()) {
                             slidingButton.setX(event.getX() - slidingButton.getWidth() / 2);
 
-                            //sliding left
+                            /* sliding left */
                             if (slidingButton.getX() < initialX) {
                                 float opacityPercentage = ((initialX - slidingButton.getX()) / initialX);
                                 slidingButton.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_button_swiping_left));
@@ -181,7 +161,7 @@ public class SwipeButton extends RelativeLayout {
                                 leftArrowsText.setAlpha((float) (1 - 1.3 * opacityPercentage));
                                 rightArrowsText.setAlpha((float) (1 - 1.3 * opacityPercentage));
                             }
-                            //sliding right
+                            /* sliding right */
                             else if (slidingButton.getX() > initialX) {
                                 float opacityPercentage = ((- initialX + slidingButton.getX()) / initialX);
                                 slidingButton.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.shape_button_swiping_right));
@@ -197,7 +177,7 @@ public class SwipeButton extends RelativeLayout {
                             }
 
                         }
-                        //set button to the limit of component when swiping outside the limits
+                        /* set button to the limit of component when swiping outside the limits */
                         if  (event.getX() + slidingButton.getWidth() / 2 > getWidth() &&
                                 slidingButton.getX() + slidingButton.getWidth() / 2 < getWidth()) {
                             slidingButton.setX(getWidth() - slidingButton.getWidth());
@@ -208,46 +188,40 @@ public class SwipeButton extends RelativeLayout {
                         }
                         if (listener != null)
                             listener.onSwipeButtonMoved(SwipeButton.this);
+                        return true;
 
-                        return true;
                     case MotionEvent.ACTION_UP:
-//                        if (active) {
-//                            collapseButton();
-//                        } else {
-                            upX = event.getX();
-                            float deltaX = downX - upX;
-                            if(Math.abs(deltaX) > initialX){
-                                if(deltaX < 0)
-                                {
-                                    //left to right == confirm
-                                    expandButton(true);
-                                    fadeSlider();
-                                    return true;
-                                }
-                                if(deltaX > 0) {
-                                    //right to left == decline
-                                    expandButton(false);
-                                    fadeSlider();
-                                    return true;
-                                }
+                        upX = event.getX();
+                        float deltaX = downX - upX;
+                        if(Math.abs(deltaX) > initialX){
+                            if(deltaX < 0)
+                            {
+                                /* left to right == confirm */
+                                expandButton(true);
+                                fadeSlider();
+                                return true;
                             }
-                            else {
-                                //not long enough swipe...
-                                moveButtonBack();
-                                return false;
+                            if(deltaX > 0) {
+                                /* right to left == decline */
+                                expandButton(false);
+                                fadeSlider();
+                                return true;
                             }
-                        //}
+                        }
+                        else {
+                            /* not long enough swipe... */
+                            moveButtonBack();
+                            return false;
+                        }
                         return true;
-                    }
+                }
                 return false;
             }
         };
     }
 
 
-    /**
-     * Animation for fading swipeButton
-     */
+    /* Animation for fading swipeButton */
     private void fadeSlider() {
         AlphaAnimation animation1 = new AlphaAnimation(1f, 0f);
         animation1.setDuration(1000);
@@ -259,11 +233,11 @@ public class SwipeButton extends RelativeLayout {
             public void onAnimationRepeat(Animation arg0) { }
             @Override
             public void onAnimationEnd(Animation arg0) {
-                //reset button
+                /* reset button */
                 removeAllViews();
-                init(getContext(), null, -1, -1);
+                init(getContext());
 
-                //raise event
+                /* raise event */
                 if (listener != null) {
                     listener.OnSwipeButtonFaded(SwipeButton.this);
                 }
@@ -273,9 +247,7 @@ public class SwipeButton extends RelativeLayout {
     }
 
 
-    /**
-     * Animation for move back
-     */
+    /* Animation for move back */
     private void moveButtonBack() {
         final ValueAnimator positionAnimator =
                 ValueAnimator.ofFloat(slidingButton.getX(), initialX);
@@ -303,9 +275,7 @@ public class SwipeButton extends RelativeLayout {
     }
 
 
-    /**
-     * Animation for expand
-     */
+    /* Animation for expand */
     private void expandButton(final boolean confirmed) {
         final ValueAnimator positionAnimator =
                 ValueAnimator.ofFloat(slidingButton.getX(), 0);
@@ -349,7 +319,7 @@ public class SwipeButton extends RelativeLayout {
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
 
-                //raise event
+                /* raise event */
                 if (listener != null) {
                     if (confirmed)
                         listener.OnSwipeButtonConfirm(SwipeButton.this);
@@ -361,9 +331,7 @@ public class SwipeButton extends RelativeLayout {
     }
 
 
-    /**
-     * Animation for collapse
-     */
+    /* Animation for collapse */
     private void collapseButton() {
         final ValueAnimator widthAnimator = ValueAnimator.ofInt(
                 slidingButton.getWidth(), ((int) initialX));

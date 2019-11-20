@@ -5,12 +5,11 @@ import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
 
-/**
- * Created by Jasmin Weimüller
+/* Created by Jasmin Weimüller
  * Backend Handling for the Volley HTTP Completion Framework
- * Inspired by https://www.varvet.com/blog/kotlin-with-volley/
- */
+ * Inspired by https://www.varvet.com/blog/kotlin-with-volley */
 class BackendVolley : Application() {
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -27,17 +26,6 @@ class BackendVolley : Application() {
     fun <T> addToRequestQueue(request: Request<T>, tag: String) {
         request.tag = if (TextUtils.isEmpty(tag)) TAG else tag
         requestQueue?.add(request)
-    }
-
-    fun <T> addToRequestQueue(request: Request<T>) {
-        request.tag = TAG
-        requestQueue?.add(request)
-    }
-
-    fun cancelPendingRequests(tag: Any) {
-        if (requestQueue != null) {
-            requestQueue!!.cancelAll(tag)
-        }
     }
 
     companion object {

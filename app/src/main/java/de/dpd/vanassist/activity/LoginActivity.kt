@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import de.dpd.vanassist.R
+import de.dpd.vanassist.config.FragmentTag
+import de.dpd.vanassist.database.AppDatabase
 import de.dpd.vanassist.fragment.auth.LoginFragment
 
 
@@ -13,31 +15,26 @@ class LoginActivity : AppCompatActivity() {
 
     companion object {
 
-        fun start(act:AppCompatActivity) {
-            val intent = Intent(act, LoginActivity::class.java)
-            act.startActivity(intent)
-            act.finish()
+        /* Starts the LoginActivity
+        * -> Can be called from any other activity/fragment */
+        fun start(activity:AppCompatActivity) {
+            val intent = Intent(activity, LoginActivity::class.java)
+            activity.startActivity(intent)
+            activity.finish()
         }
-
     }
 
     override fun onRestart() {
         super.onRestart()
-
-//        var courierRepo = CourierRepository(this)
-//        val current = courierRepo.getCourier()
-//
-//        if (current?.darkMode!!) {
-//            getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-//        }
-//        else{
-//            getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-//        }
-
+        /* Initial Creation of the local Database */
+        AppDatabase.createInstance(this)
     }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        /* Initial Creation of the local Database */
+        AppDatabase.createInstance(this)
 
         val actionBar = supportActionBar
         actionBar?.hide()
@@ -45,24 +42,14 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-//        val courierRepo = CourierRepository(this)
-//        val current = courierRepo.getCourier()
-//
-//        if (current != null && current.darkMode) {
-//            delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-//        }
-//        else{
-//            delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-//        }
-
         startLogInFragment()
-
     }
 
+    /* Starts the LoginFragment */
     private fun startLogInFragment() {
         val logInFragment = LoginFragment.newInstance()
         supportFragmentManager.beginTransaction()
-            .add(R.id.activity_login, logInFragment, "map")
+            .add(R.id.activity_login, logInFragment, FragmentTag.MAP)
             .commitAllowingStateLoss()
     }
 }

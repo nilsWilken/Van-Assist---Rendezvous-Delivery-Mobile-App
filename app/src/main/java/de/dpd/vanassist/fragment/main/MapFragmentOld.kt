@@ -15,7 +15,6 @@ import android.location.Location
 import android.os.Bundle
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import androidx.fragment.app.Fragment
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -33,7 +32,6 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.DrawableCompat
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.Button
 import android.widget.LinearLayout
@@ -75,23 +73,27 @@ import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher
 import com.mapbox.services.android.navigation.ui.v5.NavigationLauncherOptions
-import com.mapbox.services.android.navigation.ui.v5.listeners.NavigationListener
 import com.mapbox.services.android.navigation.ui.v5.route.NavigationMapRoute
-import com.mapbox.services.android.navigation.v5.navigation.MapboxNavigation
-import com.mapbox.services.android.navigation.v5.navigation.NavigationEventListener
 import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute
-import com.mapbox.services.android.navigation.v5.routeprogress.ProgressChangeListener
-import com.mapbox.services.android.navigation.v5.routeprogress.RouteProgress
 
 import de.dpd.vanassist.cloud.VanAssistAPIController
+import de.dpd.vanassist.config.MapBoxConfig
+import de.dpd.vanassist.config.ParkingAreaConfig
+import de.dpd.vanassist.config.SimulationConfig
 import de.dpd.vanassist.config.VanAssistConfig
 import de.dpd.vanassist.database.repository.CourierRepository
-import de.dpd.vanassist.database.entity.Parcel
-import de.dpd.vanassist.database.entity.ParkingArea
+import de.dpd.vanassist.database.entity.ParcelEntity
+import de.dpd.vanassist.database.entity.ParkingAreaEntity
+import de.dpd.vanassist.database.entity.VanEntity
 import de.dpd.vanassist.database.repository.ParcelRepository
 import de.dpd.vanassist.database.repository.ParkingAreaRepository
+import de.dpd.vanassist.database.repository.VanRepository
+import de.dpd.vanassist.intelligence.dynamicContent.DynamicContent
+import de.dpd.vanassist.intelligence.gamification.GamificationMode
+import de.dpd.vanassist.intelligence.intelligentDriving.IntelligentDriving
+import de.dpd.vanassist.intelligence.sizeDependentWaiting.SizeDependentWaiting
 import de.dpd.vanassist.util.FragmentRepo
-import de.dpd.vanassist.util.location.LocationListeningCallback
+import de.dpd.vanassist.util.parcel.ParcelUtil
 import de.dpd.vanassist.util.parkingArea.ParkingAreaUtil
 import de.dpd.vanassist.util.toast.Toast
 
@@ -105,48 +107,33 @@ import java.util.*
 
 var requestSend = false
 
-/**
- * A simple [Fragment] subclass.
- *
- */
+/* A simple [Fragment] subclass. */
 @Suppress("DEPRECATION")
-class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListener, ProgressChangeListener, NavigationListener, NavigationEventListener {
+class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListener {
 
-
-    //ParkingArea Sign Layer
-    private val MARKER_SOURCE = "markers-source"
-    private val MARKER_STYLE_LAYER = "markers-style-layer"
-    private val MARKER_IMAGE = "custom-marker"
-
-    //Selected Marker Layer
-    private val MARKER_SOURCE_SELECTED = "markers-source-selected"
-    private val MARKER_STYLE_LAYER_SELECTED = "markers-style-layer-selected"
-    private val MARKER_IMAGE_SELECTED = "custom-marker-selected"
-
-    //BottomSheet Interaction
-    private var llBottomSheet: LinearLayout? = null
+    /* ParcelCard Interaction */
+    private var bottomSheetLinearLayout: LinearLayout? = null
     private var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>? = null
-    var bottomSheetStreetName: TextView? = null
-    var bottomSheetStreetNameAdditionalInformation: TextView? = null
-    var bottomSheetRecipientName: TextView? = null
-    var bottomSheetRecipientNameAdditionalInformation: TextView? = null
-    var bottomSheetPhoneButton: Button? = null
-    var currentParcel: Parcel? = null
-    var swipeButton: SwipeButton? = null
-    var dialog:ProgressDialog? = null
-    var currentVanPosition:Marker? = null
+    private var bottomSheetStreetName: TextView? = null
+    private var bottomSheetStreetNameAdditionalInformation: TextView? = null
+    private var bottomSheetRecipientName: TextView? = null
+    private var bottomSheetRecipientNameAdditionalInformation: TextView? = null
+    private var bottomSheetPhoneButton: Button? = null
+    private var currentParcel: ParcelEntity? = null
+    var dialog: ProgressDialog? = null
+    private var currentVanPosition: Marker? = null
 
-    //Capturing original camera position to reset
+    /* Capturing original camera position to reset */
     private lateinit var originalCamPos: CameraPosition
 
-    //parkingArea Interaction
-    lateinit var parkingAreas: List<ParkingArea>
-    lateinit var parkingAreaRepo: ParkingAreaRepository
-    lateinit var selectedParkingArea: Feature
+    /* parkingArea Interaction */
+    private lateinit var parkingAreas: List<ParkingAreaEntity>
+    private var selectedParkingArea: Feature? = null
+    var nextParkingArea : ParkingAreaEntity? = null
     private var markerSelected = false
     var destination = Point.fromLngLat(0.0, 0.0)!!
 
-    //Animations for the floating buttons
+    /* Animations for the floating buttons */
     private lateinit var fabOpen: Animation
     private lateinit var fabClose: Animation
     private lateinit var fadeIn: Animation
@@ -155,81 +142,65 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
     private lateinit var fabRotateAnticlockwise: Animation
     private var isOpen = false
 
-    //Database Repos
-    private lateinit var courierRepo: CourierRepository
-    private lateinit var parcelRepo: ParcelRepository
+    private var broadcastReceiver: BroadcastReceiver? = null
 
-    var broadcastReceiver: BroadcastReceiver? = null
-
-    //LocationService
+    /* LocationService */
     companion object {
         var gpsService: Intent? = null
         fun newInstance(): MapFragmentOld {
-            return MapFragmentOld()
-//            FragmentRepo.mapFragmentOld = MapFragmentOld()
-//            return FragmentRepo.mapFragmentOld as MapFragmentOld
+            FragmentRepo.mapFragmentOld = MapFragmentOld()
+            return FragmentRepo.mapFragmentOld as MapFragmentOld
         }
     }
 
-    //variables for Map Object
+    /* variables for Map Object */
     private lateinit var mapView: MapView
-    private var geopoints = HashMap<String, ArrayList<Double>>()
 
-    //Restricing the Map Bounds
-    private val BOUND_CORNER_NW = LatLng(49.4291, 8.6598)
-    private val BOUND_CORNER_SE = LatLng(49.4037, 8.7148)
+    /* Restricting the Map Bounds */
     private val RESTRICTED_BOUNDS_AREA = LatLngBounds.Builder()
-        .include(BOUND_CORNER_NW)
-        .include(BOUND_CORNER_SE)
+        .include(MapBoxConfig.OFFLINE_MAP_BOUND_NORTH_WEST)
+        .include(MapBoxConfig.OFFLINE_MAP_BOUND_SOUTH_EAST)
         .build()
 
-    private val MULTIPLE_PERMISSIONS = 10
     private var permissions =
         arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
     private lateinit var locationEngine: LocationEngine
-    private var callback = LocationListeningCallback(this)
 
-    lateinit var mapboxMap: MapboxMap
+    lateinit var mapBoxMap: MapboxMap
 
-    // variables for calculating and drawing a route
+    /* variables for calculating and drawing a route */
     private lateinit var currentRoute: DirectionsRoute
 
     private var navigationMapRoute: NavigationMapRoute? = null
-    private lateinit var navigation : MapboxNavigation
 
-    var markerIndex = 0
-    var wasclicked = false
-    var wasClickedDeliveryLocation = false
-    var routeShown = false
-    var delrouteShown = false
-    var vehicleLocation = Point.fromLngLat(8.678421, 49.416937)!!
+    private var wasclicked = false
+    private var wasClickedDeliveryLocation = false
+    private var wasClickedVanLocation = false
+    private var routeShown = false
+    private var deliveryRouteShown = false
+    private var vehicleLocation = MapBoxConfig.DEFAULT_VEHICLE_LOCATION
 
-    /**
-     * Function that prepares the map (adding geopoints on the map, zooming enabled, adding custom pins on the map)
-     *
-     * Implemented by Jasmin and Raluca
-     */
+    /* Implemented by Jasmin and Raluca
+     * Function that prepares the map (adding geopoints on the map, zooming enabled, adding custom pins on the map) */
     @SuppressLint("PrivateResource")
     override fun onMapReady(mapboxMap: MapboxMap) {
 
-        this.mapboxMap = mapboxMap
-        val style_url_light = VanAssistConfig.MAP_BOX_LIGHT_STYLE
-        val style_url_dark = VanAssistConfig.MAP_BOX_DARK_STYLE
-        var style_url = style_url_light
-        val current = courierRepo.getCourier()
+        this.mapBoxMap = mapboxMap
+        val styleUrlLight = MapBoxConfig.MAP_BOX_LIGHT_STYLE
+        val styleUrlDark = MapBoxConfig.MAP_BOX_DARK_STYLE
+        var styleUrl = styleUrlLight
+        val courier = CourierRepository.shared.getCourier()
 
-        if (current?.darkMode!!) {
-            style_url = style_url_dark
+        if (courier?.darkMode!!) {
+            styleUrl = styleUrlDark
         }
 
-        mapboxMap.setStyle(Style.Builder().fromUrl(style_url)) { it ->
+        mapboxMap.setStyle(Style.Builder().fromUrl(styleUrl)) {
 
             mapboxMap.setLatLngBoundsForCameraTarget(RESTRICTED_BOUNDS_AREA)
 
-            //LOCATION
             val locationComponentOptions = LocationComponentOptions.builder(this.context!!)
-                //.layerBelow(layerId)
                 .foregroundDrawable(R.drawable.mapbox_user_icon)
                 .foregroundTintColor(Color.MAGENTA)
                 .bearingTintColor(Color.MAGENTA)
@@ -250,8 +221,8 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
             locationComponent.isLocationComponentEnabled = true
             locationComponent.renderMode = RenderMode.COMPASS
 
-            mapboxMap.setMaxZoomPreference(18.5)
-            mapboxMap.setMinZoomPreference(8.5)
+            mapboxMap.setMaxZoomPreference(MapBoxConfig.MAX_ZOOM)
+            mapboxMap.setMinZoomPreference(MapBoxConfig.MIN_ZOOM)
 
             originalCamPos = mapboxMap.cameraPosition
 
@@ -259,32 +230,27 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
                 newAnimatedCamPos(
                     LatLng(marker.position.latitude, marker.position.longitude),
                     originalCamPos.zoom + 2,
-                    500
+                    MapBoxConfig.SET_MARKER_DURATION_IN_MS
                 )
                 return@setOnMarkerClickListener true
             }
 
             mapboxMap.addOnMapClickListener(this)
 
-            val DEFAULT_INTERVAL_IN_MILLISECONDS = 1000L
-            val DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_MILLISECONDS * 5
             locationEngine = LocationEngineProvider.getBestLocationEngine(this.context!!)
-            val request = LocationEngineRequest.Builder(DEFAULT_INTERVAL_IN_MILLISECONDS)
+
+            LocationEngineRequest.Builder(MapBoxConfig.DEFAULT_INTERVAL_IN_MS)
                 .setPriority(LocationEngineRequest.PRIORITY_NO_POWER)
-                .setMaxWaitTime(DEFAULT_MAX_WAIT_TIME)
+                .setMaxWaitTime(MapBoxConfig.DEFAULT_MAX_WAIT_TIME)
                 .build()
 
             offlineMap()
-
         }
-
     }
 
-    /**
-     * Created by Jasmin & Raluca
-     *
-     * Function that starts the navigation for the current route.
-     */
+
+    /* Created by Jasmin & Raluca
+     * Function that starts the navigation for the current route. */
     private fun startTriggerNavigation() {
 
         val simulateRoute = false
@@ -292,113 +258,74 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
         val options = NavigationLauncherOptions.builder()
             .directionsRoute(currentRoute)
             .shouldSimulateRoute(simulateRoute)
-            .darkThemeResId(0)
             .build()
 
         NavigationLauncher.startNavigation(this.activity, options)
-
-
-
-//         val ops = NavigationViewOptions.builder()
-//                .directionsRoute(currentRoute)
-//                .shouldSimulateRoute(simulateRoute)
-//                .navigationListener(this!!)
-//                .progressChangeListener(this!!)
-//                .build();
-//
-//        val naviView = NavigationView(this.activity!!)
-//        naviView.startNavigation(ops);
-
-
     }
 
 
-
-    /**
-     * Created by Jasmin
-     *
-     *Function that creates the navigation between the origin and the destination point.
-     *
+    /* Created by Jasmin
+     * Function that creates the navigation between the origin and the destination point.
      * @param: origin: current location
-     * @param: destination: the arriving point
-     */
-    private fun getRoute(origin_: Point, destination_: Point, profile : String) {
+     * @param: destination: the arriving point */
+    private fun getRoute(origin_: Point, destination_: Point, profile: String) {
 
-
-        try{
-        val loc = mapboxMap.locationComponent.lastKnownLocation as Location
-        val bearing = loc.getBearing().toDouble()
-        val tolerance = 90.0
-
+        try {
+            val loc = mapBoxMap.locationComponent.lastKnownLocation as Location
+            val bearing = loc.getBearing().toDouble()
             NavigationRoute.builder(this.context!!)
                 .accessToken(Mapbox.getAccessToken()!!)
-                .origin(origin_, bearing, tolerance)
+                .origin(origin_, bearing, MapBoxConfig.NAVIGATION_TOLERANCE)
                 .profile(profile)
                 .destination(destination_)
                 .build()
                 .getRoute(object : Callback<DirectionsResponse> {
 
                     override fun onResponse(call: Call<DirectionsResponse>, response: Response<DirectionsResponse>) {
-                        Log.i("Navigation: ", response.code().toString())
-
                         if (response.body() == null) {
-                            Log.d("ERROR", "No route found.")
                             return
                         } else if (response.body()!!.routes().size < 1) {
-
-                            Log.e("ERROR", "No route found.")
                         }
 
                         currentRoute = response.body()!!.routes()[0]
 
-                        //Draw route on the map
+                        /* Draw route on the map */
                         if (navigationMapRoute != null) {
-
                             navigationMapRoute!!.removeRoute()
                         } else {
-
                             navigationMapRoute =
-                                NavigationMapRoute(null, mapView, mapboxMap, R.style.NavigationMapRoute)
+                                NavigationMapRoute(null, mapView, mapBoxMap, R.style.NavigationMapRoute)
                         }
-
                         navigationMapRoute!!.addRoute(currentRoute)
                     }
-                override fun onFailure(call: Call<DirectionsResponse>, t: Throwable) {
-                    Log.e("ERROOOOR", t.message)
-                }
+
+                    override fun onFailure(call: Call<DirectionsResponse>, t: Throwable) {
+                    }
                 })
-            } catch (e: SecurityException) {
-                Log.i("ERROOOR", e.toString())
-            }
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        }
     }
 
 
-    private fun navigate(origin_:Point, destination_:Point, walking : Boolean) {
+    private fun navigate(origin_: Point, destination_: Point, walking: Boolean) {
         try {
             var profile = DirectionsCriteria.PROFILE_DRIVING_TRAFFIC
-            Log.d("Dest", destination_.toString())
-            if (walking){
+            if (walking) {
                 profile = DirectionsCriteria.PROFILE_WALKING
             }
-            else{
-                profile = DirectionsCriteria.PROFILE_DRIVING_TRAFFIC
-            }
-            getRoute(origin_,destination_, profile)
+            getRoute(origin_, destination_, profile)
 
         } catch (e: SecurityException) {
-            Log.i("ERROOOR", e.toString())
+            e.printStackTrace()
         }
     }
 
 
+    /* Converts VectorDrawable to Bitmap */
     private fun getBitmapFromVectorDrawable(context: Context, drawableId: Int): Bitmap {
 
-        var drawable = ContextCompat.getDrawable(context, drawableId)
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-
-            drawable = (DrawableCompat.wrap(drawable!!)).mutate()
-        }
+        val drawable = ContextCompat.getDrawable(context, drawableId)
 
         val bitmap = Bitmap.createBitmap(
             drawable!!.intrinsicWidth,
@@ -413,16 +340,14 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
     }
 
 
+    /* The markers are added in this method */
     private fun addMarkers(loadedMapStyle: Style) {
-
         val features = ArrayList<Feature>()
-        parkingAreas = parkingAreaRepo.getAll()
+        parkingAreas = ParkingAreaRepository.shared.getAll()
         val nextAutoPaID = "parkingArea_429024483#3_0_12"
         if (parkingAreas.isEmpty()) {
         } else {
             for (pa in parkingAreas) {
-                Log.d("PA LAT", pa.lat.toDouble().toString())
-                Log.d("PA LAT", pa.long_.toDouble().toString())
                 if (pa.id != nextAutoPaID) {
                     val feat = Feature.fromGeometry(Point.fromLngLat(pa.long_.toDouble(), pa.lat.toDouble()))
                     feat.addStringProperty("PA ID", pa.id)
@@ -431,72 +356,92 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
             }
         }
 
-
         /* Source: A data source specifies the geographic coordinate where the image marker gets placed. */
         loadedMapStyle.addSource(
             GeoJsonSource(
-                MARKER_SOURCE, FeatureCollection.fromFeatures(features)
+                MapBoxConfig.MARKER_SOURCE, FeatureCollection.fromFeatures(features)
             )
         )
 
         /* Style layer: A style layer ties together the source and image and specifies how they are displayed on the map. */
         loadedMapStyle.addLayer(
-            SymbolLayer(MARKER_STYLE_LAYER, MARKER_SOURCE)
+            SymbolLayer(MapBoxConfig.MARKER_STYLE_LAYER, MapBoxConfig.MARKER_SOURCE)
                 .withProperties(
                     PropertyFactory.iconAllowOverlap(true),
                     PropertyFactory.iconIgnorePlacement(false),
-                    PropertyFactory.iconImage(MARKER_IMAGE),
-                    //PropertyFactory.iconOpacity(0.5f),
-                    // Adjust the second number of the Float array based on the height of your marker image.
-                    // This is because the bottom of the marker should be anchored to the coordinate point, rather
-                    // than the middle of the marker being the anchor point on the map.
-                    PropertyFactory.iconOffset(floatArrayOf(0f, -8f).toTypedArray())
+                    PropertyFactory.iconImage(MapBoxConfig.MARKER_IMAGE),
 
+                    /* Adjust the second number of the Float array based on the height of your marker image.
+                       This is because the bottom of the marker should be anchored to the coordinate point, rather
+                       than the middle of the marker being the anchor point on the map. */
+                    PropertyFactory.iconOffset(MapBoxConfig.ICON_OFFSET)
                 )
         )
 
-        //TODO SPECIFY NEXT PARKING AREA HERE
-        var nextParkingArea = ParkingAreaUtil.getNearestParkingArea(context!!)
+        /* Search for best parking area, if no one is found -> use default */
+        val nextDeliveryLocation = ParcelRepository.shared.getCurrentParcel()
+        nextParkingArea = ParkingAreaUtil.getNearestParkingArea(nextDeliveryLocation)
         if (nextParkingArea == null) {
-            nextParkingArea = parkingAreaRepo.getParcelById("parkingArea_-24828111#0_0_15")
-
+            nextParkingArea = ParkingAreaRepository.shared.getParkingAreaById(ParkingAreaConfig.DEFAULT_PARKING_AREA)
         }
-        // Create new camera position
-        newCamPos(LatLng(nextParkingArea.lat.toDouble(), nextParkingArea.long_.toDouble()), mapboxMap.maxZoomLevel - 4)
 
-        //add selected marker source
+        /* set nextParkingArea as default destination */
+        destination = Point.fromLngLat(nextParkingArea!!.long_.toDouble(), nextParkingArea!!.lat.toDouble())
+
+        /* Create new camera position */
+        newCamPos(LatLng(nextParkingArea!!.lat.toDouble(), nextParkingArea!!.long_.toDouble()), mapBoxMap.maxZoomLevel - 4)
+
+        /* add selected marker source */
         loadedMapStyle.addSource(
             GeoJsonSource(
-                MARKER_SOURCE_SELECTED,
-                Feature.fromGeometry(Point.fromLngLat(nextParkingArea.long_.toDouble(), nextParkingArea.lat.toDouble()))
+                MapBoxConfig.MARKER_SOURCE_SELECTED,
+                Feature.fromGeometry(Point.fromLngLat(nextParkingArea!!.long_.toDouble(), nextParkingArea!!.lat.toDouble()))
             )
         )
 
         loadedMapStyle.addLayer(
-            SymbolLayer(MARKER_STYLE_LAYER_SELECTED, MARKER_SOURCE_SELECTED)
+            SymbolLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED, MapBoxConfig.MARKER_SOURCE_SELECTED)
                 .withProperties(
                     PropertyFactory.iconAllowOverlap(true),
                     PropertyFactory.iconIgnorePlacement(true),
-                    PropertyFactory.iconOpacity(0.9f),
-                    PropertyFactory.textField("Park Here"),
+                    PropertyFactory.iconOpacity(MapBoxConfig.MARKER_PROPERTY_ICON_OPACITY),
+                    PropertyFactory.textField(getString(R.string.park_here_title)),
                     PropertyFactory.textAllowOverlap(true),
                     PropertyFactory.textColor(Color.RED),
-                    PropertyFactory.textOffset(floatArrayOf(0f, 0.8f).toTypedArray()),
-                    PropertyFactory.textSize(11f),
-                    PropertyFactory.iconImage(MARKER_IMAGE_SELECTED),
-                    PropertyFactory.iconOffset(floatArrayOf(0f, -8f).toTypedArray())
+                    PropertyFactory.textOffset(MapBoxConfig.MARKER_PROPERTY_TEXT_OFFSET),
+                    PropertyFactory.textSize(MapBoxConfig.MARKER_PROPERTY_TEXT_SIZE),
+                    PropertyFactory.iconImage(MapBoxConfig.MARKER_IMAGE_SELECTED),
+                    PropertyFactory.iconOffset(MapBoxConfig.ICON_OFFSET)
 
                 )
         )
 
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v = inflater.inflate(R.layout.fragment_map_old, container, false)
+
+        /* Set Default Van Location only first time after simulation start */
+        /* /> not when simulation is running and it is only resumed */
+        /* /> would overwrite last position */
+        if (SimulationConfig.isFirstVanLocationAfterSimulationStart) {
+            VanRepository.shared.insert(
+                VanEntity(
+                    VanAssistConfig.VAN_ID,
+                    destination.latitude(),
+                    destination.longitude(),
+                    true
+                )
+            )
+            SimulationConfig.isFirstVanLocationAfterSimulationStart = false
+        }
+
 
         if (testTargetApi() || checkPermissions()) {
 
@@ -504,7 +449,7 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
 
             Mapbox.getInstance(
                 this.context!!,
-                VanAssistConfig.MAP_BOX_ACCESS_TOKEN
+                MapBoxConfig.MAP_BOX_ACCESS_TOKEN
             )
 
             mapView = v.findViewById(R.id.mapView)
@@ -516,14 +461,11 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
                 this.dialog!!.dismiss()
             }
 
-            courierRepo = CourierRepository(activity!!)
-            parkingAreaRepo = ParkingAreaRepository(activity!!)
-            parcelRepo = ParcelRepository(activity!!)
-            this.currentParcel = parcelRepo.getNextParcelToDeliver()
+            this.currentParcel = ParcelRepository.shared.getCurrentParcel()
 
             val api = VanAssistAPIController(activity!! as AppCompatActivity)
 
-            //declaring the animations
+            /* declaring the animations */
             fabOpen = AnimationUtils.loadAnimation(context, R.anim.fab_open)
             fabClose = AnimationUtils.loadAnimation(context, R.anim.fab_close)
             fadeIn = AnimationUtils.loadAnimation(context, R.anim.fade_in)
@@ -532,7 +474,7 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
             fabRotateAnticlockwise = AnimationUtils.loadAnimation(context, R.anim.fab_rotate_anticlockwise)
 
 
-            //bottom sheet
+            /* Config of bottom sheet aka parcel card */
             bottomSheetStreetName = v.bottom_sheet_street_text_view as TextView
             bottomSheetStreetNameAdditionalInformation =
                 v.bottom_sheet_street_additional_information_text_view as TextView
@@ -541,14 +483,12 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
                 v.bottom_sheet_recipient_name__additional_information_text_view as TextView
             bottomSheetPhoneButton = v.bottom_sheet_phone_button as Button
 
-            val courierRepo = CourierRepository(context!!)
-            val current = courierRepo.getCourier()
+            val courier = CourierRepository.shared.getCourier()
 
-            if (current?.darkMode!!) {
+            if (courier?.darkMode!!) {
                 bottomSheetStreetName!!.setTextColor(Color.WHITE)
                 bottomSheetRecipientName!!.setTextColor(Color.WHITE)
-            }
-            else {
+            } else {
                 bottomSheetStreetName!!.setTextColor(Color.BLACK)
                 bottomSheetRecipientName!!.setTextColor(Color.BLACK)
             }
@@ -576,7 +516,7 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
                 }
             }
 
-            setParcelInformation()
+            setParcelInformation(activity as AppCompatActivity)
             startGPSService()
 
             v.goto_launchpad.setOnClickListener { view ->
@@ -586,72 +526,68 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
             v.fab.setOnClickListener {
 
                 if (isOpen) {
-                    //finish all open interactions
-                    finishSetNextParking()
+                    /* finish all open interactions */
+                    finishSetNextParkingArea()
                     finishPedestrianRouting()
-
-                    //collapse FAB
-                    collapseFAB(v)
+                    collapseFloatingActionButton(v)
                 } else {
-                    val current = courierRepo.getCourier()
-                    if (current?.mapLabel!!) {
+                    val courier = CourierRepository.shared.getCourier()
+                    if (courier?.helpMode!!) {
                         v.textview_parkinglocation.startAnimation(fadeIn)
                         v.textview_vanlocation.startAnimation(fadeIn)
                         v.textview_deliverylocation.startAnimation(fadeIn)
-                        v.textview_summonvan.startAnimation(fadeIn)
                     }
 
                     v.fab_parkinglocation.startAnimation(fabOpen)
                     v.fab_vanlocation.startAnimation(fabOpen)
                     v.fab_deliverylocation.startAnimation(fabOpen)
-                    v.fab_summonvan.startAnimation(fabOpen)
                     v.fab.startAnimation(fabRotateClockwise)
 
-                    v.fab_summonvan.isClickable = true
                     v.fab_deliverylocation.isClickable = true
                     v.fab_vanlocation.isClickable = true
                     v.fab_parkinglocation.isClickable = true
 
                     isOpen = true
-
                 }
             }
 
-            //Bottom sheet
-            llBottomSheet = v.bottom_sheet
-            bottomSheetBehavior = BottomSheetBehavior.from(llBottomSheet)
-            var disabledCollapse =
-                false        //used for swiping button (do not collapse bottom sheet while button swipes)
+            /* Parcel Card */
+            bottomSheetLinearLayout = v.bottom_sheet
+            bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetLinearLayout)
+            /* used for swiping button (do not collapse parcel card while button swipes) */
+            var disabledCollapse = false
 
             v.topPanel.setOnTouchListener { _, _ ->
                 disabledCollapse = false
                 false
             }
 
-            //Set swipe listener to SwipeButton
+            /* Set swipe listener to SwipeButton */
             val swipeButtonExpandedListener = object : SwipeButton.OnSwipeButtonListener {
                 override fun OnSwipeButtonConfirm(v: View?) {
-                    val api = VanAssistAPIController(activity!! as AppCompatActivity)
-                    parcelRepo = ParcelRepository(activity!! as AppCompatActivity)
-                    val nextParcel = parcelRepo.getNextParcelToDeliver()
-                    if(nextParcel!= null) {
-                        val parcelId = nextParcel.id
-                        api.confirmParcelDeliverySuccess(parcelId)
+                    val currentParcel = ParcelRepository.shared.getCurrentParcel()
+                    if (currentParcel != null) {
+                        GamificationMode.run(context!!)
+                        DynamicContent.reset()
+                        SizeDependentWaiting.run(FragmentRepo.mapFragmentOld!!)
+                        api.confirmParcelDeliverySuccess(currentParcel.id)
+                    } else {
+                        Toast.createToast(getString(R.string.error_no_parcel_available))
                     }
-                    Toast.createToast(getString(R.string.error_no_parcel_available))
                 }
 
                 override fun OnSwipeButtonDecline(v: View?) {
-                    val api = VanAssistAPIController(activity!! as AppCompatActivity)
-                    parcelRepo = ParcelRepository(activity!! as AppCompatActivity)
-                    val nextParcel = parcelRepo.getNextParcelToDeliver()
-                    if(nextParcel!= null) {
-                        val parcelId = nextParcel.id
-                        api.confirmParcelDeliveryFailure(parcelId)
-                    }
-                    Toast.createToast(getString(R.string.error_no_parcel_available))
-                }
+                    val currentParcel = ParcelRepository.shared.getCurrentParcel()
+                    if (currentParcel != null) {
+                        GamificationMode.run(context!!)
+                        DynamicContent.reset()
+                        SizeDependentWaiting.run(FragmentRepo.mapFragmentOld!!)
 
+                        api.confirmParcelDeliveryFailure(currentParcel.id)
+                    } else {
+                        Toast.createToast(getString(R.string.error_no_parcel_available))
+                    }
+                }
 
                 override fun onSwipeButtonMoved(v: View) {
                     disabledCollapse = true
@@ -665,7 +601,7 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
             val swipeButton = v.swipe_btn as SwipeButton
             swipeButton.setSwipeListener(swipeButtonExpandedListener)
 
-            //Set on touch listener for Pull Line Button
+            /* Set on touch listener for Pull Line Button */
             v.bottom_sheet_pull_btn.setOnClickListener {
                 if (bottomSheetBehavior!!.state == BottomSheetBehavior.STATE_COLLAPSED) {
                     bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_EXPANDED
@@ -681,7 +617,7 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
                         .setDuration(0).start()
 
                     if (isOpen) {
-                        collapseFAB(v)
+                        collapseFloatingActionButton(v)
                     }
                 }
 
@@ -696,34 +632,32 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
             })
         }
 
-        //floating action buttons
-
+        /* floating action buttons */
         v.fab_vanlocation.setOnClickListener {
-            showVanLocation(mapboxMap.maxZoomLevel - 2, false)
+            showVanLocation(mapBoxMap.maxZoomLevel - 2, false)
         }
 
         v.fab_deliverylocation.setOnClickListener {
-            showNextDeliveryLocation(mapboxMap.maxZoomLevel - 2, false)
+            showNextDeliveryLocation(mapBoxMap.maxZoomLevel - 2, false)
         }
 
         v.fab_parkinglocation.setOnClickListener {
 
-            if(parcelRepo.getNextParcelToDeliver() != null) {
+            if (ParcelRepository.shared.getCurrentParcel() != null) {
                 if (wasclicked && !routeShown) {
 
-                    //Second Interaction Step
-                    //TODO CHANGE TO DIALOG BUILDER TO SET CUSTOM NAMES FOR ACCEPT OR DECLINE
+                    /* Second Interaction Step */
                     showDialogOK(getString(R.string.select_next_parking_area),
                         DialogInterface.OnClickListener { _, which ->
 
                             when (which) {
                                 DialogInterface.BUTTON_POSITIVE -> {
-                                    // strip layers and sources
-                                    mapboxMap.style?.removeLayer(MARKER_STYLE_LAYER)
-                                    mapboxMap.style?.removeSource(MARKER_SOURCE)
+                                    /* strip layers and sources */
+                                    mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER)
+                                    mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE)
                                     fab_parkinglocation.setImageResource(R.drawable.ic_navigation_grey_24dp)
                                     routeShown = true
-                                    navigate(vehicleLocation,destination, false)
+                                    navigate(vehicleLocation, destination, false)
                                 }
 
                                 DialogInterface.BUTTON_NEGATIVE -> {
@@ -731,45 +665,50 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
                             }
                         })
                 } else if (!wasclicked) {
-                    //First Interaction Step
-                    finishSetNextParking()
+                    /* First Interaction Step */
+                    finishSetNextParkingArea()
+                    finishGetVanLocation()
+                    finishPedestrianRouting()
+
                     wasclicked = true
-                    mapboxMap.style?.removeLayer(MARKER_STYLE_LAYER_SELECTED)
-                    mapboxMap.style?.removeSource(MARKER_SOURCE_SELECTED)
+                    mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED)
+                    mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE_SELECTED)
 
                     Toast.createToast(getString(R.string.parking_area_confirmation))
 
-                    //set Custom vehicle marker
+                    /* set Custom vehicle marker */
                     val icon = IconFactory.getInstance(this.activity!!)
-                    // Add the marker to the map
-                    mapboxMap.addMarker(
+                    /* Add the marker to the map */
+                    mapBoxMap.addMarker(
                         MarkerOptions()
                             .position(LatLng(vehicleLocation.latitude(), vehicleLocation.longitude()))
                             .icon(icon.fromResource(R.mipmap.ic_custom_dpd_van_cropped))
                     )
 
-                    val latlong = LatLng(vehicleLocation.latitude(), vehicleLocation.longitude())
+                    mapBoxMap.getStyle {
 
-                    mapboxMap.getStyle {
-
-                        //Add Marker Image
-                        it.addImage(MARKER_IMAGE, getBitmapFromVectorDrawable(this.context!!, R.drawable.alpha_p_circle))
-
-                        //Add Selected Marker Image
+                        /* Add Marker Image */
                         it.addImage(
-                            MARKER_IMAGE_SELECTED,
+                            MapBoxConfig.MARKER_IMAGE,
+                            getBitmapFromVectorDrawable(this.context!!, R.drawable.alpha_p_circle)
+                        )
+
+                        /* Add Selected Marker Image */
+                        it.addImage(
+                            MapBoxConfig.MARKER_IMAGE_SELECTED,
                             BitmapFactory.decodeResource(this.resources, R.drawable.ic_custom_parker_pin_red)
                         )
+
                         addMarkers(it)
                     }
 
                     fab_parkinglocation.setImageResource(R.drawable.ic_custom_parker_confirm)
                 }
                 if (wasclicked && routeShown) {
-                    //Last Interaction Step
+                    /* Last Interaction Step */
                     postNextParkingAreaToServer()
-                    //finish the Interaction and set back to initial
-                    finishSetNextParking()
+                    /* finish the Interaction and set back to initial */
+                    finishSetNextParkingArea()
                 }
             } else {
                 Toast.createToast(getString(R.string.error_no_parcel_available))
@@ -779,9 +718,11 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
     }
 
 
+    /* Manages the display of the van location in the map */
     private fun showVanLocation(zoom: Double, animation: Boolean) {
         val icon = IconFactory.getInstance(this.activity!!)
-        mapboxMap.addMarker(
+        wasClickedVanLocation = true
+        mapBoxMap.addMarker(
             MarkerOptions()
                 .position(LatLng(vehicleLocation.latitude(), vehicleLocation.longitude()))
                 .title("DPD Van")
@@ -791,28 +732,45 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
         if (!animation) {
             newCamPos(LatLng(vehicleLocation.latitude(), vehicleLocation.longitude()), zoom)
         } else {
-            newAnimatedCamPos(LatLng(vehicleLocation.latitude(), vehicleLocation.longitude()), zoom, 5500)
+            newAnimatedCamPos(
+                LatLng(vehicleLocation.latitude(), vehicleLocation.longitude()),
+                zoom,
+                VanAssistConfig.VAN_ARRIVAL_ZOOM_DURATION
+            )
         }
     }
 
 
+    /* Manages the display of the next delivery location in the map */
     private fun showNextDeliveryLocation(zoom: Double, animation: Boolean) {
-        val nextParcel = parcelRepo.getNextParcelToDeliver()
-        if(nextParcel == null) {
+        val nextParcelToDeliver = ParcelRepository.shared.getCurrentParcel()
+        if (nextParcelToDeliver == null) {
             Toast.createToast(getString(R.string.error_no_parcel_available))
             return
         }
 
-
-        val latitude = nextParcel.latitude.toDouble()
-        val longitude = nextParcel.longitude.toDouble()
+        val latitude = nextParcelToDeliver.latitude.toDouble()
+        val longitude = nextParcelToDeliver.longitude.toDouble()
 
         if (!wasClickedDeliveryLocation) {
+            finishSetNextParkingArea()
+            finishPedestrianRouting()
+
             val icon = IconFactory.getInstance(this.activity!!)
 
             wasClickedDeliveryLocation = true
 
-            mapboxMap.addMarker(
+            if(wasClickedVanLocation){
+                mapBoxMap.addMarker(
+                    MarkerOptions()
+                        .position(LatLng(vehicleLocation.latitude(), vehicleLocation.longitude()))
+                        .title("DPD Van")
+                        .icon(icon.fromResource(R.mipmap.ic_custom_dpd_van_cropped))
+
+                )
+            }
+
+            mapBoxMap.addMarker(
                 MarkerOptions()
                     .position(LatLng(latitude, longitude))
                     .title("Delivery Location")
@@ -823,150 +781,169 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
             } else {
                 newAnimatedCamPos(LatLng(latitude, longitude), zoom, 5500)
             }
-            // change button to a navigation sign
+            /* change button to a navigation sign */
             fab_deliverylocation.setImageResource(R.drawable.ic_navigation_grey_24dp)
-        }
-        else if (wasClickedDeliveryLocation && !delrouteShown ){
-            // confirm routing to delivery location from GPS AKA Some static location for now
+
+        } else if (wasClickedDeliveryLocation && !deliveryRouteShown) {
+
+            /* confirm routing to delivery location from GPS AKA Some static location for now */
             try {
                 val employeePosition = Point.fromLngLat(
-                    mapboxMap.locationComponent.lastKnownLocation!!.longitude,
-                    mapboxMap.locationComponent.lastKnownLocation!!.latitude
+                    mapBoxMap.locationComponent.lastKnownLocation!!.longitude,
+                    mapBoxMap.locationComponent.lastKnownLocation!!.latitude
                 )
                 val delLocation = Point.fromLngLat(longitude, latitude)
                 navigate(employeePosition, delLocation, true)
-                delrouteShown = true
+                deliveryRouteShown = true
                 fab_deliverylocation.setImageResource(R.drawable.ic_custom_parker_confirm)
+
             } catch (e: SecurityException) {
-                Log.i("ERROOOOOOR NONONOOOO", e.toString())
+                e.printStackTrace()
             }
-        }
-        else if (wasClickedDeliveryLocation && delrouteShown){
+
+        } else if (wasClickedDeliveryLocation && deliveryRouteShown) {
+
             startTriggerNavigation()
         }
     }
 
 
-    private fun finishPedestrianRouting(){
+    /* Finishes the pedestrian routing */
+    private fun finishPedestrianRouting() {
         fab_deliverylocation.setImageResource(R.drawable.ic_inbox_black_24dp)
         wasClickedDeliveryLocation = false
-        delrouteShown = false
+        deliveryRouteShown = false
 
     }
 
+
+    /* Animates the camera position e.g. for to the van after it has arrived in the parking Area */
     private fun newAnimatedCamPos(pos: LatLng, zoom: Double, durationMS: Int) {
         val position = CameraPosition.Builder()
-            .target(pos) // Sets the new camera position
-            .zoom(zoom) // Sets the zoom
-            .bearing(0.0) // Rotate the camera
-            .tilt(30.0) // Set the camera tilt
-            .build() // Creates a CameraPosition from the builder
+            /* Sets the new camera position */
+            .target(pos)
+            /* Sets the zoom */
+            .zoom(zoom)
+            /* Rotate the camera */
+            .bearing(0.0)
+            /* Set the camera tilt */
+            .tilt(30.0)
+            /* Creates a CameraPosition from the builder */
+            .build()
 
-        // mapboxMap.animateCamera(CameraUpdateFactory
-        //  .newCameraPosition(position), durationMS);
-
-        mapboxMap.easeCamera(
+        mapBoxMap.easeCamera(
             CameraUpdateFactory
                 .newCameraPosition(position), durationMS
         )
     }
 
+
+    /* Updates the van location (approx. every 3 seconds */
     fun updateVanLocation(point: Point, zoom: Double) {
         removeDrivingPositionOfDPDVan()
         this.vehicleLocation = point
         showVanLocation(zoom, true)
     }
 
-    fun removeDrivingPositionOfDPDVan() {
-        //remove old position
-        for (marker in mapboxMap.markers) {
-            if(marker.title == "DPD Van Driving") {
-                mapboxMap.removeMarker(marker)
+
+    /* Removes the old position of the van in the map*/
+    private fun removeDrivingPositionOfDPDVan() {
+        for (marker in mapBoxMap.markers) {
+            if (marker.title == MapBoxConfig.MARKER_TITLE_VAN_IS_DRIVING) {
+                mapBoxMap.removeMarker(marker)
             }
         }
     }
 
+
+    /* Shows the target parking position on the map during the navigation of the van */
     fun addParkingLocationWhenVanStartDriving() {
         val icon = IconFactory.getInstance(this.activity!!)
         var markerIsSet = false
-        for(marker in mapboxMap.markers) {
-            if (marker.title == "destination") {
+        for (marker in mapBoxMap.markers) {
+            if (marker.title == MapBoxConfig.MARKER_TITLE_DESTINATION) {
                 markerIsSet = true
             }
         }
 
-        if(markerIsSet == false) {
-            mapboxMap.addMarker(
+        if (markerIsSet == false) {
+            mapBoxMap.addMarker(
                 MarkerOptions()
                     .position(LatLng(this.destination.latitude(), this.destination.longitude()))
-                    .title("destination")
+                    .title(MapBoxConfig.MARKER_TITLE_DESTINATION)
                     .icon(icon.fromBitmap(getBitmapFromVectorDrawable(this.context!!, R.drawable.alpha_p_circle)))
             )
         }
     }
 
+
+    /* Removes the target parkingArea after the van has arrived in the parkingArea */
     fun removeParkingLocationWhenVanHasParked() {
-        for(marker in mapboxMap.markers)
-            if(marker.title == "destination") {
-                mapboxMap.removeMarker(marker)
+        for (marker in mapBoxMap.markers)
+            if (marker.title == MapBoxConfig.MARKER_TITLE_DESTINATION) {
+                mapBoxMap.removeMarker(marker)
             }
     }
 
 
+    /* Updates the van location without zooming to the van */
     fun updateVanLocationWithoutZoom(point: Point) {
         this.vehicleLocation = point
         val icon = IconFactory.getInstance(this.activity!!)
-        if(this.currentVanPosition != null) {
+        if (this.currentVanPosition != null) {
             this.currentVanPosition!!.remove()
         }
         removeDrivingPositionOfDPDVan()
-        mapboxMap.addMarker(MarkerOptions()
-            .position(LatLng(vehicleLocation.latitude(), vehicleLocation.longitude()))
-            .title("DPD Van Driving")
-            .icon(icon.fromResource(R.mipmap.ic_custom_dpd_van_cropped)))
+        mapBoxMap.addMarker(
+            MarkerOptions()
+                .position(LatLng(vehicleLocation.latitude(), vehicleLocation.longitude()))
+                .title(MapBoxConfig.MARKER_TITLE_VAN_IS_DRIVING)
+                .icon(icon.fromResource(R.mipmap.ic_custom_dpd_van_cropped))
+        )
     }
 
+
+    /* Create new Cam Pos */
     private fun newCamPos(target: LatLng, zoom: Double) {
-        //create mew Cam Pos
         val cameraPosition = CameraPosition.Builder()
             .target(target)
             .zoom(zoom)
             .build()
 
-        // Move camera to new position
-        mapboxMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+        /* Move camera to new position */
+        mapBoxMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
     }
+
 
     private fun newCamPos(cameraPosition: CameraPosition) {
-        mapboxMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+        mapBoxMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
     }
 
+
     fun hideBottomSheetFromOutSide(event: MotionEvent) {
-        Log.i("fragment", "this was called")
         if (bottomSheetBehavior!!.state == BottomSheetBehavior.STATE_EXPANDED) {
             val outRect = Rect()
-            llBottomSheet!!.getGlobalVisibleRect(outRect)
+            bottomSheetLinearLayout!!.getGlobalVisibleRect(outRect)
             if (!outRect.contains(event.rawX.toInt(), event.rawY.toInt()))
                 bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_COLLAPSED
         }
     }
 
-    private fun collapseFAB(v: View) {
-        val current = courierRepo.getCourier()
-        if (current?.mapLabel!!) {
+
+    /* Collapes FloatingActionButton e.g. after Parcel confirmation */
+    private fun collapseFloatingActionButton(v: View) {
+        val courier = CourierRepository.shared.getCourier()
+        if (courier?.helpMode!!) {
             v.textview_parkinglocation.startAnimation(fadeOut)
             v.textview_vanlocation.startAnimation(fadeOut)
             v.textview_deliverylocation.startAnimation(fadeOut)
-            v.textview_summonvan.startAnimation(fadeOut)
         }
 
         v.fab_parkinglocation.startAnimation(fabClose)
         v.fab_vanlocation.startAnimation(fabClose)
         v.fab_deliverylocation.startAnimation(fabClose)
-        v.fab_summonvan.startAnimation(fabClose)
         v.fab.startAnimation(fabRotateAnticlockwise)
 
-        v.fab_summonvan.isClickable = false
         v.fab_deliverylocation.isClickable = false
         v.fab_vanlocation.isClickable = false
         v.fab_parkinglocation.isClickable = false
@@ -974,8 +951,9 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
         isOpen = false
     }
 
-    fun setParcelInformation() {
-        this.currentParcel = parcelRepo.getNextParcelToDeliver()
+    /* Sets parcel information in the bottom sheet */
+    fun setParcelInformation(con:AppCompatActivity) {
+        this.currentParcel = ParcelRepository.shared.getCurrentParcel()
         if (currentParcel?.address == null) {
             bottomSheetStreetName?.text = getString(R.string.no_data_available)
         } else {
@@ -983,7 +961,7 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
         }
 
         if (currentParcel?.additionalAddressInformation == null) {
-            bottomSheetStreetNameAdditionalInformation?.text = getString(R.string.no_data_available)
+            bottomSheetStreetNameAdditionalInformation?.text = con.getString(R.string.no_data_available)
         } else {
             bottomSheetStreetNameAdditionalInformation?.text = currentParcel?.additionalAddressInformation
         }
@@ -997,7 +975,7 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
 
 
         if (currentParcel?.additionalRecipientInformation == null) {
-            bottomSheetRecipientNameAdditionalInformation?.text = getString(R.string.no_data_available)
+            bottomSheetRecipientNameAdditionalInformation?.text = con.getString(R.string.no_data_available)
         } else {
             bottomSheetRecipientNameAdditionalInformation?.text = currentParcel?.additionalRecipientInformation
         }
@@ -1010,6 +988,7 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
     }
 
 
+    /* Startes GPS as a service */
     private fun startGPSService() {
         val gpsService = Intent(context!!.applicationContext, GPSService::class.java)
         activity!!.startService(gpsService)
@@ -1037,25 +1016,52 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
 
                     val latitude = intent.extras!!.getDouble("latitude")
                     val longitude = intent.extras!!.getDouble("longitude")
+                    Position.update(latitude, longitude)
 
-                    Position.latitude = latitude
-                    Position.longitude = longitude
+                    DynamicContent.manageDynamicContent()
+                    if (DynamicContent.isActivated) {
+                        expandBottomSheet()
+                    }
+
+                    IntelligentDriving.manageIntelligentDrivingMode()
+                    if(IntelligentDriving.isActivated) {
+                        var isParcelTooLarge = false
+                        if(SizeDependentWaiting.isEnabled) {
+                            val parcel = ParcelRepository.shared.getCurrentParcel()
+                            if(parcel != null) {
+                                if(ParcelUtil.getParcelSize(parcel) == "XL") {
+                                    /* Is doing nothing if parcel is too large */
+                                    isParcelTooLarge = true
+                                }
+                            }
+                        }
+
+                        if(isParcelTooLarge == false) {
+                            val nextDeliveryLocation = ParcelRepository.shared.getNextParcel()
+                            var nextParkingArea = ParkingAreaUtil.getNearestParkingArea(nextDeliveryLocation)
+                            if (nextParkingArea == null) {
+                                nextParkingArea =
+                                    ParkingAreaRepository.shared.getParkingAreaById("parkingArea_-24828111#0_0_15")
+                            }
+                            postNextParkingAreaToServer(nextParkingArea)
+                            IntelligentDriving.reset()
+                        }
+                    }
                 }
             }
         }
         activity?.registerReceiver(broadcastReceiver, IntentFilter("location_update"))
     }
 
-    //PERMISSIONS
 
-    @TargetApi(23)
+    /* PERMISSIONS */
+    @TargetApi(VanAssistConfig.TARGET_API)
     fun checkPermissions(): Boolean {
         var result: Int
         val listPermissionsNeeded = ArrayList<String>()
         for (p in permissions) {
             result = context!!.checkSelfPermission(p)
             if (result != PackageManager.PERMISSION_GRANTED) {
-                Log.d("INFO", "Log here")
                 listPermissionsNeeded.add(p)
             }
         }
@@ -1064,13 +1070,11 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
             ActivityCompat.requestPermissions(
                 this.activity!!,
                 listPermissionsNeeded.toTypedArray(),
-                MULTIPLE_PERMISSIONS
+                MapBoxConfig.MULTIPLE_PERMISSIONS
             )
-            Log.d("INFO", "Still need permissions")
             return false
 
         }
-        Log.d("INFO", "All permissions granted")
         return true
     }
 
@@ -1081,7 +1085,7 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
         grantResults: IntArray
     ) {
         when (requestCode) {
-            MULTIPLE_PERMISSIONS -> {
+            MapBoxConfig.MULTIPLE_PERMISSIONS -> {
                 if (grantResults.isNotEmpty()) {
                     var permissionsDenied = ""
                     for (per in permissionsList) {
@@ -1092,11 +1096,8 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
 
                     }
                     if (permissionsDenied != "") {
-                        Log.d("INFO", "All permissions denied")
-                        Log.d("INFO", permissionsDenied)
-
-                        showDialogOK("Writing and Location Services Permission required for this app. Do you want to change Permissions",
-                            DialogInterface.OnClickListener { dialog, which ->
+                        showDialogOK(getString(R.string.permission_alert),
+                            DialogInterface.OnClickListener { _, which ->
                                 when (which) {
                                     DialogInterface.BUTTON_POSITIVE -> checkPermissions()
                                     DialogInterface.BUTTON_NEGATIVE -> {
@@ -1112,49 +1113,58 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
         }
     }
 
-    /**
-     * Created by Jasmin & Raluca
-     *
+
+    /* Created by Jasmin & Raluca
      * Function that creates a dialog.
-     *
      * @param: message: The message displayed on the dialog
-     * @param: okListener: The implementation for the click listener
-     */
+     * @param: okListener: The implementation for the click listener */
     private fun showDialogOK(message: String, okListener: DialogInterface.OnClickListener) {
         AlertDialog.Builder(this.context)
             .setMessage(message)
-            .setPositiveButton("OK", okListener)
-            .setNegativeButton("Cancel", okListener)
+            .setPositiveButton(getString(R.string.ok), okListener)
+            .setNegativeButton(getString(R.string.cancel), okListener)
             .create()
             .show()
     }
 
+
     private fun testTargetApi(): Boolean {
-        if (Build.VERSION.SDK_INT < 23) {
+        if (Build.VERSION.SDK_INT < VanAssistConfig.TARGET_API) {
             return true
         }
         return false
     }
 
+    /* Send next parkingArea to the server */
     private fun postNextParkingAreaToServer() {
-        // instantiate API
         val api = VanAssistAPIController(activity!! as AppCompatActivity)
-        // send over parkingArea retrieved from ID from Repo
-        api.postNextParkingLocation(selectedParkingArea.getStringProperty("PA ID"))
-
+        /* send over parkingArea retrieved from ID from Repo */
+        if (selectedParkingArea != null) {
+            api.postNextParkingLocation(selectedParkingArea!!.getStringProperty("PA ID"))
+        } else {
+            api.postNextParkingLocation(nextParkingArea!!.id)
+        }
     }
 
+
+    /* Send next parkingArea to the server */
+    fun postNextParkingAreaToServer(parkingArea: ParkingAreaEntity) {
+        val api = VanAssistAPIController(activity!! as AppCompatActivity)
+        api.postNextParkingLocation(parkingArea.id)
+    }
+
+    /* EventHandler for interaction with the map */
     override fun onMapClick(point: LatLng): Boolean {
         if (wasclicked) {
-            val style = mapboxMap.style
+            val style = mapBoxMap.style
             if (style != null) {
 
-                val selectedMarkerSymbolLayer = style.getLayer(MARKER_STYLE_LAYER_SELECTED) as SymbolLayer
+                val selectedMarkerSymbolLayer = style.getLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED) as SymbolLayer
 
-                val pixel = mapboxMap.projection.toScreenLocation(point)
-                val features = mapboxMap.queryRenderedFeatures(pixel, MARKER_STYLE_LAYER)
-                val selectedFeature = mapboxMap.queryRenderedFeatures(
-                    pixel, MARKER_STYLE_LAYER_SELECTED
+                val pixel = mapBoxMap.projection.toScreenLocation(point)
+                val features = mapBoxMap.queryRenderedFeatures(pixel, MapBoxConfig.MARKER_STYLE_LAYER)
+                val selectedFeature = mapBoxMap.queryRenderedFeatures(
+                    pixel, MapBoxConfig.MARKER_STYLE_LAYER_SELECTED
                 )
 
                 if (selectedFeature.size > 0 && markerSelected) {
@@ -1171,18 +1181,17 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
                 val mutableList: MutableList<Feature> = arrayListOf()
                 mutableList.add(Feature.fromGeometry(features[0].geometry()))
 
-                val coorJSON = JSONObject(features[0].geometry()!!.toJson())
-                val coord = coorJSON.getJSONArray("coordinates")
+                val geoCoordinateJSON = JSONObject(features[0].geometry()!!.toJson())
+                val geoCoordinate = geoCoordinateJSON.getJSONArray("coordinates")
 
-                Log.d("FEATURES", features[0].toString())
                 selectedParkingArea = features[0]
 
-                val long_ = coord.getDouble(0)
-                val lat_ = coord.getDouble(1)
-                destination = Point.fromLngLat(long_, lat_)
-                newAnimatedCamPos(LatLng(lat_, long_), originalCamPos.zoom + 2, 500)
+                val longitude = geoCoordinate.getDouble(0)
+                val latitude = geoCoordinate.getDouble(1)
+                destination = Point.fromLngLat(longitude, latitude)
+                newAnimatedCamPos(LatLng(latitude, longitude), originalCamPos.zoom + 2, MapBoxConfig.CAM_POS_ANIMATION_IN_MS)
 
-                val source: GeoJsonSource = style.getSourceAs(MARKER_SOURCE_SELECTED)!!
+                val source: GeoJsonSource = style.getSourceAs(MapBoxConfig.MARKER_SOURCE_SELECTED)!!
                 source.setGeoJson(FeatureCollection.fromFeatures(mutableList))
 
                 if (markerSelected) {
@@ -1197,10 +1206,11 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
     }
 
 
+    /* Handles the deselection of markers */
     private fun deselectMarker(iconLayer: SymbolLayer) {
         val markerAnimator = ValueAnimator()
         markerAnimator.setObjectValues(2f, 1f)
-        markerAnimator.duration = 300
+        markerAnimator.duration = MapBoxConfig.MARKER_ANIMATION_DURATION
         markerAnimator.addUpdateListener {
             iconLayer.setProperties(PropertyFactory.iconSize(it.animatedValue as Float))
         }
@@ -1209,11 +1219,12 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
     }
 
 
+    /* Handles the selection of markers */
     private fun selectMarker(iconLayer: SymbolLayer) {
 
         val markerAnimator = ValueAnimator()
         markerAnimator.setObjectValues(1f, 2f)
-        markerAnimator.duration = 300
+        markerAnimator.duration = MapBoxConfig.MARKER_ANIMATION_DURATION
         markerAnimator.addUpdateListener {
             iconLayer.setProperties(PropertyFactory.iconSize(it.animatedValue as Float))
         }
@@ -1222,114 +1233,101 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
 
     }
 
+
+    /* Finish the interaction with the map (get van) */
     private fun finishGetVanLocation() {
 
-        //Strip markers
-        for (m in mapboxMap.markers) {
-            mapboxMap.removeMarker(m)
+        wasClickedVanLocation = false
+        /* Strip markers */
+        for (m in mapBoxMap.markers) {
+            mapBoxMap.removeMarker(m)
         }
-
         newCamPos(originalCamPos)
-
-
     }
 
-    private fun finishSetNextParking() {
 
-        // set wasclicked back
+    /* Finish the interaction with the map (set parkingArea) */
+    private fun finishSetNextParkingArea() {
+
+        /* reset wasClicked */
         if (wasclicked) {
             wasclicked = false
         }
 
-        // set wasclicked back
+        /* reset markerSelected */
         if (markerSelected) {
             markerSelected = false
         }
 
-        // strip all layers and sources
-        val style = mapboxMap.style
+        /* strip all layers and sources */
+        val style = mapBoxMap.style
         if (style != null) {
-            // strip layers and sources
-            mapboxMap.style?.removeLayer(MARKER_STYLE_LAYER)
-            mapboxMap.style?.removeLayer(MARKER_STYLE_LAYER_SELECTED)
-            mapboxMap.style?.removeSource(MARKER_SOURCE)
-            mapboxMap.style?.removeSource(MARKER_SOURCE_SELECTED)
+            /* strip layers and sources */
+            mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER)
+            mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED)
+            mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE)
+            mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE_SELECTED)
             fab_parkinglocation.setImageResource(R.drawable.ic_local_parking_black_24dp)
-
         }
 
-
-        //set back the routes
+        /* reset the routes */
         if (navigationMapRoute != null) {
             navigationMapRoute!!.removeRoute()
             routeShown = false
         }
 
-
-        //strip all markers
-        for (m in mapboxMap.markers) {
-            mapboxMap.removeMarker(m)
+        /* strip all markers */
+        for (m in mapBoxMap.markers) {
+            mapBoxMap.removeMarker(m)
         }
-
         newCamPos(originalCamPos)
-
     }
 
-    /**
-     * Created by Jasmin & Raluca
-     *
-     * Function that includes offline navigation through the map
-     */
+
+    /* Created by Jasmin & Raluca
+     * Function that includes offline navigation through the map */
     private fun offlineMap() {
 
-        //OFFLINE
         val offlineManager = OfflineManager.getInstance(this.activity!!)
 
-        //Create bonding box for offline region
+        /* Create bounding box for offline region */
         val latLngBounds = LatLngBounds.Builder()
-            .include(LatLng(49.4291, 8.6598)) //NW
-            .include(LatLng(49.4037, 8.7148)) //SE
+            .include(MapBoxConfig.OFFLINE_MAP_BOUND_NORTH_WEST)
+            .include(MapBoxConfig.OFFLINE_MAP_BOUND_SOUTH_EAST)
             .build()
 
-        Log.d("STYLE", mapboxMap.style?.url.toString())
-        //define offline region
+        /* Define offline region */
         val definition = OfflineTilePyramidRegionDefinition(
-            mapboxMap.style?.url,
+            mapBoxMap.style?.url,
             latLngBounds,
-            8.5,
-            18.5,
+            MapBoxConfig.MIN_ZOOM,
+            MapBoxConfig.MAX_ZOOM,
             this.resources.displayMetrics.density
         )
 
-        //metadata
-        //implementation uses JSON to store Neuenheim as the offline region name
+        /* metadata */
+        /* implementation uses JSON to store Neuenheim as the offline region name */
         var metadata: ByteArray?
         try {
 
             val jsonObject = JSONObject()
             jsonObject.put("Region", "Neuenheim")
             val json = jsonObject.toString()
-            metadata = json.toByteArray(charset("UTF-8"))
+            metadata = json.toByteArray(charset(VanAssistConfig.CHAR_SET))
         } catch (e: Exception) {
-
-            Log.e("ERRORRRR", "Failed to encode metadata: " + e.message)
             metadata = null
         }
 
-
-        //checking if the region is already downloaded
+        /* checking if the region is already downloaded */
         var regionDownloaded = true
         offlineManager.listOfflineRegions(object : OfflineManager.ListOfflineRegionsCallback {
             override fun onList(offlineRegions: Array<out OfflineRegion>?) {
                 regionDownloaded = !(offlineRegions == null || offlineRegions.isEmpty())
             }
 
-            override fun onError(error: String?) {
-                Log.e("ERROR", "Error: $error")
-            }
+            override fun onError(e: String?) {}
 
         })
-
 
         offlineManager.createOfflineRegion(definition, metadata!!, object : OfflineManager.CreateOfflineRegionCallback {
             override fun onCreate(offlineRegion: OfflineRegion?) {
@@ -1337,46 +1335,26 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
 
                 offlineRegion?.setObserver(object : OfflineRegion.OfflineRegionObserver {
                     override fun mapboxTileCountLimitExceeded(limit: Long) {
-                        // Notify if offline region exceeds maximum tile count
-                        Log.e("ERROR", "Mapbox tile count limit exceeded: $limit")
+                        /* Notify if offline region exceeds maximum tile count */
                     }
 
-                    override fun onStatusChanged(status: OfflineRegionStatus?) {
+                    override fun onStatusChanged(status: OfflineRegionStatus?) {}
 
-                        // Calculate the download percentage
-                        val percentage = if (status?.requiredResourceCount!! >= 0)
-                            100.0 * status.completedResourceCount / status.requiredResourceCount else 0.0
-
-                        if (status.isComplete) {
-                            // Download complete
-                            Log.d("ERROR", "Region downloaded successfully.")
-                        } else if (status.isRequiredResourceCountPrecise) {
-                            Log.d("ERROR", percentage.toString())
-                        }
-                    }
-
-                    override fun onError(error: OfflineRegionError?) {
-
-                        // If an error occurs, print to logcat
-                        Log.e("ERROR", "onError reason: " + error?.reason)
-                        Log.e("ERROR", "onError message: " + error?.message)
-                    }
+                    override fun onError(error: OfflineRegionError?) {}
                 })
             }
 
-            override fun onError(error: String?) {
-                Log.e("ERROR", "Error: $error")
-            }
+            override fun onError(error: String?) {}
         })
 
-        // Customize the download notification's appearance
+        /* Customize the download notification's appearance */
         val notificationOptions = NotificationOptions.builder(this.activity!!)
             .smallIconRes(R.drawable.mapbox_logo_icon)
             .returnActivity(this.activity!!::class.java.name)
             .build()
 
         if (!regionDownloaded) {
-            // Start downloading the map tiles for offline use
+            /* Start downloading the map tiles for offline use */
             OfflinePlugin.getInstance(this.activity!!).startDownload(
                 OfflineDownloadOptions.builder()
                     .definition(definition)
@@ -1385,50 +1363,10 @@ class MapFragmentOld : androidx.fragment.app.Fragment(), OnMapReadyCallback, Map
                     .build()
             )
         }
-
-        offlineManager.listOfflineRegions(object : OfflineManager.ListOfflineRegionsCallback {
-            override fun onList(offlineRegions: Array<out OfflineRegion>?) {
-                // Get the region bounds and zoom and move the camera.
-                val bounds = (offlineRegions!![0].definition as OfflineTilePyramidRegionDefinition).bounds
-                Log.d("BOUNDS", bounds.toString())
-
-                val regionZoom = (offlineRegions[0].definition as OfflineTilePyramidRegionDefinition).minZoom
-                Log.d("BOUNDS", regionZoom.toString())
-
-            }
-
-            override fun onError(error: String?) {
-                Log.e("ERROR", "Error: $error")
-            }
-
-        })
     }
 
 
-    //NAVIGATION EVENT LISTENER
-    override fun onRunning(running: Boolean) {
-        if (running) {
-           Log.d("onRunning:", "Started")
-        } else {
-            Log.d("onRunning:", "Stopped")
-        }
+    fun expandBottomSheet() {
+        bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_EXPANDED
     }
-
-    override fun onNavigationFinished() {
-        Log.d("onRunning:", "Finished")
-    }
-
-    override fun onNavigationRunning() {
-        Log.d("onRunning:", "Started")
-    }
-
-    override fun onCancelNavigation() {
-        Log.d("onRunning:", "Canceled")
-    }
-
-    override fun onProgressChange(location: Location?, routeProgress: RouteProgress?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-
 }

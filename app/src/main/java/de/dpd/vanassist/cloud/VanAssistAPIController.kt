@@ -2,18 +2,15 @@ package de.dpd.vanassist.cloud
 
 import android.app.ProgressDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import android.util.Log
-import android.widget.TextView
 import org.json.JSONException
 import org.json.JSONObject
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GetTokenResult
-import com.google.android.gms.tasks.OnCompleteListener
 import de.dpd.vanassist.R
 import de.dpd.vanassist.activity.MapActivity
 import de.dpd.vanassist.config.Path
-import de.dpd.vanassist.database.entity.Parcel
-import de.dpd.vanassist.util.Vehicle
+import de.dpd.vanassist.database.entity.ParcelEntity
 import de.dpd.vanassist.database.repository.CourierRepository
 import de.dpd.vanassist.database.repository.ParcelRepository
 import de.dpd.vanassist.database.repository.ParkingAreaRepository
@@ -28,46 +25,30 @@ import de.dpd.vanassist.config.FragmentTag
 import de.dpd.vanassist.util.toast.Toast
 import okhttp3.*
 import java.io.IOException
-import kotlin.collections.HashMap
 
 
-class VanAssistAPIController(act: AppCompatActivity) {
+class VanAssistAPIController(activity: AppCompatActivity) {
 
     private val service = ServiceVolley()
-    var resultAPI = HashMap<String, String?>()
     private val apiController = APIController(service)
-    val main = act
-    lateinit var parcelRepo: ParcelRepository
-    lateinit var courierRepo: CourierRepository
-    lateinit var parkingAreaRepo: ParkingAreaRepository
-
+    val main = activity
 
     private lateinit var auth: FirebaseAuth
 
 
-    /**
-     * Created by Axel Herbstreith and Jasmin Weimüller
-     *
+    /* Created by Axel Herbstreith and Jasmin Weimüller
      * Starts the log in process for the courier
      * Firebase Authentication is handled in this method, if successful courier information will be loaded from server
      *
      * @param activity, username, password
-     * @return void
-     **/
+     * @return void */
     fun userAuthentication(act: AppCompatActivity, userName: String, password: String) {
-        courierRepo = CourierRepository(main)
         val dialog = ProgressDialog.show(act, "", act.getString(R.string.authenticating___), true)
         auth = FirebaseAuth.getInstance()
-
-
         auth.signInWithEmailAndPassword(userName, password)
             .addOnCompleteListener(act) { task ->
                 if (task.isSuccessful) {
-
-                    parcelRepo = ParcelRepository(main)
-                    parkingAreaRepo = ParkingAreaRepository(main)
                     loadAndSaveCourierInformation(act, dialog, userName)
-                    //getAllParkingLocations()
                 } else {
                     dialog.dismiss()
                     android.widget.Toast.makeText(
@@ -79,16 +60,15 @@ class VanAssistAPIController(act: AppCompatActivity) {
             }
     }
 
-    /**
-     * Created by Axel Herbstreith and Jasmin Weimüller
+    /* Created by Axel Herbstreith and Jasmin Weimüller
      *
      * Load and saves the courier information
-     * --> Get the Firebase Token
-     * --> Create params for api call
+     * -> Get the Firebase Token
+     * -> Create params for api call
      * Then all parcel information are loaded in background
      * Then, the map Activity is only started when
      *  - the data was retrieved from server, stored on the local database and checked if exactly one user entry is in the local DB
-     *  - All permissions are granted, if not --> start Permission Activity
+     *  - All permissions are granted, if not -> start Permission Activity
      *
      * @param activity, dialog
      * @return Void
@@ -97,49 +77,41 @@ class VanAssistAPIController(act: AppCompatActivity) {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
             .addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    return@addOnCompleteListener
-                }
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
 
-                val uid = task.result!!.token ?: return@addOnCompleteListener
+                        val params = CourierJSONParser.createHeaderCourierInformationRequest(uid, userName)
+                        val path = Path.COURIER_INFORMATION
 
-                val params = CourierJSONParser.createHeaderCourierInformationRequest(uid, userName)
-                val path = Path.COURIER_INFORMATION
+                        apiController.get(path, params) { response ->
+                            if (response != null) {
+                                try {
+                                    val jsonObject = JSONObject(response.toString())
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
 
-                apiController.get(path, params) { response ->
-                    if (response == null) {
-                        Log.d("Error", "catch load and save courier")
-                        return@get
-                    }
-
-                    val strResp = response.toString()
-                    try {
-                        val jsonObject = JSONObject(strResp)
-                        val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
-                        Log.wtf("courier info", "->" + courier.languageCode)
-                        courierRepo.insert(courier)
-
-                        if (courierRepo.getAll().count() == 1) {
-                            loadAndSaveAllParcel()
-                            dialog.dismiss()
-                            MapActivity.start(act)
-                            //                                        if(PermissionHandler.permissionGranted(act))  {
-                            //                                            MapActivity.start(act)
-                            //                                        } else {
-                            //                                            PermissionActivity.start(act)
-                            //                                        }
+                                    if (CourierRepository.shared.getAll().count() == 1) {
+                                        loadAndSaveAllParcel()
+                                        dialog.dismiss()
+                                        MapActivity.start(act)
+                                    }
+                                } catch (e: JSONException) {
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_courier_information_loading))
+                            }
                         }
-
-                    } catch (e: JSONException) {
-                        e.printStackTrace()
                     }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_courier_information_loading))
                 }
             }
     }
 
 
-    /**
-     * Created by Axel Herbstreith and Jasmin Weimüller
+    /* Created by Axel Herbstreith and Jasmin Weimüller
      *
      * Requests all parcel information from server, parses the response and stores it on the local database
      *
@@ -154,10 +126,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                     val uid = task.result!!.token
                     if (uid != null) {
 
-                        parcelRepo = ParcelRepository(main)
-                        courierRepo = CourierRepository(main)
-                        parkingAreaRepo = ParkingAreaRepository(main)
-                        val courier = courierRepo.getCourier()!!
+                        val courier = CourierRepository.shared.getCourier()!!
                         val courierId = courier.id
                         val verificationToken = courier.verificationToken
                         val params = ParcelJSONParser.createHeaderGetAllParcelRequest(uid, courierId, verificationToken)
@@ -169,8 +138,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 try {
                                     val jsonObject = JSONObject(strResp)
                                     val parcelResponseObject = ParcelJSONParser.parseResponseToParcelList(jsonObject)
-                                    courierRepo.updateVerificationToken(parcelResponseObject.verificationToken)
-                                    parcelRepo.insertAll(parcelResponseObject.parcelList)
+                                    CourierRepository.shared.updateVerificationToken(parcelResponseObject.verificationToken)
+                                    ParcelRepository.shared.insertAll(parcelResponseObject.parcelList)
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_loading))
                                     e.printStackTrace()
@@ -186,8 +155,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
             }
     }
 
-    /**
-     * Created by Axel Herbstreith and Jasmin Weimüller
+    /* Created by Axel Herbstreith and Jasmin Weimüller
      *
      * Sends the updated parcel status to the server, when request was successful, the updated parcel information will be send back to frontend
      * This updated parcel information are parsed and stored in the local db again, after this process, the parcel information in the parcel sheet (UI) will pe updated.
@@ -202,23 +170,20 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 if (task.isSuccessful) {
                     val uid = task.result!!.token
                     if (uid != null) {
-                        courierRepo = CourierRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val path = Path.PARCEL_CONFIRM_DELIVERY_SUCCESS
                         val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
                         val body = ParcelJSONParser.createBodyConfirmParcelRequest(parcelId)
 
                         apiController.put(path, header, body) { response ->
-                            Log.wtf("response", response.toString())
                             if (response != null) {
                                 val strResp = response.toString()
 
                                 try {
                                     val jsonObject = JSONObject(strResp)
                                     val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
-                                    parcelRepo = ParcelRepository(main)
-                                    parcelRepo.insert(parcel)
-                                    FragmentRepo.mapFragmentOld?.setParcelInformation()
+                                    ParcelRepository.shared.insert(parcel)
+                                    FragmentRepo.mapFragmentOld?.setParcelInformation(main)
                                     if (FragmentRepo.parcelListFragmentDeliverySuccess != null) {
                                         FragmentRepo.parcelListFragmentDeliverySuccess!!.updateAdapter()
                                     }
@@ -239,11 +204,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-    /*
-     *
-     * Parcel ... Failure Parcel Order
-     *
-     */
+    /* Confirms that the courier failed to deliver the parcel */
     fun confirmParcelDeliveryFailure(parcelId: String) {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
@@ -251,8 +212,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 if (task.isSuccessful) {
                     val uid = task.result!!.token
                     if (uid != null) {
-                        courierRepo = CourierRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val path = Path.PARCEL_CONFIRM_DELIVERY_FAILURE
                         val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
                         val body = ParcelJSONParser.createBodyConfirmParcelRequest(parcelId)
@@ -264,9 +224,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 try {
                                     val jsonObject = JSONObject(strResp)
                                     val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
-                                    parcelRepo = ParcelRepository(main)
-                                    parcelRepo.insert(parcel)
-                                    FragmentRepo.mapFragmentOld?.setParcelInformation()
+                                    ParcelRepository.shared.insert(parcel)
+                                    FragmentRepo.mapFragmentOld?.setParcelInformation(main)
                                     if (FragmentRepo.parcelListFragmentDeliveryFailure != null) {
                                         FragmentRepo.parcelListFragmentDeliveryFailure!!.updateAdapter()
                                     }
@@ -287,12 +246,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-    /*
-    *
-    * Parcel ... Undo Parcel Delivery Confirmation
-    *
-    */
-    fun undoParcelDeliveryConfirmation(parcel: Parcel) {
+    /* Undo of the parcel delivery confirmation */
+    fun undoParcelDeliveryConfirmation(parcel: ParcelEntity) {
 
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
@@ -300,9 +255,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 if (task.isSuccessful) {
                     val uid = task.result!!.token
                     if (uid != null) {
-
-                        courierRepo = CourierRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
                         val body = ParcelJSONParser.createBodyConfirmParcelRequest(parcel.id)
                         val path = Path.PARCEL_DELIVERY_UNDO
@@ -314,8 +267,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 try {
                                     val jsonObject = JSONObject(strResp)
                                     val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
-                                    parcelRepo = ParcelRepository(main)
-                                    parcelRepo.insert(parcel)
+                                    ParcelRepository.shared.insert(parcel)
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_undo_parcel_delivery))
                                     e.printStackTrace()
@@ -332,8 +284,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-    /**
-     * Created by Axel Herbstreith and Jasmin Weimüller
+    /* Created by Axel Herbstreith and Jasmin Weimüller
      *
      * Sends the updated courier darkmode setting to the server, when request was successful, the updated courier information will be send back to frontend
      * This updated courier information are parsed and stored in the local db again
@@ -348,9 +299,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 if (task.isSuccessful) {
                     val uid = task.result!!.token
                     if (uid != null) {
-
-                        courierRepo = CourierRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
                         val body = ParcelJSONParser.createRequestEmptyBody()
                         val path = Path.ENABLE_DARK_MODE
@@ -362,11 +311,10 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 try {
                                     val jsonObject = JSONObject(strResp)
                                     val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
-                                    courierRepo.insert(courier)
-                                    var test = courierRepo.getCourier()
-                                    Log.d("API COURIER THEME", test!!.darkMode.toString())
-                                    main!!.recreate()
-
+                                    CourierRepository.shared.insert(courier)
+                                    main.delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                                    //AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                                    main.recreate()
 
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_dark_mode_activation))
@@ -384,8 +332,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-    /**
-     * Created by Axel Herbstreith and Jasmin Weimüller
+    /* Created by Axel Herbstreith and Jasmin Weimüller
      *
      * Sends the updated courier darkmode setting to the server, when request was successful, the updated courier information will be send back to frontend
      * This updated courier information are parsed and stored in the local db again
@@ -402,8 +349,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                     val uid = task.result!!.token
                     if (uid != null) {
 
-                        courierRepo = CourierRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
                         val body = ParcelJSONParser.createRequestEmptyBody()
                         val path = Path.DISABLE_DARK_MODE
@@ -415,10 +361,9 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 try {
                                     val jsonObject = JSONObject(strResp)
                                     val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
-                                    courierRepo.insert(courier)
-                                    var test = courierRepo.getCourier()
-                                    Log.d("API COURIER THEME", test!!.darkMode.toString())
-                                    main!!.recreate()
+                                    CourierRepository.shared.insert(courier)
+                                    main.delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                                    main.recreate()
 
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_dark_mode_deactivation))
@@ -436,8 +381,559 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-    /**
-     * Created by Axel Herbstreith
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier intelligence mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun enableAmbientIntelligenceMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.ENABLE_AMBIENT_INTELLIGENCE_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.ambient_intelligence_activation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.ambient_intelligence_activation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.ambient_intelligence_activation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier intelligence mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun disableAmbientIntelligenceMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.DISABLE_AMBIENT_INTELLIGENCE_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.ambient_intelligence_deactivation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.ambient_intelligence_deactivation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.ambient_intelligence_deactivation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier time based dark mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun enableTimeBasedDarkMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.ENABLE_TIME_BASED_DARK_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.time_dependent_darkmode_activation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.time_dependent_darkmode_activation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.time_dependent_darkmode_activation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier time based dark mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun disableTimeBasedDarkMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.DISABLE_TIME_BASED_DARK_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.time_dependent_darkmode_deactivation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.time_dependent_darkmode_deactivation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.time_dependent_darkmode_deactivation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier size dependent waiting mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun enableSizeDependentWaitingMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.ENABLE_SIZE_DEPENDENT_WAITING_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.size_dependent_waiting_mode_activation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.size_dependent_waiting_mode_activation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.size_dependent_waiting_mode_activation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier size dependent waiting mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun disableSizeDependentWaitingMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.DISABLE_SIZE_DEPENDENT_WAITING_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    //Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.size_dependent_waiting_mode_deactivation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                //Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.size_dependent_waiting_mode_deactivation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    //Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.size_dependent_waiting_mode_deactivation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier dynamic content mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun enableDynamicContentMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.ENABLE_DYNAMIC_CONTENT_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.dynamic_content_activation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.dynamic_content_activation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.dynamic_content_activation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier dynamic content mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun disableDynamicContentMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.DISABLE_DYNAMIC_CONTENT_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.dynamic_content_deactivation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.dynamic_content_deactivation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.dynamic_content_deactivation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier gamification mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun enableGamificationMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.ENABLE_GAMIFICATION_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.gamification_activation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.gamification_activation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.gamification_activation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier gamification mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun disableGamificationMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.DISABLE_GAMIFICATION_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.gamification_deactivation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.gamification_deactivation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.gamification_deactivation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier intelligent driving mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun enableIntelligentDrivingMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.ENABLE_INTELLIGENT_DRIVING_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.intelligent_driving_activation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.intelligent_driving_activation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.intelligent_driving_activation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
+     *
+     * Sends the updated courier intelligent driving mode setting to the server, when request was successful, the updated courier information will be send back to frontend
+     * This updated courier information are parsed and stored in the local db again
+     *
+     * @param
+     * @return void
+     **/
+    fun disableIntelligentDrivingMode() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = CourierJSONParser.createDefaultHeader(uid, courierId)
+                        val body = ParcelJSONParser.createRequestEmptyBody()
+                        val path = Path.DISABLE_INTELLIGENT_DRIVING_MODE
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                val strResp = response.toString()
+
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                    CourierRepository.shared.insert(courier)
+
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.intelligent_driving_deactivation_failed))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.intelligent_driving_deactivation_failed))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.intelligent_driving_deactivation_failed))
+                }
+            }
+    }
+
+
+    /* Created by Axel Herbstreith
      *
      * Sends the updated courier language setting to the server, when request was successful, the updated courier information will be send back to frontend
      * This updated courier information are parsed and stored in the local db again
@@ -453,8 +949,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                     val uid = task.result!!.token
                     if (uid != null) {
 
-                        courierRepo = CourierRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
                         val body = CourierJSONParser.createRequestBodyChangeLanguage(languageCode)
                         val path = Path.CHANGE_LANGUAGE
@@ -466,7 +961,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 try {
                                     val jsonObject = JSONObject(strResp)
                                     val newCourier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
-                                    courierRepo.insert(newCourier)
+                                    CourierRepository.shared.insert(newCourier)
 
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_change_language))
@@ -484,8 +979,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-    /**
-     * Created by Axel Herbstreith and Jasmin Weimüller
+    /* Created by Axel Herbstreith and Jasmin Weimüller
      *
      * Sends the updated courier map label setting to the server, when request was successful, the updated courier information will be send back to frontend
      * This updated courier information are parsed and stored in the local db again
@@ -493,7 +987,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
      * @param
      * @return void
      */
-    fun enableMapLabel() {
+    fun enableHelpMode() {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
             .addOnCompleteListener { task ->
@@ -501,8 +995,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                     val uid = task.result!!.token
                     if (uid != null) {
 
-                        courierRepo = CourierRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
                         val body = ParcelJSONParser.createRequestEmptyBody()
                         val path = Path.ENABLE_MAP_LABEL
@@ -514,7 +1007,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 try {
                                     val jsonObject = JSONObject(strResp)
                                     val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
-                                    courierRepo.insert(courier)
+                                    CourierRepository.shared.insert(courier)
                                 } catch (e: JSONException) {
                                     e.printStackTrace()
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_help_label_activation))
@@ -531,8 +1024,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-    /**
-     * Created by Axel Herbstreith and Jasmin Weimüller
+    /* Created by Axel Herbstreith and Jasmin Weimüller
      *
      * Sends the updated courier map label setting to the server, when request was successful, the updated courier information will be send back to frontend
      * This updated courier information are parsed and stored in the local db again
@@ -540,7 +1032,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
      * @param
      * @return void
      */
-    fun disableMapLabel() {
+    fun disableHelpMode() {
 
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
@@ -548,8 +1040,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 if (task.isSuccessful) {
                     val uid = task.result!!.token
                     if (uid != null) {
-                        courierRepo = CourierRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
                         val body = ParcelJSONParser.createRequestEmptyBody()
                         val path = Path.DISABLE_MAP_LABEL
@@ -560,7 +1052,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 try {
                                     val jsonObject = JSONObject(strResp)
                                     val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
-                                    courierRepo.insert(courier)
+                                    CourierRepository.shared.insert(courier)
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_help_label_deactivation))
                                     e.printStackTrace()
@@ -577,6 +1069,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
+    /* Starts the simulation
+     * This method needs to be executed by another framework than volley (in our case OkHttp3) since there was an issue with using Volley -> see report) */
     fun startSimulation() {
 
         FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { instanceIdResult ->
@@ -588,8 +1082,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
                     if (task.isSuccessful) {
                         val uid = task.result!!.token
                         if (uid != null) {
-                            courierRepo = CourierRepository(main)
-                            val courierId = courierRepo.getCourierId()!!
+
+                            val courierId = CourierRepository.shared.getCourierId()!!
                             val url = Path.BASE_PATH + Path.SIMULATION_START
                             val client = OkHttpClient()
                             val secondsSinceMidnight = DateParser.getSecondsSinceMidnight().toString()
@@ -599,10 +1093,9 @@ class VanAssistAPIController(act: AppCompatActivity) {
                             head.put("courier_id", courierId)
                             head.put("seconds_since_midnight", secondsSinceMidnight)
                             head.put("fcm_token", fcmToken)
-                            val headerbuild = Headers.of(head)
-                            //val params = CourierJSONParser.createHeaderStartSimulation(uid, courierId, secondsSinceMidnight.toLong())
+                            val headerBuild = Headers.of(head)
 
-                            val request = Request.Builder().url(url).headers(headerbuild).build()
+                            val request = Request.Builder().url(url).headers(headerBuild).build()
 
 
 
@@ -618,6 +1111,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                             val strResp = response.body()!!.string()
                                             try {
                                                 val jsonObject = JSONObject(strResp)
+                                                Log.wtf("Test;", strResp)
                                                 val data = jsonObject.getJSONObject("data")
                                                 val simulationIsRunning = data.getBoolean("simulation_is_running")
 
@@ -654,12 +1148,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-    /**
-     * Created by Axel Herbstreith
-     *
-     * @param
-     * @return void
-     */
+    /* Created by Axel Herbstreith
+     * Stops the running simulation */
     fun stopSimulation() {
 
         val user = FirebaseAuth.getInstance().currentUser
@@ -668,15 +1158,14 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 if (task.isSuccessful) {
                     val uid = task.result!!.token
                     if (uid != null) {
-                        courierRepo = CourierRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
                         val body = ParcelJSONParser.createRequestEmptyBody()
                         val path = Path.SIMULATION_STOP
 
                         apiController.put(path, header, body) { response ->
                             if (response != null) {
-                                val strResp = response.toString()
                                 try {
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
@@ -694,11 +1183,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
     }
 
 
-    /*
-     *
-     * Parcel ... Update Parcel Order
-     *
-     */
+    /* This call updated the parcel order */
     fun updateParcelPosition(parcelId: String, newPos: Int) {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
@@ -706,9 +1191,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 if (task.isSuccessful) {
                     val uid = task.result!!.token
                     if (uid != null) {
-                        courierRepo = CourierRepository(main)
-                        parcelRepo = ParcelRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val header = ParcelJSONParser.createHeaderUpdateParcelPosition(uid, courierId)
                         val body = ParcelJSONParser.createRequestBodyUpdateParcelPosition(parcelId, newPos)
 
@@ -718,9 +1202,10 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 val strResp = response.toString()
                                 try {
                                     val jsonObject = JSONObject(strResp)
-                                    val parcelList =
-                                        ParcelJSONParser.parseResponseToParcelListWithoutVerificationToken(jsonObject)
-                                    parcelRepo.insertAll(parcelList)
+                                    val parcelList = ParcelJSONParser.parseResponseToParcelListWithoutVerificationToken(jsonObject)
+
+                                    ParcelRepository.shared.insertAll(parcelList)
+
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_update_parcel_position))
                                     e.printStackTrace()
@@ -736,12 +1221,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
             }
     }
 
-/*
- *
- * Vehicle ... Get All Parking Locations
- *
- */
 
+    /* Loads all parking areas from backend */
     fun getAllParkingLocations() {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
@@ -749,8 +1230,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 if (task.isSuccessful) {
                     val uid = task.result!!.token
                     if (uid != null) {
-                        val courierRepo = CourierRepository(main)
-                        val courierId = courierRepo.getCourierId()!!
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val path = Path.PARKING_ALL
                         val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
 
@@ -759,19 +1240,15 @@ class VanAssistAPIController(act: AppCompatActivity) {
 
                                 val strResp = response.toString()
                                 try {
-                                    parkingAreaRepo = ParkingAreaRepository(main)
                                     val jsonObject = JSONObject(strResp)
-                                    val parkingAreaResponseObject =
-                                        ParkingAreaJSONParser.parseResponseToParkingAreaObject(jsonObject)
-                                    Log.d("PARKING", parkingAreaResponseObject.toString())
-                                    parkingAreaRepo.insertAll(parkingAreaResponseObject)
+                                    val parkingAreaResponseObject = ParkingAreaJSONParser.parseResponseToParkingAreaObject(jsonObject)
+                                    ParkingAreaRepository.shared.insertAll(parkingAreaResponseObject)
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_load_parking_location))
                                     e.printStackTrace()
                                 }
                             } else {
                                 Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_load_parking_location))
-                                Log.d("Error", response.toString())
                             }
                         }
                     }
@@ -781,12 +1258,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
             }
     }
 
-    /*
- *
- * Vehicle ... Get All Parking Locations
- *
- */
 
+    /* Sends next Parking Location to Server */
     fun postNextParkingLocation(paID: String) {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
@@ -794,10 +1267,8 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 if (task.isSuccessful) {
                     val uid = task.result!!.token
                     if (uid != null) {
-                        val courierRepo = CourierRepository(main)
-                        val parkingAreaRepo = ParkingAreaRepository(main)
-                        val pA = parkingAreaRepo.getParcelById(paID)
-                        val courierId = courierRepo.getCourierId()!!
+                        val pA = ParkingAreaRepository.shared.getParkingAreaById(paID)
+                        val courierId = CourierRepository.shared.getCourierId()!!
                         val path = Path.PARKING_NEXT
                         val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
                         val body = ParkingAreaJSONParser.createBodyPostNextParkingLocation(pA)
@@ -809,10 +1280,7 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                     val jsonObject = JSONObject(strResp)
                                     val parkingAreaResponseObject =
                                         ParkingAreaJSONParser.parseResponseToParkingAreaObjectSingle(jsonObject)
-                                    Log.d("SINGLE PARKING", parkingAreaResponseObject.toString())
-                                    //parkingAreaRepo.insertAll(parkingAreaResponseObject)
 
-                                    //Do something with this object
                                 } catch (e: JSONException) {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
                                     e.printStackTrace()
@@ -820,8 +1288,6 @@ class VanAssistAPIController(act: AppCompatActivity) {
                                 }
                             } else {
                                 Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
-                                Log.d("Error", "Error with Parking Area Request")
-                                Log.d("Error", response.toString())
                             }
                         }
                     }
@@ -830,334 +1296,4 @@ class VanAssistAPIController(act: AppCompatActivity) {
                 }
             }
     }
-
-
-    /*********************************************NOT_IMPLEMENTED**************************************************/
-
-
-    fun getCurrentUid() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener(OnCompleteListener<GetTokenResult> { task ->
-                if (task.isSuccessful) {
-                    val local_idToken = task.result!!.token
-                    if (local_idToken != null) {
-                        Log.d("UID", local_idToken)
-                    }
-                } else {
-                }
-            })
-    }
-
-    /*
-     *
-     * Vehicle ... Get Current Location of Vehicle
-     *
-     */
-    fun getLocation() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener(OnCompleteListener<GetTokenResult> { task ->
-                if (task.isSuccessful) {
-                    // DO EVERYTHING IN HERE
-                    val local_idToken = task.result!!.token
-                    if (local_idToken != null) {
-                        Log.d("UID", local_idToken)
-                        Log.d("UID", local_idToken.length.toString())
-                        var params = JSONObject()
-                        params.put("uid", local_idToken)
-                        /* FOR OVERRIDING the usual headers
-                        params.put("courier_id", "vanassist")
-                        params.put("van_id", "")
-                        */
-                        var lat = "";
-                        var long = "";
-                        var message: String
-                        var status: String
-                        var path = "vehicle/location"
-
-                        apiController.get(path, params) { response ->
-                            if (response != null) {
-                                var strResp = response.toString()
-                                Log.d("Location", strResp)
-                                try {
-
-                                    var jsonObject = JSONObject(strResp)
-                                    var jo = jsonObject.getJSONObject("data")
-                                    lat = jo.getString("latitude")
-                                    long = jo.getString("longitude")
-                                    message = jsonObject.getString("message").toString()
-                                    status = jsonObject.getString("status").toString()
-
-                                    var loc_vehicle = Vehicle(lat, long)
-
-                                    /*
-                                    NOW WORK WITH VEHICLE
-                                     */
-                                    Log.d("RESULT_API", resultAPI.size.toString())
-                                    var txtView = main.findViewById(de.dpd.vanassist.R.id.txtResult) as TextView
-                                    txtView.text = strResp
-
-                                } catch (e: JSONException) {
-                                    e.printStackTrace()
-                                }
-                                Log.d("RESULT_API", resultAPI.toString())
-                                var statusResult = "";
-                                statusResult = resultAPI.get("status").toString()
-                                Log.d("RESULT_API", statusResult)
-                                /*
-                                EVERYTHING WE WANT TO DO WITH THE RESULT SHOULD GO IN HERE!
-                                 */
-                            } else {
-                                Log.d("Error", "catch get Location")
-                            }
-                        }
-                    }
-                } else {
-                }
-            })
-    }
-
-
-    /*
-     *
-     * Vehicle ... Summon Van
-     *
-     */
-
-    fun putSummonVan(loc_courier_lat: String, loc_courier_long: String) {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener(OnCompleteListener<GetTokenResult> { task ->
-                if (task.isSuccessful) {
-                    // DO EVERYTHING IN HERE
-                    val local_idToken = task.result!!.token
-                    if (local_idToken != null) {
-                        Log.d("UID", local_idToken)
-                        Log.d("UID", local_idToken.length.toString())
-                        var params = JSONObject()
-                        params.put("uid", local_idToken)
-                        /* FOR OVERRIDING the usual headers
-                        params.put("courier_id", "vanassist")
-                        params.put("van_id", "")
-                        */
-                        var innerparams = JSONObject()
-                        var path = "vehicle/location"
-
-                        var message: String
-                        var status: String
-                        var lat = loc_courier_lat;
-                        var long = loc_courier_long;
-
-                        innerparams.put("latitude", lat)
-                        innerparams.put("longitude", long)
-                        params.put("location", innerparams)
-
-                        apiController.get(path, params) { response ->
-                            if (response != null) {
-                                //do Response Parsing
-                                var strResp = response.toString()
-                                Log.d("Summon var", strResp)
-                                try {
-                                    var jsonObject = JSONObject(strResp)
-                                    var jo = jsonObject.getJSONObject("data")
-                                    lat = jo.getString("latitude")
-                                    long = jo.getString("longitude")
-                                    message = jsonObject.getString("message").toString()
-                                    status = jsonObject.getString("status").toString()
-
-                                    var loc_vehicle = Vehicle(lat, long)
-                                    var txtView = main.findViewById(de.dpd.vanassist.R.id.txtResult) as TextView
-                                    txtView.text = strResp
-                                    /*
-                                    NOW WORK WITH VEHICLE
-                                     */
-
-                                } catch (e: JSONException) {
-                                    e.printStackTrace()
-                                }
-                                /*
-                                EVERYTHING WE WANT TO DO WITH THE RESULT SHOULD GO IN HERE!
-                                 */
-                            } else {
-                                Log.d("Error", "catch summon van")
-                            }
-                        }
-                    }
-                } else {
-                }
-            })
-    }
-
-
-/*
- *
- * Vehicle ... get UID
- *
- */
-
-
-    fun getUID() {
-
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener(OnCompleteListener<GetTokenResult> { task ->
-                if (task.isSuccessful) {
-                    // DO EVERYTHING IN HERE
-                    val local_idToken = task.result!!.token
-                    if (local_idToken != null) {
-                        //  idToken = local_idToken
-                        Log.d("UID", local_idToken)
-                        Log.d("UID", local_idToken.length.toString())
-
-                        var params = JSONObject()
-                        params.put("uid", local_idToken)
-                        /* FOR OVERRIDING the usual headers
-                        params.put("courier_id", "vanassist")
-                        params.put("van_id", "")
-                        */
-
-                        var path = "uid"
-                        var message: String
-                        var status: String
-
-                        apiController.get(path, params) { response ->
-                            if (response != null) {
-                                //do Response Parsing
-                                try {
-
-                                } catch (e: JSONException) {
-                                    e.printStackTrace()
-                                }
-                                /*
-                                EVERYTHING WE WANT TO DO WITH THE RESULT SHOULD GO IN HERE!
-                                 */
-                            } else {
-                                Log.d("Error", "catch get UID")
-                            }
-                        }
-                    }
-                } else {
-                }
-            })
-    }
-
-
-    /*
-*
-* Courier ... Get Courier Information
-*
-*/
-
-    /*
-*
-* Courier ... Start Delivery Day
-*
-*/
-    fun postStartDeliveryDay() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener(OnCompleteListener<GetTokenResult> { task ->
-                if (task.isSuccessful) {
-                    // DO EVERYTHING IN HERE
-                    val local_idToken = task.result!!.token
-                    if (local_idToken != null) {
-                        Log.d("UID", local_idToken)
-                        Log.d("UID", local_idToken.length.toString())
-
-                        var params = JSONObject()
-                        params.put("uid", local_idToken)
-                        /* FOR OVERRIDING the usual headers
-                        params.put("courier_id", "vanassist")
-                        params.put("van_id", "")
-                        */
-
-                        var path = "courier/day/start" //"vehicle/location"
-                        var message: String
-                        var status: String
-
-                        apiController.post(path, params, JSONObject()) { response ->
-                            if (response != null) {
-                                var strResp = response.toString()
-                                Log.d("All parcels", strResp)
-
-                                try {
-                                    var jsonObject = JSONObject(strResp)
-                                    var jo = jsonObject.getJSONObject("data")
-                                    message = jsonObject.getString("message").toString()
-                                    status = jsonObject.getString("status").toString()
-                                    var txtView = main.findViewById(de.dpd.vanassist.R.id.txtResult) as TextView
-                                    txtView.text = strResp
-
-                                } catch (e: JSONException) {
-                                    e.printStackTrace()
-                                }
-                                /*
-                                EVERYTHING WE WANT TO DO WITH THE RESULT SHOULD GO IN HERE!
-                                 */
-                            } else {
-                                Log.d("Error", "catch post start day")
-                            }
-                        }
-                    }
-                } else {
-                }
-            })
-    }
-
-    /*
-    *
-    * Courier ... Finish Delivery Day
-    *
-    */
-    fun putFinishDeliveryDay() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener(OnCompleteListener<GetTokenResult> { task ->
-                if (task.isSuccessful) {
-                    // DO EVERYTHING IN HERE
-                    val local_idToken = task.result!!.token
-                    if (local_idToken != null) {
-                        Log.d("UID", local_idToken)
-                        Log.d("UID", local_idToken.length.toString())
-
-                        var params = JSONObject()
-                        params.put("uid", local_idToken)
-                        /* FOR OVERRIDING the usual headers
-                        params.put("courier_id", "vanassist")
-                        params.put("van_id", "")
-                        */
-
-                        var path = "courier/day/finish" //"vehicle/location"
-                        var message: String
-                        var status: String
-
-                        apiController.put(path, params, JSONObject()) { response ->
-                            if (response != null) {
-                                var strResp = response.toString()
-                                Log.d("All parcels", strResp)
-
-                                try {
-                                    var jsonObject = JSONObject(strResp)
-                                    var jo = jsonObject.getJSONObject("data")
-                                    message = jsonObject.getString("message").toString()
-                                    status = jsonObject.getString("status").toString()
-                                    var txtView = main.findViewById(de.dpd.vanassist.R.id.txtResult) as TextView
-                                    txtView.text = strResp
-                                } catch (e: JSONException) {
-                                    e.printStackTrace()
-                                }
-                                /*
-                                EVERYTHING WE WANT TO DO WITH THE RESULT SHOULD GO IN HERE!
-                                */
-                            } else {
-                                Log.d("Error", "catch finish delivery day")
-                            }
-                        }
-                    }
-                } else {
-                }
-            })
-    }
-
 }

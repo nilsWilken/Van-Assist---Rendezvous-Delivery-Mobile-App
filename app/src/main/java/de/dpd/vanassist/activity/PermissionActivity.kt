@@ -34,15 +34,16 @@ class PermissionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_permission)
 
-        val courierRepo = CourierRepository(this)
-        val courier = courierRepo.getCourier()
+        val courier = CourierRepository.shared.getCourier()
+
+        /* Set language code */
         val locale = LanguageManager.createLocale(courier?.languageCode!!)
         LanguageManager.setLocale(locale, this)
 
+        /* Activate darkmode if necessary */
         if (courier.darkMode) {
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        }
-        else{
+        } else{
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
@@ -53,13 +54,11 @@ class PermissionActivity : AppCompatActivity() {
     public override fun onResume() {
         super.onResume()
 
-        val courierRepo = CourierRepository(this)
-        val current = courierRepo.getCourier()
+        val courier = CourierRepository.shared.getCourier()
 
-        if (current?.darkMode!!) {
+        if (courier?.darkMode!!) {
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        }
-        else{
+        } else{
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
@@ -72,13 +71,11 @@ class PermissionActivity : AppCompatActivity() {
     override fun onRestart() {
         super.onRestart()
 
-        val courierRepo = CourierRepository(this)
-        val current = courierRepo.getCourier()
+        val courier = CourierRepository.shared.getCourier()
 
-        if (current?.darkMode!!) {
+        if (courier?.darkMode!!) {
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        }
-        else{
+        } else {
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
@@ -92,6 +89,7 @@ class PermissionActivity : AppCompatActivity() {
             .commitAllowingStateLoss()
     }
 
+    /* Checks permissions */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if(requestCode == 100) {
@@ -138,6 +136,7 @@ class PermissionActivity : AppCompatActivity() {
 
     }
 
+    /* Opens android settings */
     private fun startSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
         intent.addCategory(Intent.CATEGORY_DEFAULT)
@@ -151,7 +150,7 @@ class PermissionActivity : AppCompatActivity() {
         finish()
     }
 
-
+    /* Is executed then permission were denied */
     private fun showOpenSettingsButton() {
         val builder1 = AlertDialog.Builder(this)
         builder1.setTitle(getString(R.string.permission_alert_title))

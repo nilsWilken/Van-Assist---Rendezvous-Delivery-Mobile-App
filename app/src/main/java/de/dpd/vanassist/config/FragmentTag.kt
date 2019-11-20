@@ -9,5 +9,7 @@ class FragmentTag {
         const val OPEN_DELIVERY = "open_delivery"
         const val PERMISSION = "permission"
         const val LAUNCHPAD = "launchpad"
+        const val INTELLIGENCE = "intelligence"
     }
+
 }

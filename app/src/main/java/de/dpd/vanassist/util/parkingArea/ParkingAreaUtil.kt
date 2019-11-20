@@ -1,24 +1,23 @@
 package de.dpd.vanassist.util.parkingArea
 
-import android.content.Context
-import de.dpd.vanassist.database.entity.ParkingArea
-import de.dpd.vanassist.database.repository.ParcelRepository
+import de.dpd.vanassist.database.entity.ParcelEntity
+import de.dpd.vanassist.database.entity.ParkingAreaEntity
 import de.dpd.vanassist.database.repository.ParkingAreaRepository
 import de.dpd.vanassist.util.location.LocationUtil
-import de.dpd.vanassist.util.toast.Toast
 
 class ParkingAreaUtil {
 
     companion object {
-        fun getNearestParkingArea(context:Context):ParkingArea? {
+        fun getNearestParkingArea(nextDeliveryLocation: ParcelEntity?):ParkingAreaEntity? {
 
-            val nextDeliveryLocation = ParcelRepository(context).getNextParcelToDeliver()
-
-            val deliveryLat = nextDeliveryLocation!!.latitude
+            if(nextDeliveryLocation == null) {
+                return null
+            }
+            val deliveryLat = nextDeliveryLocation.latitude
             val deliveryLng = nextDeliveryLocation.longitude
-            val parkingAreaList = ParkingAreaRepository(context).getAll()
+            val parkingAreaList = ParkingAreaRepository.shared.getAll()
 
-            var parkingAreaWithShortestDistance:ParkingArea? = null
+            var parkingAreaWithShortestDistance:ParkingAreaEntity? = null
             var shortestDistance = 5000000.00
             var counter = 0
 

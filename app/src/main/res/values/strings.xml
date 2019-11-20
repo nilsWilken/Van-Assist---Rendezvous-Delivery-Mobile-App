@@ -28,7 +28,6 @@
     <string name="log_out">Log out</string>
     <string name="locate_delivery_destination">Locate Delivery Destination</string>
     <string name="locate_van">Locate Van</string>
-    <string name="summon_van">Summon Van</string>
     <string name="next_parking_location">Find Next Parking Location</string>
     <string name="authentication_failed">Authentication failed</string>
     <string name="yes">Yes</string>
@@ -39,6 +38,9 @@
     <string name="not_available">Not available</string>
     <string name="loading_map___">Loading map...</string>
     <string name="start_simulation___">Starting simulation...</string>
+    <string name="ambient_intelligence_menu_title">Ambient Intelligence</string>
+    <string name="park_here_title">Park Here</string>
+    <string name="permission_alert">Writing and Location Services Permission required for this app. Do you want to change Permissions?</string>
 
 
     <!-- SPECIFIC VALUES -->
@@ -77,6 +79,28 @@
     <string name="error_load_parking_location">Load parking location failed</string>
     <string name="error_set_next_parking_location">Set next parking location failed</string>
     <string name="error_no_parcel_available">No parcel information available</string>
+    <string name="error_courier_information_loading">Loading courier information failed</string>
+    <string name="ambient_intelligence_activation_failed">Activation of the Ambient Intelligence Mode failed</string>
+    <string name="ambient_intelligence_deactivation_failed">Deactivation of the Ambient Intelligence Mode failed</string>
+    <string name="time_dependent_darkmode_activation_failed">Activation of the Time dependent Darkmode failed</string>
+    <string name="time_dependent_darkmode_deactivation_failed">Deactivation of the Time dependent Darkmode failed</string>
+    <string name="size_dependent_waiting_mode_activation_failed">Activation of the Size Dependent Waiting Mode failed</string>
+    <string name="size_dependent_waiting_mode_deactivation_failed">Deactivation of the Size Dependent Waiting Mode failed</string>
+    <string name="dynamic_content_activation_failed">Activation of the Dynamic Content Mode failed</string>
+    <string name="dynamic_content_deactivation_failed">Deactivation of the Dynamic Content Mode failed</string>
+    <string name="gamification_activation_failed">Activation of the Gamification Mode failed</string>
+    <string name="gamification_deactivation_failed">Deactivation of the Gamification Mode failed</string>
+    <string name="intelligent_driving_activation_failed">Activation of the Intelligent Driving Mode failed</string>
+    <string name="intelligent_driving_deactivation_failed">Deactivation of the Intelligent Driving Mode failed</string>
+
+
+
+    <!-- AMBIENT INTELLIGENCE -->
+    <string name="ai_gamification_message_1">Only</string>
+    <string name="ai_gamification_message_2">parcel left</string>
+    <string name="ai_timeenableddarkmodeTitle">Theme Swap necessary</string>
+    <string name="ai_timeenableddarkmode_message">Intelligent mode recommends to switch themes. Want to do this now?</string>
+
 
 
 </resources>

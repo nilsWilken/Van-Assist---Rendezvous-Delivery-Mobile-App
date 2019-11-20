@@ -27,9 +27,7 @@ import android.util.Log
 import de.dpd.vanassist.util.language.LanguageManager
 
 
-class SettingsFragment : androidx.fragment.app.Fragment() {
-
-    private lateinit var courierRepo: CourierRepository
+class SettingsFragment : Fragment() {
 
     private lateinit var countryList:ArrayList<CountryItem>
     private lateinit var countryAdapter:CountryAdapter
@@ -42,8 +40,7 @@ class SettingsFragment : androidx.fragment.app.Fragment() {
 
         val v = inflater.inflate(R.layout.fragment_settings, container, false)
 
-
-        courierRepo = CourierRepository(activity!!)
+        (activity as AppCompatActivity).supportActionBar?.title = "Settings"
 
         val appLocale = Configuration(context!!.getResources().getConfiguration()).locale.toString()
         val currentPos = LanguageManager.getPositionByCountryCode(appLocale)
@@ -69,23 +66,27 @@ class SettingsFragment : androidx.fragment.app.Fragment() {
             }
         }
 
-        //setButtonEffect(v.usernameButton)
         setButtonEffect(v.themeButton)
         setButtonEffect(v.helperLabelsButton)
         setButtonEffect(v.privacyButton)
         setButtonEffect(v.logoutButton)
-        val courier = courierRepo.getCourier()
+        val courier = CourierRepository.shared.getCourier()
         v.usernameButton.text = courier!!.firstName!!.trim() + " " + courier.lastName!!.trim()
 
-        /*v.usernameButton.setOnClickListener {
-            val changeUsernameDialog = ChangeUsernameDialogFragment()
-            val window = changeUsernameDialog.activity?.window
-            window?.setGravity(Gravity.BOTTOM)
-            changeUsernameDialog.show(activity?.supportFragmentManager, "changeUser")
-        } */
+        val api = VanAssistAPIController(activity!! as AppCompatActivity)
 
-        val themeValue = courierRepo.getCourier()?.darkMode
+        v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked = CourierRepository.shared.getCourier()!!.ambientIntelligenceMode
 
+        v.intelligenceModeSettingsButton.setOnClickListener {
+            v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked = !v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked
+            if(v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked) {
+                api.enableAmbientIntelligenceMode()
+            } else {
+                api.disableAmbientIntelligenceMode()
+            }
+        }
+
+        val themeValue = CourierRepository.shared.getCourier()?.darkMode
         if (themeValue != null) {
             v.themeButtonContainer.themeSwitch.isChecked = themeValue
         }
@@ -94,39 +95,33 @@ class SettingsFragment : androidx.fragment.app.Fragment() {
             setDarkMode(themeValue!!, v)
         }
 
-
         v.helperLabelsButton.setOnClickListener {
             v.helperLabelsButtonContainer.helperLabelsSwitch.isChecked = !v.helperLabelsButtonContainer.helperLabelsSwitch.isChecked
         }
-        val labelValue = courierRepo.getCourier()?.mapLabel
+        val labelValue = CourierRepository.shared.getCourier()?.helpMode
         if (labelValue != null) {
             v.helperLabelsButtonContainer.helperLabelsSwitch.isChecked = labelValue
         }
-        //handler for helper labels toggling
+        /* handler for helper labels toggling */
         v.helperLabelsButtonContainer.helperLabelsSwitch.setOnCheckedChangeListener { _, isChecked ->
-            val currentUser = courierRepo.getCourier()
             if (isChecked) {
-                val api = VanAssistAPIController(activity!! as AppCompatActivity)
-                api.enableMapLabel()
+                api.enableHelpMode()
             }
             else {
                 val api = VanAssistAPIController(activity!! as AppCompatActivity)
-                api.disableMapLabel()
+                api.disableHelpMode()
             }
         }
-
 
         v.privacyButton.setOnClickListener {
             val i = Intent(Intent.ACTION_VIEW, Uri.parse(Path.PRIVACY))
             startActivity(i)
         }
 
-
         v.logoutButton.setOnClickListener{
             val confirmDialog = LogoutDialogFragment()
             confirmDialog.show(activity?.supportFragmentManager, "confirm")
         }
-
 
         v.goto_launchpad_from_settings.setOnClickListener { view ->
             activity?.onBackPressed()
@@ -136,10 +131,7 @@ class SettingsFragment : androidx.fragment.app.Fragment() {
     }
 
 
-    /**
-     * method that sets an effect to change background color on click
-     * @param button
-     */
+    /* method that sets an effect to change background color on click */
     private fun setButtonEffect(button: View) {
         button.setOnTouchListener { view, event ->
             when (event.action) {
@@ -157,14 +149,12 @@ class SettingsFragment : androidx.fragment.app.Fragment() {
     }
 
 
-    fun refreshActivity() {
-
+    private fun refreshActivity() {
         activity!!.recreate()
     }
 
 
-
-    fun setDarkMode(darkMode: Boolean, v : View){
+    private fun setDarkMode(darkMode: Boolean, v : View){
         val builder1 = AlertDialog.Builder(context!!)
         builder1.setTitle(getString(R.string.dark_mode_alert_title))
         builder1.setMessage(getString(R.string.dark_mode_alert_message))
@@ -175,19 +165,16 @@ class SettingsFragment : androidx.fragment.app.Fragment() {
             DialogInterface.OnClickListener { dialog, id ->
                 dialog.cancel()
 
-                Log.wtf("Theme set: DarkMode = ", "+-> " + darkMode  )
-
-                // do update
-                val themeValue = courierRepo.getCourier()?.darkMode
+                /* Do update */
+                val themeValue = CourierRepository.shared.getCourier()?.darkMode
 
                 if (themeValue!!) {
-                    //disable it
+                    /* Disable it */
                     v.themeButtonContainer.themeSwitch.isChecked = false
 
                     val api = VanAssistAPIController(activity!! as AppCompatActivity)
                     api.disableDarkMode()
-                }
-                else {
+                } else {
                     v.themeButtonContainer.themeSwitch.isChecked = true
                     val api = VanAssistAPIController(activity!! as AppCompatActivity)
                     api.enableDarkMode()
@@ -198,16 +185,17 @@ class SettingsFragment : androidx.fragment.app.Fragment() {
         builder1.setNegativeButton(
             getString(R.string.no),
             DialogInterface.OnClickListener { dialog, id ->
-                //do nothing
+                /* do nothing */
                 v.themeButtonContainer.themeSwitch.isChecked = darkMode
                 dialog.cancel()
             })
 
         val alert = builder1.create()
         alert.show()
-
     }
 
+
+    /* Set language code */
     fun setLocale(locale: Locale) {
 
         val builder1 = AlertDialog.Builder(context!!)
@@ -219,14 +207,12 @@ class SettingsFragment : androidx.fragment.app.Fragment() {
             getString(R.string.yes),
             DialogInterface.OnClickListener { dialog, id ->
                 dialog.cancel()
-                var languageCode = locale.toString()
-                //change locally
+                val languageCode = locale.toString()
+                /* Change locally */
                 LanguageManager.setLocale(locale, context!!)
-                Log.wtf("LanguageCode","Code-> " + languageCode)
-                courierRepo.updateLanguageCode(languageCode)
-                Log.wtf("LanguageCode","Code-> " + courierRepo.getCourier()!!.languageCode)
+                CourierRepository.shared.updateLanguageCode(languageCode)
 
-                //change remote (async)
+                /* Change remote (async) */
                 val api = VanAssistAPIController(activity!! as AppCompatActivity)
                 api.changeLanguage(locale.toString())
                 refreshActivity()

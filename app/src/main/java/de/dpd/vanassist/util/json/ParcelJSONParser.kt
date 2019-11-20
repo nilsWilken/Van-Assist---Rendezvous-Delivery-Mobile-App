@@ -1,12 +1,12 @@
 package de.dpd.vanassist.util.json
 
-import de.dpd.vanassist.database.entity.Parcel
+import de.dpd.vanassist.database.entity.ParcelEntity
 import de.dpd.vanassist.util.parcel.ParcelListResponseObject
 import de.dpd.vanassist.util.TypeParser
 import org.json.JSONObject
 import java.util.ArrayList
 
-class ParcelJSONParser {
+class ParcelJSONParser: JSONParser() {
 
     companion object {
 
@@ -18,11 +18,9 @@ class ParcelJSONParser {
             return params
         }
 
+
         fun createHeaderUpdateParcelPosition(uid:String, courierId:String): JSONObject {
-            val params = JSONObject()
-            params.put("uid", uid)
-            params.put("courier_id", courierId)
-            return params
+            return createDefaultHeader(uid, courierId)
         }
 
 
@@ -33,16 +31,16 @@ class ParcelJSONParser {
             return params
         }
 
+
         fun createHeaderConfirmDeliveryRequest(uid:String, courierId:String):JSONObject {
-            val params = JSONObject()
-            params.put("uid", uid)
-            params.put("courier_id", courierId)
-            return params
+            return createDefaultHeader(uid, courierId)
         }
+
 
         fun createRequestEmptyBody():JSONObject {
             return JSONObject()
         }
+
 
         fun createBodyConfirmParcelRequest(parcelId:String): JSONObject{
             val params = JSONObject()
@@ -50,7 +48,8 @@ class ParcelJSONParser {
             return params
         }
 
-        fun parseDeliveryConfirm(response: JSONObject): Parcel {
+
+        fun parseDeliveryConfirm(response: JSONObject): ParcelEntity {
             val status = response.getInt("status")
             val message = response.getString("message")
             val data = response.getJSONObject("data")
@@ -72,7 +71,7 @@ class ParcelJSONParser {
             val longitude = data.getString("longitude")
             val verificationToken = data.getString("verification_token")
 
-            return Parcel(
+            return ParcelEntity(
                 id,
                 state,
                 nameOfRecipient,
@@ -100,7 +99,7 @@ class ParcelJSONParser {
             val parcelListVerificationToken = data.getString("verification_token")
 
             val parcelResponseList = data.getJSONArray("parcel_list")
-            val parcelList = ArrayList<Parcel>()
+            val parcelList = ArrayList<ParcelEntity>()
             for (i in 0..(parcelResponseList.length() - 1)) {
                 val parcelJSON = parcelResponseList.getJSONObject(i)
 
@@ -121,7 +120,7 @@ class ParcelJSONParser {
                 val longitude = parcelJSON.getString("longitude")
                 val verificationToken = parcelJSON.getString("verification_token")
 
-                val parcel = Parcel(
+                val parcel = ParcelEntity(
                     id,
                     state,
                     nameOfRecipient,
@@ -146,12 +145,12 @@ class ParcelJSONParser {
 
 
 
-        fun parseResponseToParcelListWithoutVerificationToken(response: JSONObject): ArrayList<Parcel> {
+        fun parseResponseToParcelListWithoutVerificationToken(response: JSONObject): ArrayList<ParcelEntity> {
             val status = response.getInt("status")
             val message = response.getString("message")
 
             val parcelResponseList = response.getJSONArray("data")
-            val parcelList = ArrayList<Parcel>()
+            val parcelList = ArrayList<ParcelEntity>()
             for (i in 0..(parcelResponseList.length() - 1)) {
                 val parcelJSON = parcelResponseList.getJSONObject(i)
 
@@ -172,7 +171,7 @@ class ParcelJSONParser {
                 val longitude = parcelJSON.getString("longitude")
                 val verificationToken = parcelJSON.getString("verification_token")
 
-                val parcel = Parcel(
+                val parcel = ParcelEntity(
                     id,
                     state,
                     nameOfRecipient,

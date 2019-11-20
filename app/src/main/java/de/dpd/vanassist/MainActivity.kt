@@ -1,98 +1,98 @@
-package de.dpd.vanassist
+//package de.dpd.vanassist
 
-import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import androidx.appcompat.app.AppCompatDelegate
-import android.widget.Button
-import android.widget.TextView
-import com.google.firebase.auth.FirebaseAuth
-import de.dpd.vanassist.cloud.APIController
-import de.dpd.vanassist.cloud.ServiceVolley
-import de.dpd.vanassist.cloud.VanAssistAPIController
-import de.dpd.vanassist.activity.LoginActivity
-import de.dpd.vanassist.activity.MapActivity
-import android.view.Menu
-import de.dpd.vanassist.database.repository.CourierRepository
-
-
-class MainActivity : AppCompatActivity() {
-
-    lateinit var cloudButton: Button
-    lateinit var txtResult: TextView
-    lateinit var authButton: Button
-    lateinit var mapButton: Button
-    lateinit var loginButton: Button
-    val api = VanAssistAPIController(this)
-    val service = ServiceVolley()
-    val apiController = APIController(service)
-    var result = HashMap<String, String?>()
-    private lateinit var auth: FirebaseAuth
+//import android.content.Intent
+//import androidx.appcompat.app.AppCompatActivity
+//import android.os.Bundle
+//import androidx.appcompat.app.AppCompatDelegate
+//import android.widget.Button
+//import android.widget.TextView
+//import com.google.firebase.auth.FirebaseAuth
+//import de.dpd.vanassist.cloud.APIController
+//import de.dpd.vanassist.cloud.ServiceVolley
+//import de.dpd.vanassist.cloud.VanAssistAPIController
+//import de.dpd.vanassist.activity.LoginActivity
+//import de.dpd.vanassist.activity.MapActivity
+//import android.view.Menu
+//import de.dpd.vanassist.database.repository.CourierRepository
 
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+//class MainActivity : AppCompatActivity() {
+
+//    lateinit var cloudButton: Button
+//    lateinit var txtResult: TextView
+//    lateinit var authButton: Button
+//    lateinit var mapButton: Button
+//    lateinit var loginButton: Button
+//    val api = VanAssistAPIController(this)
+//    val service = ServiceVolley()
+//    val apiController = APIController(service)
+//    var result = HashMap<String, String?>()
+//    private lateinit var auth: FirebaseAuth
+
+
+//    override fun onCreateOptionsMenu(menu: Menu): Boolean {
 
 
         // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.main_menu, menu)
+//        menuInflater.inflate(R.menu.main_menu, menu)
 
-        return true
-    }
-
-
-    override fun onRestart() {
-        super.onRestart()
-        var courierRepo = CourierRepository(this)
-        val current = courierRepo.getCourier()
-
-        if (current?.darkMode!!) {
-            getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        }
-        else{
-            getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        }
-
-    }
+//        return true
+//    }
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+//    override fun onRestart() {
+//        super.onRestart()
+//        var courierRepo = CourierRepository(this)
+//        val current = courierRepo.getCourier()
+
+//        if (current?.darkMode!!) {
+//            getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+//        }
+//        else{
+//            getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+//        }
+
+//    }
+
+
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        setContentView(R.layout.activity_main)
 
         //Checks if user is logged in --> route to log in screen
-        val user =FirebaseAuth.getInstance().currentUser
-        if(user == null) {
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
+//        val user =FirebaseAuth.getInstance().currentUser
+//        if(user == null) {
+//            val intent = Intent(this, LoginActivity::class.java)
+//            startActivity(intent)
 
-            finish()
-        }
-
-
-        val actionbar = supportActionBar
-        actionbar?.setIcon(R.drawable.vanassist)
+//            finish()
+//        }
 
 
-        var courierRepo = CourierRepository(this)
-        val current = courierRepo.getCourier()
-
-        if (current?.darkMode!!) {
-            getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        }
-        else{
-            getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        }
+//        val actionbar = supportActionBar
+//        actionbar?.setIcon(R.drawable.vanassist)
 
 
+//        var courierRepo = CourierRepository(this)
+//        val current = courierRepo.getCourier()
 
-        cloudButton = findViewById(R.id.btCloud)
+//        if (current?.darkMode!!) {
+//            getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+//        }
+//        else{
+//            getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+//        }
 
-        txtResult = findViewById(R.id.txtResult)
+
+
+//        cloudButton = findViewById(R.id.btCloud)
+
+//        txtResult = findViewById(R.id.txtResult)
         // Initialize Firebase Auth
        // auth = FirebaseAuth.getInstance()
 
 
-        cloudButton.setOnClickListener {
+//        cloudButton.setOnClickListener {
 
             // GET LOCATION TEST : WORKING
             //api.getLocation()
@@ -134,14 +134,14 @@ class MainActivity : AppCompatActivity() {
             //api.putFinishDeliveryDay()
 
             //
-        }
+//        }
 
-        mapButton = findViewById(R.id.btnMap)
-        mapButton.setOnClickListener {
-            val intent = Intent(this, MapActivity::class.java)
-            startActivity(intent)
-        }
+//        mapButton = findViewById(R.id.btnMap)
+//        mapButton.setOnClickListener {
+//            val intent = Intent(this, MapActivity::class.java)
+//            startActivity(intent)
+//        }
 
-    }
+//    }
 
-}
+//}

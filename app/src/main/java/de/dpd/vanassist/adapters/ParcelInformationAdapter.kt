@@ -1,16 +1,14 @@
 package de.dpd.vanassist.adapters
 
 import de.dpd.vanassist.R
-import de.dpd.vanassist.database.entity.Parcel
+import de.dpd.vanassist.database.entity.ParcelEntity
 import de.dpd.vanassist.cloud.VanAssistAPIController
-import de.dpd.vanassist.util.parcel.ParcelStatus
+import de.dpd.vanassist.util.parcel.ParcelState
 
 import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.graphics.Color
-import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.ItemTouchHelper
 import android.transition.AutoTransition
 import android.transition.TransitionManager
@@ -21,16 +19,19 @@ import android.view.animation.Animation.RELATIVE_TO_SELF
 import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.RadioButton
-import de.dpd.vanassist.database.repository.CourierRepository
+import de.dpd.vanassist.database.entity.CourierEntity
+import de.dpd.vanassist.util.parcel.ParcelUtil
+import de.dpd.vanassist.config.ParcelInformationAdapterConfig
 
 import kotlinx.android.synthetic.main.parcel_information_card.view.*
 
 class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragment) : androidx.recyclerview.widget.RecyclerView.Adapter<ParcelInformationAdapter.ParcelInformationHolder>(){
 
-    private lateinit var parcels: ArrayList<Parcel>
+    private lateinit var parcelList: ArrayList<ParcelEntity>
     private var expandedPosition = -1
     private lateinit var touchHelper : ItemTouchHelper
     private val api = VanAssistAPIController(fragment.activity as AppCompatActivity)
+    private lateinit var courier: CourierEntity
     private var state = 0
 
     private lateinit var arrow : TextView
@@ -39,12 +40,16 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
         this.touchHelper = touchHelper
     }
 
-    fun setParcels(parcelList: ArrayList<Parcel>) {
-        this.parcels = parcelList
+    fun setParcels(parcelList: ArrayList<ParcelEntity>) {
+        this.parcelList = parcelList
     }
 
     fun setState(state: Int) {
         this.state = state
+    }
+
+    fun setCourier(courier:CourierEntity) {
+        this.courier = courier
     }
 
     fun getFragment(): androidx.fragment.app.Fragment {
@@ -52,10 +57,8 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
         return this.fragment
     }
 
-    /**
-     * Inflates the parcel view within the list
-     * @params ViewGroup, viewType
-     **/
+    /* Inflates the parcel view within the list
+     * @params ViewGroup, viewType */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ParcelInformationHolder {
 
         val view = LayoutInflater.from(parent.context).inflate(R.layout.parcel_information_card, parent, false)
@@ -65,30 +68,27 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
     }
 
 
-    /**
-     * Gets the number of parcels in the list
-     */
+    /* Gets the number of parcelList in the list */
     override fun getItemCount(): Int {
-
-        return parcels.size
+        return parcelList.size
     }
 
 
-    /**
-     * Binds each parcel in the list to a view
-     */
+    /* Binds each parcel in the list to a view */
     @SuppressLint("ResourceAsColor")
     override fun onBindViewHolder(holder: ParcelInformationHolder, position: Int) {
 
-        val currentParcel = parcels[position]
+        val currentParcel = parcelList[position]
 
         holder.parcel = currentParcel
         holder.address.text = currentParcel.address
         holder.additionalClientAddressInfo.text = currentParcel.additionalAddressInformation
         holder.clientName.text = currentParcel.nameOfRecipient
         holder.additionalClientAddressInfo.text = currentParcel.additionalRecipientInformation
+        holder.parcelSize.text = ParcelUtil.getParcelSize(currentParcel)
+
+        /* create dialog for undo */
         holder.undo.setOnClickListener {
-            //create dialog for undo
             val inflater = fragment.layoutInflater
             if (state == 1) {
                 val dialogView = inflater.inflate(R.layout.undo_dialog_delivered, null)
@@ -107,26 +107,28 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
 
                         if (radioButtonUnsuccess.isChecked) {
                             api.confirmParcelDeliveryFailure(currentParcel.id)
-                            parcels.removeAt(position)
+                            parcelList.removeAt(position)
                             notifyItemRemoved(position)
+                            this.notifyDataSetChanged()
                         }
                         if (radioButtonOpen.isChecked) {
                             api.undoParcelDeliveryConfirmation(currentParcel)
-                            parcels.removeAt(position)
+                            parcelList.removeAt(position)
                             notifyItemRemoved(position)
+                            this.notifyDataSetChanged()
                         }
                     })
 
+                /* CourierEntity cancelled the dialog
+                 * -> No action needed here */
                 builder1.setNegativeButton(
                     fragment.getString(R.string.cancel),
                     DialogInterface.OnClickListener { _, _ ->
-                        // User cancelled the dialog
                     })
 
 
                 builder1.create().show()
-            }
-            else if (state == 2) {
+            } else if (state == ParcelState.DELIVERY_FAILURE) {
                 val dialogView = inflater.inflate(R.layout.undo_dialog_undelivered, null)
                 val builder1 = androidx.appcompat.app.AlertDialog.Builder(fragment.context!!)
                 builder1.setView(dialogView)
@@ -137,45 +139,42 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
                 builder1.setPositiveButton(
                     fragment.getString(R.string.yes),
                     DialogInterface.OnClickListener { _, _ ->
-                        // Accept configuration
+                        /* Accept configuration */
                         val radioButtonOpen = dialogView.findViewById<RadioButton>(R.id.open_delivery_radio_button_2)!!
                         val radioButtonSuccess = dialogView.findViewById<RadioButton>(R.id.successful_delivery_radio_button)!!
 
                         if (radioButtonSuccess.isChecked) {
                             api.confirmParcelDeliverySuccess(currentParcel.id)
-                            parcels.removeAt(position)
+                            parcelList.removeAt(position)
                             notifyItemRemoved(position)
+                            this.notifyDataSetChanged()
+
                         }
                         if (radioButtonOpen.isChecked) {
                             api.undoParcelDeliveryConfirmation(currentParcel)
-                            parcels.removeAt(position)
-                            notifyItemRemoved(position)                        }
+                            parcelList.removeAt(position)
+                            notifyItemRemoved(position)
+                            this.notifyDataSetChanged()}
                     })
 
+                /* CourierEntity cancelled the dialog
+                 * -> No action needed here */
                 builder1.setNegativeButton(
                     fragment.getString(R.string.cancel),
                     DialogInterface.OnClickListener { _, _ ->
-                        // User cancelled the dialog
                     })
 
                 builder1.create().show()
             }
         }
 
-        val l = currentParcel.length.toString() //+ "cm"
-        val w = currentParcel.width.toString() //+ "cm"
-        val h = currentParcel.height.toString() //+ "cm"
-        val wg = currentParcel.weight.toString() + "g"
-        holder.lengthLabel.text = l
-        holder.widthLabel.text = w
-        holder.heightLabel.text = h
-        holder.weightLabel.text = wg
+        holder.lengthLabel.text = currentParcel.length.toString()
+        holder.widthLabel.text = currentParcel.width.toString()
+        holder.heightLabel.text = currentParcel.height.toString()
+        holder.weightLabel.text = currentParcel.weight.toString() + ParcelInformationAdapterConfig.WEIGHT_ABBR
 
-        //set color based on mode
-        val courierRepo = CourierRepository(this.fragment.context!!)
-        val current = courierRepo.getCourier()
-
-        if (current?.darkMode!!) {
+        /* set color based on mode */
+        if (courier.darkMode) {
             holder.address.setTextColor(Color.WHITE)
             holder.clientName.setTextColor(Color.WHITE)
             holder.box.setImageResource(R.drawable.ic_dpd_box_while_slim)
@@ -187,19 +186,16 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
             holder.box.setImageResource(R.drawable.ic_dpd_box_black_slim)
         }
 
-
         val isExpanded = position == expandedPosition
 
         holder.detailsOnExpand.visibility = if (isExpanded) View.VISIBLE else View.GONE
         holder.view.isActivated = isExpanded
         holder.view.setOnClickListener {
-
             if (isExpanded) {
                 animateCollapse()
             } else {
                 animateExpand()
             }
-
             expandedPosition = if (isExpanded) -1 else position
 
             TransitionManager.beginDelayedTransition(holder.detailsOnExpand, AutoTransition())
@@ -207,7 +203,7 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
         }
 
         val targetState = currentParcel.state
-        if (targetState == ParcelStatus.PLANNED) {
+        if (targetState == ParcelState.PLANNED) {
             holder.view.reorder_parcel.setOnTouchListener { _, event ->
                 if (event.actionMasked == MotionEvent.ACTION_DOWN) {
                     touchHelper.startDrag(holder)
@@ -223,38 +219,37 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
     }
 
     private fun animateExpand() {
-        val rotate = RotateAnimation(360f, 180f, RELATIVE_TO_SELF, 0.5f, RELATIVE_TO_SELF, 0.5f)
-        rotate.duration = 300
+        val rotate = RotateAnimation(ParcelInformationAdapterConfig.ANIM_DEGREE_360, ParcelInformationAdapterConfig.ANIM_DEGREE_180, RELATIVE_TO_SELF, ParcelInformationAdapterConfig.PIVOT_X_Y, RELATIVE_TO_SELF, ParcelInformationAdapterConfig.PIVOT_X_Y)
+        rotate.duration = ParcelInformationAdapterConfig.ANIMATION_DURATION
         rotate.fillAfter = true
         arrow.animation = rotate
     }
 
     private fun animateCollapse() {
-        val rotate = RotateAnimation(180f, 360f, RELATIVE_TO_SELF, 0.5f, RELATIVE_TO_SELF, 0.5f)
-        rotate.duration = 300
+        val rotate = RotateAnimation(ParcelInformationAdapterConfig.ANIM_DEGREE_180, ParcelInformationAdapterConfig.ANIM_DEGREE_360, RELATIVE_TO_SELF, ParcelInformationAdapterConfig.PIVOT_X_Y, RELATIVE_TO_SELF, ParcelInformationAdapterConfig.PIVOT_X_Y)
+        rotate.duration = ParcelInformationAdapterConfig.ANIMATION_DURATION
         rotate.fillAfter = true
         arrow.animation = rotate
     }
 
     fun onViewMoved(oldPosition: Int, newPosition: Int) {
-        val targetParcel = parcels[oldPosition]
-        parcels.removeAt(oldPosition)
-        parcels.add(newPosition, targetParcel)
+        val targetParcel = parcelList[oldPosition]
+        parcelList.removeAt(oldPosition)
+        parcelList.add(newPosition, targetParcel)
         notifyItemChanged(oldPosition)
         notifyItemChanged(newPosition)
         notifyItemMoved(oldPosition, newPosition)
     }
 
     fun onItemDismiss(position: Int){
-
-        parcels.removeAt(position)
+        parcelList.removeAt(position)
         notifyItemRemoved(position)
     }
 
 
     class ParcelInformationHolder constructor(val view: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(view) {
 
-        lateinit var parcel: Parcel
+        lateinit var parcel: ParcelEntity
         var address = view.findViewById<TextView>(R.id.address)!!
         var clientName = view.findViewById<TextView>(R.id.client_name)!!
         var additionalClientAddressInfo = view.findViewById<TextView>(R.id.additionalclientaddress_info)!!
@@ -265,5 +260,6 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
         var heightLabel = view.findViewById<TextView>(R.id.heightLabel)!!
         var weightLabel = view.findViewById<TextView>(R.id.weightLabel)!!
         var undo = view.findViewById<ImageView>(R.id.undo)!!
+        var parcelSize = view.parcelsize
     }
 }
