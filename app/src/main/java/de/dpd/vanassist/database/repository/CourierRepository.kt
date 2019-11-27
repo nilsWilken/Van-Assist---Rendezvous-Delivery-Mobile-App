@@ -1,70 +1,51 @@
 package de.dpd.vanassist.database.repository
 
-import de.dpd.vanassist.database.daos.CourierDao
 import de.dpd.vanassist.database.AppDatabase
 import de.dpd.vanassist.database.entity.CourierEntity
 
 class CourierRepository {
+    private val courierDao = AppDatabase.shared.courierDao()
 
     companion object {
-
-        private var instance: CourierRepository? = null
-        private var courierDao : CourierDao? = null
-
         /* Access variable for CourierRepository */
-        val shared: CourierRepository
-            get() {
-                if (instance == null) {
-                    courierDao = AppDatabase.shared.courierDao()
-                    instance = CourierRepository()
-                }
-                return instance!!
-            }
+        val shared: CourierRepository by lazy {
+            CourierRepository()
+        }
     }
 
     /* Loads the ID of the courier from the database */
-    fun getCourierId():String? {
-        val courier = getCourier()
-        if(courier != null) {
-            return courier.id
-        }
-        return null
-    }
+    fun getCourierId(): String? = getCourier()?.id
 
     /* Loads Courier from database */
-    fun getCourier(): CourierEntity? {
-        val courierList = courierDao!!.getAll()
-        if (courierList.count() == 1) {
-            return courierList[0]
-        }
-        return null
-    }
+    fun getCourier(): CourierEntity? = if (getAll().count() == 1) getAll().first() else null
 
     /* Get all records from the courier table */
     fun getAll(): List<CourierEntity> {
-        return courierDao!!.getAll()
+        return courierDao.getAll()
     }
 
     /* Insert courier record */
     fun insert(courier: CourierEntity) {
-        courierDao!!.insertCourier(courier)
+        courierDao.insertCourier(courier)
     }
 
     /* updates the verification token */
-    fun updateVerificationToken(verificationToken:String) {
-        val courierId = getCourierId()!!
-        courierDao!!.updateCourierVerificationToken(courierId, verificationToken)
+    fun updateVerificationToken(verificationToken: String) {
+        getCourierId()?.let { courierId ->
+            courierDao.updateCourierVerificationToken(courierId, verificationToken)
+        }
     }
 
     /* updated the language code */
-    fun updateLanguageCode(languageCode:String) {
-        val courier = getCourier()
-        courier!!.languageCode = languageCode
-        courierDao!!.insertCourier(courier)
+    fun updateLanguageCode(languageCode: String) {
+        getCourier()?.let { courier ->
+            courier.languageCode = languageCode
+            courierDao.insertCourier(courier)
+        }
     }
 
     /* delete all records from the courier table */
-    fun deleteAll(){
-        courierDao!!.deleteAllFromTable()
+    fun deleteAll() {
+        courierDao.deleteAllFromTable()
     }
 }

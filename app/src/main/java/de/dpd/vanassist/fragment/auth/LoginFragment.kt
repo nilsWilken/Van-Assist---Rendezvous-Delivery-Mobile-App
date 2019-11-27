@@ -18,6 +18,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
+import de.dpd.vanassist.BuildConfig
 
 import de.dpd.vanassist.R
 import de.dpd.vanassist.cloud.VanAssistAPIController
@@ -59,6 +60,12 @@ class LoginFragment : androidx.fragment.app.Fragment() {
         val logInButton = v.logInButton as Button
         logInButton.setOnClickListener {
 
+            if (BuildConfig.DEBUG) {
+                if (userNameField.text.isNullOrEmpty())
+                    userNameField.setText("vanassist@uni-mannheim.de")
+                if (passwordField.text.isNullOrEmpty())
+                    passwordField.setText("vanassist")
+            }
             val username = userNameField.text.toString().trim().toLowerCase()
             val password = passwordField.text.toString().trim()
 

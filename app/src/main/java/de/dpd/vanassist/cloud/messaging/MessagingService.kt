@@ -52,12 +52,10 @@ class MessagingService: FirebaseMessagingService() {
                 if(mapFragment.activity != null) {
                     mapFragment.activity!!.runOnUiThread {
                         Toast.makeText(FragmentRepo.mapFragmentOld!!.context!!, "Vehicle arrived", Toast.LENGTH_LONG).show()
-                        val mapFragment = FragmentRepo.mapFragmentOld!!
                         //mapFragment.removeParkingLocationWhenVanHasParked()
-                        val destination = mapFragment.destination
                         //mapFragment.updateVanLocation(destination, mapFragment.mapBoxMap.maxZoomLevel - 3)
 
-                        VanRepository.shared.insert(VanEntity(VanAssistConfig.VAN_ID, destination.latitude(), destination.longitude(), true))
+                        VanRepository.shared.insert(VanEntity(VanAssistConfig.VAN_ID, 0.0, 0.0, true))
                     }
                 }
             }

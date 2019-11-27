@@ -65,7 +65,7 @@ class DynamicContent {
 
 
         private fun checkIfVanIsParked(): Boolean {
-            return VanRepository.shared.getVanById(VanAssistConfig.VAN_ID).isParking
+            return VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)?.isParking ?: false
         }
 
 
@@ -82,8 +82,8 @@ class DynamicContent {
         private fun checkIfCourierIsCloseToVan(): Boolean {
             val currentVanPosition = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)
 
-            val vanLatitude = currentVanPosition.latitude
-            val vanLongitude = currentVanPosition.longitude
+            val vanLatitude = currentVanPosition?.latitude ?: 0.0
+            val vanLongitude = currentVanPosition?.longitude ?: 0.0
 
             val courierLatitude = Position.latitude
             val courierLongitude = Position.longitude
@@ -93,10 +93,7 @@ class DynamicContent {
 
 
         private fun checkIfCourierIsCloseToNextDeliveryLocation(): Boolean {
-            val currentParcel = ParcelRepository.shared.getCurrentParcel()
-            if(currentParcel == null) {
-                return false
-            }
+            val currentParcel = ParcelRepository.shared.getCurrentParcel() ?: return false
             val parcelLatitude = currentParcel.latitude.toDouble()
             val parcelLongitude = currentParcel.longitude.toDouble()
 

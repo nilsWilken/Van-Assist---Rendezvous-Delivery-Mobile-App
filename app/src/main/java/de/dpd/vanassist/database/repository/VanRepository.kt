@@ -5,30 +5,21 @@ import de.dpd.vanassist.database.daos.VanDao
 import de.dpd.vanassist.database.entity.VanEntity
 
 class VanRepository {
+    private val vanDao : VanDao = AppDatabase.shared.vanDao()
 
     companion object {
-
-        private var instance: VanRepository? = null
-        private var vanDao : VanDao? = null
-
-        /* Access variable for VanRepository */
-        val shared: VanRepository
-            get() {
-                if (instance == null) {
-                    vanDao = AppDatabase.shared.vanDao()
-                    instance = VanRepository()
-                }
-                return instance!!
-            }
+        val shared: VanRepository by lazy {
+            VanRepository()
+        }
     }
 
     /* Insert van record */
     fun insert(van:VanEntity) {
-        vanDao!!.insertVan(van)
+        vanDao.insertVan(van)
     }
 
     /* Get van by id */
-    fun getVanById(vanId:String): VanEntity {
-        return vanDao!!.getVan(vanId)
+    fun getVanById(vanId:String): VanEntity? {
+        return vanDao.getVan(vanId)
     }
 }

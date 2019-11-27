@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: com.googlecode.plist:dd-plist:1.21@jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.googlecode.plist/dd-plist/1.21/4b8e4a6f35d39cd70b1c39d9c253233c4f0c7171/dd-plist-1.21.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.googlecode.plist/dd-plist/1.21/87bfe2d08479a22511f8a28935dd5a2439239470/dd-plist-1.21-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.googlecode.plist/dd-plist/1.21/c56300407b20943ee339cc0f8f28d0d6dabff2a/dd-plist-1.21-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

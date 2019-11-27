@@ -1,35 +1,29 @@
 package de.dpd.vanassist.activity
 
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate
+import android.view.MotionEvent
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import com.google.firebase.auth.FirebaseAuth
 import de.dpd.vanassist.R
-import de.dpd.vanassist.fragment.main.MapFragmentOld
-import android.view.MotionEvent
-import com.mapbox.mapboxsdk.Mapbox
 import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.config.FragmentTag
-import de.dpd.vanassist.config.MapBoxConfig
 import de.dpd.vanassist.database.AppDatabase
-import de.dpd.vanassist.fragment.main.LaunchpadFragment
 import de.dpd.vanassist.database.repository.CourierRepository
 import de.dpd.vanassist.database.repository.ParkingAreaRepository
-import de.dpd.vanassist.util.FragmentRepo
-import de.dpd.vanassist.util.permission.PermissionHandler
-import de.dpd.vanassist.util.language.LanguageManager
+import de.dpd.vanassist.fragment.main.LaunchpadFragment
+import de.dpd.vanassist.fragment.main.MapFragmentOld
 import de.dpd.vanassist.intelligence.timeDependentDarkMode.TimeIntentReceiver
+import de.dpd.vanassist.util.FragmentRepo
+import de.dpd.vanassist.util.language.LanguageManager
+import de.dpd.vanassist.util.permission.PermissionHandler
 
 
 @Suppress("DEPRECATION")
 class MapActivity : AppCompatActivity() {
-
-
     companion object {
-
         /* Starts the MapActivity
         * -> Can be called from any other activity/fragment */
         fun start(act: AppCompatActivity) {
@@ -38,7 +32,6 @@ class MapActivity : AppCompatActivity() {
             act.finish()
         }
     }
-
 
     public override fun onResume() {
         super.onResume()
@@ -51,7 +44,7 @@ class MapActivity : AppCompatActivity() {
         /* Activate darkmode if necessary */
         if (courier?.darkMode!!) {
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else{
+        } else {
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
@@ -63,29 +56,8 @@ class MapActivity : AppCompatActivity() {
         apiController.getAllParkingLocations()
     }
 
-
-    override fun onRestart() {
-        super.onRestart()
-
-        /* Initial Creation of the local Database */
-        AppDatabase.createInstance(this)
-
-        val courier = CourierRepository.shared.getCourier()
-
-        /* Activate darkmode if necessary */
-        if (courier?.darkMode!!) {
-            delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else{
-            delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        }
-    }
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        /* Initial Creation of the local Database */
-        AppDatabase.createInstance(this)
 
         val firebaseUser = FirebaseAuth.getInstance().currentUser
 
@@ -94,13 +66,13 @@ class MapActivity : AppCompatActivity() {
         /* Checks information is stored -> if yes, user is logged in
          * -> If no, go to loginActivity
          * -> If yes, check if permissions are granted (if granted, start launchpad, else start Activity to grant permission  */
-        if(firebaseUser == null || CourierRepository.shared.getAll().count() != 1) {
+        if (firebaseUser == null || CourierRepository.shared.getAll().count() != 1) {
             LoginActivity.start(this)
-        } else if(!PermissionHandler.permissionGranted(this)) {
+        } else if (!PermissionHandler.permissionGranted(this)) {
             PermissionActivity.start(this)
         } else {
             val apiController = VanAssistAPIController(this)
-            if (ParkingAreaRepository.shared.getAll().isEmpty()){
+            if (ParkingAreaRepository.shared.getAll().isEmpty()) {
                 apiController.getAllParkingLocations()
             }
 
@@ -109,13 +81,11 @@ class MapActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_map)
 
-        Mapbox.getInstance(this, MapBoxConfig.MAP_BOX_ACCESS_TOKEN)
-
         val courier = CourierRepository.shared.getCourier()
 
         /* Get and set language code */
         val languageCode = courier?.languageCode
-        if(languageCode != null) {
+        if (languageCode != null) {
             val locale = LanguageManager.createLocale(languageCode)
             LanguageManager.setLocale(locale, this)
         }
@@ -128,22 +98,18 @@ class MapActivity : AppCompatActivity() {
         }
 
         /* Set time-based darkmode */
-        if(courier != null) {
+        if (courier != null) {
             val trigger = TimeIntentReceiver(this)
             if (courier.ambientIntelligenceMode && courier.timeBasedDarkMode) {
                 trigger.cancelAlarmService()
                 val themeSwap = trigger.setDarkModeTimes()
                 if (themeSwap) {
 
-                    val builder1 = AlertDialog.Builder(this)
                     val apiController = VanAssistAPIController(this)
-                    builder1.setTitle(getString(R.string.ai_timeenableddarkmodeTitle))
-                    builder1.setMessage(getString(R.string.ai_timeenableddarkmode_message))
-                    builder1.setCancelable(true)
-
-                    builder1.setPositiveButton(
-                        getString(R.string.yes),
-                        DialogInterface.OnClickListener { dialog, id ->
+                    AlertDialog.Builder(this).setTitle(getString(R.string.ai_timeenableddarkmodeTitle))
+                        .setMessage(getString(R.string.ai_timeenableddarkmode_message))
+                        .setCancelable(true)
+                        .setPositiveButton(getString(R.string.yes)) { dialog, id ->
                             dialog.cancel()
 
                             if (courier.darkMode) {
@@ -151,17 +117,12 @@ class MapActivity : AppCompatActivity() {
                             } else {
                                 apiController.enableDarkMode()
                             }
-                        })
-
-                    builder1.setNegativeButton(
-                        getString(R.string.no),
-                        DialogInterface.OnClickListener { dialog, id ->
+                        }
+                        .setNegativeButton(getString(R.string.no)) { dialog, id ->
                             //do nothing
                             dialog.cancel()
-                        })
-
-                    val alert = builder1.create()
-                    alert.show()
+                        }
+                        .create().show()
                 }
             }
             if ((!courier.ambientIntelligenceMode || !courier.timeBasedDarkMode)) {

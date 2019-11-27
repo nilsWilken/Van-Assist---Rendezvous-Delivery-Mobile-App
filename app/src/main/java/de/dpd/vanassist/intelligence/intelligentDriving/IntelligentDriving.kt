@@ -48,7 +48,7 @@ class IntelligentDriving {
 
 
         private fun checkIfVanIsParked(): Boolean {
-            return VanRepository.shared.getVanById(VanAssistConfig.VAN_ID).isParking
+            return VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)?.isParking ?: false
         }
 
 
@@ -70,10 +70,7 @@ class IntelligentDriving {
 
 
         private fun checkIfCourierIsCloseToVan(): Boolean {
-            val currentVanPosition = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)
-            if(currentVanPosition == null) {
-                return false;
-            }
+            val currentVanPosition = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID) ?: return false
             val vanLatitude = currentVanPosition.latitude
             val vanLongitude = currentVanPosition.longitude
 

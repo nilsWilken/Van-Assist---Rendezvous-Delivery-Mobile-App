@@ -24,5 +24,5 @@ interface VanDao {
 
     /* Get van by id */
     @Query("SELECT * FROM Van WHERE id == :id")
-    fun getVan(id: String): VanEntity
+    fun getVan(id: String): VanEntity?
 }

@@ -24,13 +24,6 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRestart() {
-        super.onRestart()
-        /* Initial Creation of the local Database */
-        AppDatabase.createInstance(this)
-    }
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
 
         /* Initial Creation of the local Database */

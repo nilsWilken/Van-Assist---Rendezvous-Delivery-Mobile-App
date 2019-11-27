@@ -16,4 +16,8 @@
     <color name="launchpadButtonColor">#D7D7D7</color>
     <color name="black">#000000</color>
     <color name="intelligence_settings_disabled">#C1C1C1</color>
+    <color name="nearly_black">#18181a</color>
+    <color name="light_black">#9f9f9f</color>
+    <color name="button_solid">#efefef</color>
+    <color name="button_stroke">#00bfbfbf</color>
 </resources>

@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/VanAssit.iml" filepath="$PROJECT_DIR$/VanAssit.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/mapsdk/mapsdk.iml" filepath="$PROJECT_DIR$/mapsdk/mapsdk.iml" />
-      <module fileurl="file://$PROJECT_DIR$/mobileApp.iml" filepath="$PROJECT_DIR$/mobileApp.iml" />
     </modules>
   </component>
 </project>

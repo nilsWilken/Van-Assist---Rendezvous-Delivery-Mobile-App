@@ -4,6 +4,10 @@ import android.text.TextUtils
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.Volley
+import com.facebook.stetho.Stetho
+import com.hdm_i.dm.android.MapSDK
+import com.hdm_i.dm.android.engine.Engine
+import de.dpd.vanassist.database.AppDatabase
 
 /* Created by Jasmin Weimüller
  * Backend Handling for the Volley HTTP Completion Framework
@@ -13,6 +17,10 @@ class BackendVolley : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+
+        MapSDK.init(this)
+        Stetho.initializeWithDefaults(this)
+        AppDatabase.createInstance(this)
     }
 
     private val requestQueue: RequestQueue? = null
