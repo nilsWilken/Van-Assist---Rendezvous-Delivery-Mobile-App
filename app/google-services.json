@@ -1,42 +1,34 @@
 {
   "project_info": {
-    "project_number": "119024013040",
-    "firebase_url": "https://vanassist-f4bf3.firebaseio.com",
-    "project_id": "vanassist-f4bf3",
-    "storage_bucket": "vanassist-f4bf3.appspot.com"
+    "project_number": "563249291763",
+    "firebase_url": "https://vanassist-12590.firebaseio.com",
+    "project_id": "vanassist-12590",
+    "storage_bucket": "vanassist-12590.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:119024013040:android:a65f2f977db1416e",
+        "mobilesdk_app_id": "1:563249291763:android:47a70df48f4d9a25827286",
         "android_client_info": {
           "package_name": "de.dpd.vanassist"
         }
       },
       "oauth_client": [
         {
-          "client_id": "119024013040-hna7ensqqrs5ac66qqp6vg99qml6epmb.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "de.dpd.vanassist",
-            "certificate_hash": "2f54481567540536238ebb70e9371121725cc71b"
-          }
-        },
-        {
-          "client_id": "119024013040-6vu96abmg8roq3294qqoqm1804vocal5.apps.googleusercontent.com",
+          "client_id": "563249291763-8q0ie3li331nd7mjbd38ml2nfdmdfr35.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAyCrrI9MOp1jg34DTSBri1Q0QkgrXK1bM"
+          "current_key": "AIzaSyA9ZRGJdEmpvSOOCGZj__DyYULwme58bUg"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "119024013040-6vu96abmg8roq3294qqoqm1804vocal5.apps.googleusercontent.com",
+              "client_id": "563249291763-8q0ie3li331nd7mjbd38ml2nfdmdfr35.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
