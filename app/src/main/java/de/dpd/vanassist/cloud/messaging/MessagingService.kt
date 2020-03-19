@@ -52,10 +52,12 @@ class MessagingService: FirebaseMessagingService() {
                 if(mapFragment.activity != null) {
                     mapFragment.activity!!.runOnUiThread {
                         Toast.makeText(FragmentRepo.mapFragmentOld!!.context!!, "Vehicle arrived", Toast.LENGTH_LONG).show()
+                        val mapFragment = FragmentRepo.mapFragmentOld!!
                         //mapFragment.removeParkingLocationWhenVanHasParked()
-                        //mapFragment.updateVanLocation(destination, mapFragment.mapBoxMap.maxZoomLevel - 3)
+                        val destination = mapFragment.destination
+                        mapFragment.updateVanLocationWithoutZoom(destination, true)
 
-                        VanRepository.shared.insert(VanEntity(VanAssistConfig.VAN_ID, 0.0, 0.0, true))
+                        VanRepository.shared.insert(VanEntity(VanAssistConfig.VAN_ID, destination.latitude(), destination.longitude(), true))
                     }
                 }
             }
@@ -76,7 +78,7 @@ class MessagingService: FirebaseMessagingService() {
                     mapFragment.activity!!.runOnUiThread {
                         val mapFragment = FragmentRepo.mapFragmentOld!!
                         //mapFragment.addParkingLocationWhenVanStartDriving()
-                        //mapFragment.updateVanLocationWithoutZoom(destination)
+                        mapFragment.updateVanLocationWithoutZoom(destination, false)
                     }
                 }
             }

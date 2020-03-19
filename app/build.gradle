@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+apply plugin: 'com.google.gms.google-services'
+
 apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
@@ -52,9 +54,9 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
 
     //MapBox
-//    implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:7.3.0'
+    implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:7.3.0'
     implementation 'com.google.android.material:material:1.0.0'
-//    implementation 'com.mapbox.mapboxsdk:mapbox-android-navigation-ui:0.34.0'
+    implementation 'com.mapbox.mapboxsdk:mapbox-android-navigation-ui:0.34.0'
     implementation 'androidx.exifinterface:exifinterface:1.0.0'
     implementation 'com.mapbox.mapboxsdk:mapbox-android-plugin-offline-v7:0.5.0'
 

@@ -17,21 +17,23 @@ data class ParcelEntity(
 
     val additionalRecipientInformation: String? = null,
 
-    val address: String,
+    val floor: Double,
 
     val city: String,
+
+    val address: String,
 
     val additionalAddressInformation: String? = null,
 
     val deliveryPosition: Int,
 
-    val weight: Int,
+    val weight: Double,
 
-    val width: Int,
+    val width: Double,
 
-    val height: Int,
+    val height: Double,
 
-    val length: Int,
+    val length: Double,
 
     val latitude: String,
 

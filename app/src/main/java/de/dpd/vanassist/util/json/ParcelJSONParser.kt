@@ -59,14 +59,15 @@ class ParcelJSONParser: JSONParser() {
             val phoneNumber = TypeParser.optString(data, "phone_number")
             val nameOfRecipient = data.getString("name_of_recipient")
             val additionalRecipientInformation = TypeParser.optString(data, "additional_recipient_information")
+            val floor = data.getDouble("floor")
             val address = data.getString("address")
             val city = data.getString("city")
             val additionalAddressInformation = TypeParser.optString(data,"additional_address_information")
             val deliveryPosition = data.getInt("delivery_position")
-            val weight = data.getInt("weight")
-            val width = data.getInt("width")
-            val height = data.getInt("height")
-            val length = data.getInt("length")
+            val weight = data.getDouble("weight")
+            val width = data.getDouble("width")
+            val height = data.getDouble("height")
+            val length = data.getDouble("length")
             val latitude = data.getString("latitude")
             val longitude = data.getString("longitude")
             val verificationToken = data.getString("verification_token")
@@ -77,8 +78,9 @@ class ParcelJSONParser: JSONParser() {
                 nameOfRecipient,
                 phoneNumber,
                 additionalRecipientInformation,
-                address,
+                floor,
                 city,
+                address,
                 additionalAddressInformation,
                 deliveryPosition,
                 weight,
@@ -108,14 +110,15 @@ class ParcelJSONParser: JSONParser() {
                 val phoneNumber = TypeParser.optString(parcelJSON,"phone_number")
                 val nameOfRecipient = parcelJSON.getString("name_of_recipient")
                 val additionalRecipientInformation = TypeParser.optString(parcelJSON,"additional_recipient_information")
+                val floor = parcelJSON.getDouble("floor")
                 val address = parcelJSON.getString("address")
                 val city = parcelJSON.getString("city")
                 val additionalAddressInformation = TypeParser.optString(parcelJSON,"additional_address_information")
                 val deliveryPosition = parcelJSON.getInt("delivery_position")
-                val weight = parcelJSON.getInt("weight")
-                val width = parcelJSON.getInt("width")
-                val height = parcelJSON.getInt("height")
-                val length = parcelJSON.getInt("length")
+                val weight = parcelJSON.getDouble("weight")
+                val width = parcelJSON.getDouble("width")
+                val height = parcelJSON.getDouble("height")
+                val length = parcelJSON.getDouble("length")
                 val latitude = parcelJSON.getString("latitude")
                 val longitude = parcelJSON.getString("longitude")
                 val verificationToken = parcelJSON.getString("verification_token")
@@ -126,8 +129,9 @@ class ParcelJSONParser: JSONParser() {
                     nameOfRecipient,
                     phoneNumber,
                     additionalRecipientInformation,
-                    address,
+                    floor,
                     city,
+                    address,
                     additionalAddressInformation,
                     deliveryPosition,
                     weight,
@@ -159,14 +163,15 @@ class ParcelJSONParser: JSONParser() {
                 val phoneNumber = TypeParser.optString(parcelJSON,"phone_number")
                 val nameOfRecipient = parcelJSON.getString("name_of_recipient")
                 val additionalRecipientInformation = TypeParser.optString(parcelJSON,"additional_recipient_information")
+                val floor = parcelJSON.getDouble("floor")
                 val address = parcelJSON.getString("address")
                 val city = parcelJSON.getString("city")
                 val additionalAddressInformation = TypeParser.optString(parcelJSON,"additional_address_information")
                 val deliveryPosition = parcelJSON.getInt("delivery_position")
-                val weight = parcelJSON.getInt("weight")
-                val width = parcelJSON.getInt("width")
-                val height = parcelJSON.getInt("height")
-                val length = parcelJSON.getInt("length")
+                val weight = parcelJSON.getDouble("weight")
+                val width = parcelJSON.getDouble("width")
+                val height = parcelJSON.getDouble("height")
+                val length = parcelJSON.getDouble("length")
                 val latitude = parcelJSON.getString("latitude")
                 val longitude = parcelJSON.getString("longitude")
                 val verificationToken = parcelJSON.getString("verification_token")
@@ -177,8 +182,9 @@ class ParcelJSONParser: JSONParser() {
                     nameOfRecipient,
                     phoneNumber,
                     additionalRecipientInformation,
-                    address,
+                    floor,
                     city,
+                    address,
                     additionalAddressInformation,
                     deliveryPosition,
                     weight,
