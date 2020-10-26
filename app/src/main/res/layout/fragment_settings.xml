@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/fragment_settings"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -46,37 +47,7 @@
         app:layout_constraintTop_toBottomOf="@id/settingSeparator"
         app:layout_constraintBottom_toTopOf="@id/themeButtonContainer"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintLeft_toRightOf="parent">
-
-        <Button
-            android:id="@+id/intelligenceModeSettingsButton"
-            android:text="Ambient Intelligence"
-            android:textAlignment="textStart"
-            android:textAllCaps="false"
-            android:textStyle="normal"
-            android:textSize="16dp"
-            android:background="@android:color/transparent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="18dp"
-            android:paddingBottom="18dp"
-            android:paddingStart="24dp"
-            android:drawableStart="@drawable/ic_brightness_medium_red_24dp"
-            android:drawablePadding="24dp"/>
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/intelligenceModeSettingsSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:theme="@style/SwitchCompatTheme"
-            android:checked="false"
-            android:layout_marginEnd="16dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:minHeight="18dp"
-            android:minWidth="32dp"
-        />
-    </RelativeLayout>
+        app:layout_constraintLeft_toRightOf="parent"/>
 
     <RelativeLayout
         android:id="@+id/themeButtonContainer"
@@ -85,37 +56,7 @@
         app:layout_constraintTop_toBottomOf="@id/intelligenceModeSettingsContainer"
         app:layout_constraintBottom_toTopOf="@id/helperLabelsButtonContainer"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintLeft_toRightOf="parent">
-
-        <Button
-            android:id="@+id/themeButton"
-            android:text="@string/dark_mode"
-            android:textAlignment="textStart"
-            android:textAllCaps="false"
-            android:textStyle="normal"
-            android:textSize="16dp"
-            android:background="@android:color/transparent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="18dp"
-            android:paddingBottom="18dp"
-            android:paddingStart="24dp"
-            android:drawableStart="@drawable/ic_brightness_medium_red_24dp"
-            android:drawablePadding="24dp"/>
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/themeSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:theme="@style/SwitchCompatTheme"
-            android:text=""
-            android:checked="false"
-            android:layout_marginEnd="16dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:minHeight="18dp"
-            android:minWidth="32dp" />
-    </RelativeLayout>
+        app:layout_constraintLeft_toRightOf="parent"/>
 
     <RelativeLayout
         android:id="@+id/helperLabelsButtonContainer"
@@ -124,39 +65,7 @@
         app:layout_constraintTop_toBottomOf="@id/themeButtonContainer"
         app:layout_constraintBottom_toTopOf="@id/languageButtonContainer"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintLeft_toRightOf="parent">
-
-        <Button
-            android:id="@+id/helperLabelsButton"
-            android:text="@string/help_mode"
-            android:textAlignment="textStart"
-            android:textAllCaps="false"
-            android:textStyle="normal"
-            android:textSize="16dp"
-            android:background="@android:color/transparent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="18dp"
-            android:paddingBottom="18dp"
-            android:paddingStart="24dp"
-            android:drawableStart="@drawable/ic_info_red_24dp"
-            android:drawablePadding="24dp"/>
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/helperLabelsSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:theme="@style/SwitchCompatTheme"
-            android:text=""
-            android:checked="true"
-            android:layout_marginEnd="16dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:minHeight="18dp"
-            android:minWidth="32dp"
-        />
-
-    </RelativeLayout>
+        app:layout_constraintLeft_toRightOf="parent"/>
 
     <RelativeLayout
         android:id="@+id/languageButtonContainer"
@@ -217,27 +126,51 @@
         app:layout_constraintLeft_toRightOf="parent"
     />
 
+
     <Button
         android:id="@+id/logoutButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="4dp"
+        android:background="@android:color/transparent"
+        android:drawableStart="@drawable/baseline_exit_to_app_24px"
+        android:drawablePadding="24dp"
+        android:paddingStart="24dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="18dp"
         android:text="@string/log_out"
         android:textAlignment="textStart"
         android:textAllCaps="false"
-        android:textStyle="normal"
-        android:textSize="16dp"
-        android:background="@android:color/transparent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="18dp"
-        android:paddingBottom="18dp"
-        android:paddingStart="24dp"
-        android:drawableStart="@drawable/baseline_exit_to_app_24px"
-        android:drawablePadding="24dp"
 
-        app:layout_constraintTop_toBottomOf="@id/privacyButton"
+        android:textSize="16dp"
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintLeft_toRightOf="parent"
-    />
+        app:layout_constraintTop_toBottomOf="@+id/parcelResetButton" />
 
+    <Button
+        android:id="@+id/parcelResetButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:drawableStart="@drawable/ic_info_red_24dp"
+        android:drawablePadding="24dp"
+        android:paddingStart="24dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="18dp"
+        android:text="@string/parcel_status_reset"
+        android:textAlignment="textStart"
+        android:textAllCaps="false"
+        android:textSize="16dp"
+
+        android:textStyle="normal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintLeft_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/privacyButton" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/goto_launchpad_from_settings"
@@ -252,7 +185,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
     />
-
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

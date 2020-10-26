@@ -66,16 +66,21 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        setButtonEffect(v.themeButton)
-        setButtonEffect(v.helperLabelsButton)
+//        setButtonEffect(v.themeButton)
+//        setButtonEffect(v.helperLabelsButton)
         setButtonEffect(v.privacyButton)
+        setButtonEffect(v.parcelResetButton)
         setButtonEffect(v.logoutButton)
         val courier = CourierRepository.shared.getCourier()
         v.usernameButton.text = courier!!.firstName!!.trim() + " " + courier.lastName!!.trim()
 
         val api = VanAssistAPIController(activity!! as AppCompatActivity)
 
-        v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked = CourierRepository.shared.getCourier()!!.ambientIntelligenceMode
+        v.parcelResetButton.setOnClickListener {
+            api.requestParcelStateReset()
+        }
+
+/*        v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked = CourierRepository.shared.getCourier()!!.ambientIntelligenceMode
 
         v.intelligenceModeSettingsButton.setOnClickListener {
             v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked = !v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked
@@ -84,18 +89,18 @@ class SettingsFragment : Fragment() {
             } else {
                 api.disableAmbientIntelligenceMode()
             }
-        }
+        }*/
 
-        val themeValue = CourierRepository.shared.getCourier()?.darkMode
+/*        val themeValue = CourierRepository.shared.getCourier()?.darkMode
         if (themeValue != null) {
             v.themeButtonContainer.themeSwitch.isChecked = themeValue
         }
 
         v.themeButton.setOnClickListener {
             setDarkMode(themeValue!!, v)
-        }
+        }*/
 
-        v.helperLabelsButton.setOnClickListener {
+ /*       v.helperLabelsButton.setOnClickListener {
             v.helperLabelsButtonContainer.helperLabelsSwitch.isChecked = !v.helperLabelsButtonContainer.helperLabelsSwitch.isChecked
         }
         val labelValue = CourierRepository.shared.getCourier()?.helpMode
@@ -111,7 +116,7 @@ class SettingsFragment : Fragment() {
                 val api = VanAssistAPIController(activity!! as AppCompatActivity)
                 api.disableHelpMode()
             }
-        }
+        }*/
 
         v.privacyButton.setOnClickListener {
             val i = Intent(Intent.ACTION_VIEW, Uri.parse(Path.PRIVACY))
@@ -154,7 +159,7 @@ class SettingsFragment : Fragment() {
     }
 
 
-    private fun setDarkMode(darkMode: Boolean, v : View){
+ /*   private fun setDarkMode(darkMode: Boolean, v : View){
         val builder1 = AlertDialog.Builder(context!!)
         builder1.setTitle(getString(R.string.dark_mode_alert_title))
         builder1.setMessage(getString(R.string.dark_mode_alert_message))
@@ -192,7 +197,7 @@ class SettingsFragment : Fragment() {
 
         val alert = builder1.create()
         alert.show()
-    }
+    }*/
 
 
     /* Set language code */

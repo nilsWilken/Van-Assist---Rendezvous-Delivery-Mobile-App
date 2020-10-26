@@ -41,6 +41,7 @@
     <string name="ambient_intelligence_menu_title">Ambient Intelligence</string>
     <string name="park_here_title">Hier parken</string>
     <string name="permission_alert">Die App benötigt Schreib- und Standortzugriff. Möchtest du die Zugriffsrechte ändern?</string>
+    <string name="parcel_status_reset">Pakete zurücksetzen</string>
 
 
 
@@ -66,6 +67,7 @@
     <string name="deliveries_dialog_message">Auf welchen Zutand möchtest du das Paket setzen?</string>
     <string name="parking_area_confirmation">Bitte bestätige oder verändere den Parkplatz</string>
     <string name="select_next_parking_area">Willst du diesen Parkplatz auswählen und die Route anzeigen lassen?</string>
+    <string name="parcel_status_reset_successful">Zurücksetzen der Paketzustände war erfolgreich!</string>
 
     <!-- ERROR HANDLING -->
     <string name="error_parcel_loading">Bei dem Laden der Pakete ist ein Fehler aufgetreten</string>
@@ -82,7 +84,9 @@
     <string name="error_load_parking_location">Bei dem Laden der Parkplätze ist ein Fehler aufgetreten</string>
     <string name="error_set_next_parking_location">Bei dem Setzen des nächsten Parkplatzes ist ein Fehler aufgetreten</string>
     <string name="error_no_parcel_available">Keine Paketinformationen verfügbar</string>
+    <string name="error_request_parcel_state_reset">Anfrage zum Zurücksetzen der Paketzustände fehlgeschlagen</string>
     <string name="error_courier_information_loading">Bei dem Laden der Informationen des Zustellers ist ein Fehler aufgetreten</string>
+    <string name="error_current_van_location_loading">Beim Laden der Position des Fahrzeugs ist ein Fehler aufgetreten</string>
     <string name="ambient_intelligence_activation_failed">Bei der Aktivierung des Ambient Intelligence Modes ist ein Fehler aufgetreten</string>
     <string name="ambient_intelligence_deactivation_failed">Bei der Deaktivierung des Ambient Intelligence Modes ist ein Fehler aufgetreten</string>
     <string name="time_dependent_darkmode_activation_failed">Bei der Aktivierung des zeitbasierten Nachtmodus ist ein Fehler aufgetreten</string>

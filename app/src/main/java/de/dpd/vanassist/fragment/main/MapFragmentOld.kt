@@ -30,6 +30,7 @@ import kotlinx.android.synthetic.main.fragment_map_old.view.*
 import de.dpd.vanassist.controls.SwipeButton
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
@@ -111,7 +112,7 @@ var requestSend = false
 @Suppress("DEPRECATION")
 class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListener {
 
-    /* ParcelCard Interaction */
+    /* PARCEL CARD INTERACTION */
     private var bottomSheetLinearLayout: LinearLayout? = null
     private var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>? = null
     private var bottomSheetStreetName: TextView? = null
@@ -126,14 +127,14 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
     /* Capturing original camera position to reset */
     private lateinit var originalCamPos: CameraPosition
 
-    /* parkingArea Interaction */
+    /* PARKING AREA INTERACTION */
     private lateinit var parkingAreas: List<ParkingAreaEntity>
     private var selectedParkingArea: Feature? = null
     var nextParkingArea : ParkingAreaEntity? = null
     private var markerSelected = false
     var destination = Point.fromLngLat(0.0, 0.0)!!
 
-    /* Animations for the floating buttons */
+    /* FLOATING BUTTON ANIMATIONS */
     private lateinit var fabOpen: Animation
     private lateinit var fabClose: Animation
     private lateinit var fadeIn: Animation
@@ -144,7 +145,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     private var broadcastReceiver: BroadcastReceiver? = null
 
-    /* LocationService */
+    /* LOCATION SERVICE */
     companion object {
         var gpsService: Intent? = null
         fun newInstance(): MapFragmentOld {
@@ -153,10 +154,10 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         }
     }
 
-    /* variables for Map Object */
+    /* MAB BOX VARIABLES */
     private lateinit var mapView: MapView
 
-    /* Restricting the Map Bounds */
+    /* MAP BOUND RESTRICTIONS */
     private val RESTRICTED_BOUNDS_AREA = LatLngBounds.Builder()
         .include(MapBoxConfig.OFFLINE_MAP_BOUND_NORTH_WEST)
         .include(MapBoxConfig.OFFLINE_MAP_BOUND_SOUTH_EAST)
@@ -167,9 +168,10 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     private lateinit var locationEngine: LocationEngine
 
+    /* MAP BOX */
     lateinit var mapBoxMap: MapboxMap
 
-    /* variables for calculating and drawing a route */
+    /* ROUTE UTILS */
     private lateinit var currentRoute: DirectionsRoute
 
     private var navigationMapRoute: NavigationMapRoute? = null
@@ -187,6 +189,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
     override fun onMapReady(mapboxMap: MapboxMap) {
 
         this.mapBoxMap = mapboxMap
+
+        //SET AND DETERMINE MAP STYLE (LIGHT VS DARK)
         val styleUrlLight = MapBoxConfig.MAP_BOX_LIGHT_STYLE
         val styleUrlDark = MapBoxConfig.MAP_BOX_DARK_STYLE
         var styleUrl = styleUrlLight
@@ -195,9 +199,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         if (courier?.darkMode!!) {
             styleUrl = styleUrlDark
         }
-
         mapboxMap.setStyle(Style.Builder().fromUrl(styleUrl)) {
-
             mapboxMap.setLatLngBoundsForCameraTarget(RESTRICTED_BOUNDS_AREA)
 
             val locationComponentOptions = LocationComponentOptions.builder(this.context!!)
@@ -229,7 +231,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             mapboxMap.setOnMarkerClickListener { marker ->
                 newAnimatedCamPos(
                     LatLng(marker.position.latitude, marker.position.longitude),
-                    this.originalCamPos.zoom + 2,
+                    this.originalCamPos.zoom + 1,
                     MapBoxConfig.SET_MARKER_DURATION_IN_MS
                 )
                 return@setOnMarkerClickListener true
@@ -245,9 +247,18 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 .build()
 
             offlineMap()
+
+            if(this.dialog != null) {
+                this.dialog!!.dismiss()
+            }
         }
     }
 
+/*
+#################################################################################################################################
+########################################### NAVIGATION UTILS ####################################################################
+#################################################################################################################################
+ */
 
     /* Created by Jasmin & Raluca
      * Function that starts the navigation for the current route. */
@@ -315,13 +326,19 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             if (walking) {
                 profile = DirectionsCriteria.PROFILE_WALKING
             }
-            getRoute(origin_, destination_, profile)
+            this.getRoute(origin_, destination_, profile)
 
         } catch (e: SecurityException) {
             e.printStackTrace()
         }
     }
 
+
+/*
+#################################################################################################################################
+########################################### MAP DRAWING UTILS ###################################################################
+#################################################################################################################################
+ */
 
     /* Converts VectorDrawable to Bitmap */
     private fun getBitmapFromVectorDrawable(context: Context, drawableId: Int): Bitmap {
@@ -344,11 +361,10 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
     /* The markers are added in this method */
     private fun addMarkers(loadedMapStyle: Style) {
         val features = ArrayList<Feature>()
-        parkingAreas = ParkingAreaRepository.shared.getAll()
+        this.parkingAreas = ParkingAreaRepository.shared.getAll()
         val nextAutoPaID = "parkingArea_429024483#3_0_12"
-        if (parkingAreas.isEmpty()) {
-        } else {
-            for (pa in parkingAreas) {
+        if (!this.parkingAreas.isEmpty()) {
+            for (pa in this.parkingAreas) {
                 if (pa.id != nextAutoPaID) {
                     val feat = Feature.fromGeometry(Point.fromLngLat(pa.long_.toDouble(), pa.lat.toDouble()))
                     feat.addStringProperty("PA ID", pa.id)
@@ -381,22 +397,22 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
         /* Search for best parking area, if no one is found -> use default */
         val nextDeliveryLocation = ParcelRepository.shared.getCurrentParcel()
-        nextParkingArea = ParkingAreaUtil.getNearestParkingArea(nextDeliveryLocation)
-        if (nextParkingArea == null) {
-            nextParkingArea = ParkingAreaRepository.shared.getParkingAreaById(ParkingAreaConfig.DEFAULT_PARKING_AREA)
+        this.nextParkingArea = ParkingAreaUtil.getNearestParkingArea(nextDeliveryLocation)
+        if (this.nextParkingArea == null) {
+            this.nextParkingArea = ParkingAreaRepository.shared.getParkingAreaById(ParkingAreaConfig.DEFAULT_PARKING_AREA)
         }
 
         /* set nextParkingArea as default destination */
-        destination = Point.fromLngLat(nextParkingArea!!.long_.toDouble(), nextParkingArea!!.lat.toDouble())
+        this.destination = Point.fromLngLat(this.nextParkingArea!!.long_.toDouble(), this.nextParkingArea!!.lat.toDouble())
 
         /* Create new camera position */
-        newCamPos(LatLng(nextParkingArea!!.lat.toDouble(), nextParkingArea!!.long_.toDouble()), mapBoxMap.maxZoomLevel - 4)
+        newCamPos(LatLng(this.nextParkingArea!!.lat.toDouble(), this.nextParkingArea!!.long_.toDouble()), this.mapBoxMap.maxZoomLevel - 2)
 
         /* add selected marker source */
         loadedMapStyle.addSource(
             GeoJsonSource(
                 MapBoxConfig.MARKER_SOURCE_SELECTED,
-                Feature.fromGeometry(Point.fromLngLat(nextParkingArea!!.long_.toDouble(), nextParkingArea!!.lat.toDouble()))
+                Feature.fromGeometry(Point.fromLngLat(this.nextParkingArea!!.long_.toDouble(), this.nextParkingArea!!.lat.toDouble()))
             )
         )
 
@@ -419,11 +435,15 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     }
 
+/*
+#################################################################################################################################
+########################################### APPLICATION CONTROL #################################################################
+#################################################################################################################################
+ */
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
-
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Mapbox.getInstance(
@@ -431,21 +451,6 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             MapBoxConfig.MAP_BOX_ACCESS_TOKEN
         )
         val v = inflater.inflate(R.layout.fragment_map_old, container, false)
-
-        /* Set Default Van Location only first time after simulation start */
-        /* /> not when simulation is running and it is only resumed */
-        /* /> would overwrite last position */
-        if (SimulationConfig.isFirstVanLocationAfterSimulationStart) {
-            VanRepository.shared.insert(
-                VanEntity(
-                    VanAssistConfig.VAN_ID,
-                    this.destination.latitude(),
-                    this.destination.longitude(),
-                    true
-                )
-            )
-            SimulationConfig.isFirstVanLocationAfterSimulationStart = false
-        }
 
 
         if (testTargetApi() || checkPermissions()) {
@@ -458,13 +463,36 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
             this.mapView.getMapAsync(this)
 
-            this.mapView.addOnDidFinishRenderingMapListener {
+            /*this.mapView.addOnDidFinishLoadingMapListener {
+                Log.i("MapFragmentOld", "DidFinishListenerCalled!")
                 this.dialog!!.dismiss()
-            }
+            }*/
 
             this.currentParcel = ParcelRepository.shared.getCurrentParcel()
 
             val api = VanAssistAPIController(activity!! as AppCompatActivity)
+
+            /* Set Default Van Location only first time after simulation start */
+            /* /> not when simulation is running and it is only resumed */
+            /* /> would overwrite last position */
+            if (SimulationConfig.isFirstVanLocationAfterSimulationStart) {
+                VanRepository.shared.insert(
+                    VanEntity(
+                        VanAssistConfig.VAN_ID,
+                        this.vehicleLocation.latitude(),
+                        this.vehicleLocation.longitude(),
+                        true,
+                        "CLOSED",
+                        "IN DELIVERY",
+                        "OK",
+                        ""
+                    )
+                )
+
+                SimulationConfig.isFirstVanLocationAfterSimulationStart = false
+            }
+
+
 
             /* declaring the animations */
             this.fabOpen = AnimationUtils.loadAnimation(context, R.anim.fab_open)
@@ -517,8 +545,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 }
             }
 
-            setParcelInformation(activity as AppCompatActivity)
-            startGPSService()
+            this.setParcelInformation(activity as AppCompatActivity)
+            this.startGPSService()
 
             v.goto_launchpad.setOnClickListener { view ->
                 activity!!.onBackPressed()
@@ -528,9 +556,9 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
                 if (this.isOpen) {
                     /* finish all open interactions */
-                    finishSetNextParkingArea()
-                    finishPedestrianRouting()
-                    collapseFloatingActionButton(v)
+                    this.finishSetNextParkingArea()
+                    this.finishPedestrianRouting()
+                    this.collapseFloatingActionButton(v)
                 } else {
                     val courier = CourierRepository.shared.getCourier()
                     if (courier?.helpMode!!) {
@@ -658,7 +686,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                                     this.mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE)
                                     fab_parkinglocation.setImageResource(R.drawable.ic_navigation_grey_24dp)
                                     this.routeShown = true
-                                    navigate(this.vehicleLocation, this.destination, false)
+                                    this.navigate(this.vehicleLocation, this.destination, false)
                                 }
 
                                 DialogInterface.BUTTON_NEGATIVE -> {
@@ -667,9 +695,9 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                         })
                 } else if (!this.wasclicked) {
                     /* First Interaction Step */
-                    finishSetNextParkingArea()
-                    finishGetVanLocation()
-                    finishPedestrianRouting()
+                    this.finishSetNextParkingArea()
+                    this.finishGetVanLocation()
+                    this.finishPedestrianRouting()
 
                     this.wasclicked = true
                     this.mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED)
@@ -707,9 +735,9 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 }
                 if (this.wasclicked && this.routeShown) {
                     /* Last Interaction Step */
-                    postNextParkingAreaToServer()
+                    this.postNextParkingAreaToServer()
                     /* finish the Interaction and set back to initial */
-                    finishSetNextParkingArea()
+                    this.finishSetNextParkingArea()
                 }
             } else {
                 Toast.createToast(getString(R.string.error_no_parcel_available))
@@ -718,9 +746,201 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         return v
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (this.broadcastReceiver == null) {
+            this.broadcastReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+
+                    val latitude = intent.extras!!.getDouble("latitude")
+                    val longitude = intent.extras!!.getDouble("longitude")
+                    Position.update(latitude, longitude)
+
+                    DynamicContent.manageDynamicContent()
+                    if (DynamicContent.isActivated) {
+                        expandBottomSheet()
+                    }
+
+                    IntelligentDriving.manageIntelligentDrivingMode()
+                    if(IntelligentDriving.isActivated) {
+                        var isParcelTooLarge = false
+                        if(SizeDependentWaiting.isEnabled) {
+                            val parcel = ParcelRepository.shared.getCurrentParcel()
+                            if(parcel != null) {
+                                if(ParcelUtil.getParcelSize(parcel) == "XL") {
+                                    /* Is doing nothing if parcel is too large */
+                                    isParcelTooLarge = true
+                                }
+                            }
+                        }
+
+                        if(isParcelTooLarge == false) {
+                            val nextDeliveryLocation = ParcelRepository.shared.getNextParcel()
+                            var nextParkingArea: ParkingAreaEntity? = ParkingAreaUtil.getNearestParkingArea(nextDeliveryLocation)
+                            if (nextParkingArea == null) {
+                                nextParkingArea =
+                                    ParkingAreaRepository.shared.getParkingAreaById("parkingArea_-24828111#0_0_15")
+                            }
+                            postNextParkingAreaToServer(nextParkingArea!!)
+                            IntelligentDriving.reset()
+                        }
+                    }
+                }
+            }
+        }
+        activity?.registerReceiver(this.broadcastReceiver, IntentFilter("location_update"))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        if (this.broadcastReceiver != null) {
+            activity!!.unregisterReceiver(this.broadcastReceiver)
+        }
+
+        if (gpsService != null) {
+            activity!!.stopService(gpsService)
+        }
+
+        if(this.dialog != null) {
+            this.dialog!!.dismiss()
+        }
+    }
+
+    /* PERMISSIONS */
+    @TargetApi(VanAssistConfig.TARGET_API)
+    fun checkPermissions(): Boolean {
+        var result: Int
+        val listPermissionsNeeded = ArrayList<String>()
+        for (p in this.permissions) {
+            result = context!!.checkSelfPermission(p)
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(p)
+            }
+        }
+
+        if (!listPermissionsNeeded.isEmpty()) {
+            ActivityCompat.requestPermissions(
+                this.activity!!,
+                listPermissionsNeeded.toTypedArray(),
+                MapBoxConfig.MULTIPLE_PERMISSIONS
+            )
+            return false
+
+        }
+        return true
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissionsList: Array<String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            MapBoxConfig.MULTIPLE_PERMISSIONS -> {
+                if (grantResults.isNotEmpty()) {
+                    var permissionsDenied = ""
+                    for (per in permissionsList) {
+                        if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                            permissionsDenied += "\n" + per
+
+                        }
+
+                    }
+                    if (permissionsDenied != "") {
+                        showDialogOK(getString(R.string.permission_alert),
+                            DialogInterface.OnClickListener { _, which ->
+                                when (which) {
+                                    DialogInterface.BUTTON_POSITIVE -> checkPermissions()
+                                    DialogInterface.BUTTON_NEGATIVE -> {
+                                    }
+                                }
+                            })
+                    } else {
+
+                    }
+                }
+                return
+            }
+        }
+    }
+
+
+/*
+#################################################################################################################################
+########################################### ON MAP CLICK LISTENER ###############################################################
+#################################################################################################################################
+ */
+
+    /* EventHandler for interaction with the map */
+    override fun onMapClick(point: LatLng): Boolean {
+        if (this.wasclicked) {
+            val style = this.mapBoxMap.style
+            if (style != null) {
+
+                val selectedMarkerSymbolLayer = style.getLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED) as SymbolLayer
+
+                val pixel = this.mapBoxMap.projection.toScreenLocation(point)
+                val features = this.mapBoxMap.queryRenderedFeatures(pixel, MapBoxConfig.MARKER_STYLE_LAYER)
+                val selectedFeature = this.mapBoxMap.queryRenderedFeatures(
+                    pixel, MapBoxConfig.MARKER_STYLE_LAYER_SELECTED
+                )
+
+                if (selectedFeature.size > 0 && this.markerSelected) {
+                    return false
+                }
+
+                if (features.isEmpty()) {
+                    if (this.markerSelected) {
+                        deselectMarker(selectedMarkerSymbolLayer)
+                    }
+                    return false
+                }
+
+                val mutableList: MutableList<Feature> = arrayListOf()
+                mutableList.add(Feature.fromGeometry(features[0].geometry()))
+
+                val geoCoordinateJSON = JSONObject(features[0].geometry()!!.toJson())
+                val geoCoordinate = geoCoordinateJSON.getJSONArray("coordinates")
+
+                this.selectedParkingArea = features[0]
+
+                val longitude = geoCoordinate.getDouble(0)
+                val latitude = geoCoordinate.getDouble(1)
+                this.destination = Point.fromLngLat(longitude, latitude)
+                newAnimatedCamPos(LatLng(latitude, longitude), this.originalCamPos.zoom + 2, MapBoxConfig.CAM_POS_ANIMATION_IN_MS)
+
+                val source: GeoJsonSource = style.getSourceAs(MapBoxConfig.MARKER_SOURCE_SELECTED)!!
+                source.setGeoJson(FeatureCollection.fromFeatures(mutableList))
+
+                if (this.markerSelected) {
+                    deselectMarker(selectedMarkerSymbolLayer)
+                }
+                if (features.size > 0) {
+                    selectMarker(selectedMarkerSymbolLayer)
+                }
+            }
+        }
+        return true
+    }
+
+
+/*
+#################################################################################################################################
+########################################### GENERAL UI UTILS ####################################################################
+#################################################################################################################################
+ */
+
 
     /* Manages the display of the van location in the map */
     private fun showVanLocation(zoom: Double, animation: Boolean) {
+        val api = VanAssistAPIController(activity!! as AppCompatActivity)
+        api.getCurrentVanLocation()
+
+        var van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)!!
+        this.vehicleLocation = Point.fromLngLat(van.longitude, van.latitude)
+        Log.i("MapFragmentOld", "Current vehicle position: " + van.latitude + " " + van.longitude)
+
         val icon = IconFactory.getInstance(this.activity!!)
         this.wasClickedVanLocation = true
         this.mapBoxMap.addMarker(
@@ -754,8 +974,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         val longitude = nextParcelToDeliver.longitude.toDouble()
 
         if (!this.wasClickedDeliveryLocation) {
-            finishSetNextParkingArea()
-            finishPedestrianRouting()
+            this.finishSetNextParkingArea()
+            this.finishPedestrianRouting()
 
             val icon = IconFactory.getInstance(this.activity!!)
 
@@ -794,7 +1014,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     this.mapBoxMap.locationComponent.lastKnownLocation!!.latitude
                 )
                 val delLocation = Point.fromLngLat(longitude, latitude)
-                navigate(employeePosition, delLocation, true)
+                this.navigate(employeePosition, delLocation, true)
                 this.deliveryRouteShown = true
                 fab_deliverylocation.setImageResource(R.drawable.ic_custom_parker_confirm)
 
@@ -803,8 +1023,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             }
 
         } else if (this.wasClickedDeliveryLocation && this.deliveryRouteShown) {
-
-            startTriggerNavigation()
+            this.startTriggerNavigation()
         }
     }
 
@@ -888,21 +1107,19 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
 
     /* Updates the van location without zooming to the van */
-    fun updateVanLocationWithoutZoom(point: Point, updateMarker: Boolean) {
+    fun updateVanLocationWithoutZoom(point: Point) {
         this.vehicleLocation = point
         val icon = IconFactory.getInstance(this.activity!!)
         if (this.currentVanPosition != null) {
             this.currentVanPosition!!.remove()
         }
-        if(updateMarker) {
-            removeDrivingPositionOfDPDVan()
-            this.mapBoxMap.addMarker(
-                MarkerOptions()
-                    .position(LatLng(this.vehicleLocation.latitude(), this.vehicleLocation.longitude()))
-                    .title(MapBoxConfig.MARKER_TITLE_VAN_IS_DRIVING)
-                    .icon(icon.fromResource(R.mipmap.ic_custom_dpd_van_cropped))
-            )
-        }
+        this.removeDrivingPositionOfDPDVan()
+        this.mapBoxMap.addMarker(
+            MarkerOptions()
+                .position(LatLng(this.vehicleLocation.latitude(), this.vehicleLocation.longitude()))
+                .title(MapBoxConfig.MARKER_TITLE_VAN_IS_DRIVING)
+                .icon(icon.fromResource(R.mipmap.ic_custom_dpd_van_cropped))
+        )
     }
 
 
@@ -998,125 +1215,6 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
     }
 
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-        if (this.broadcastReceiver != null) {
-            activity!!.unregisterReceiver(this.broadcastReceiver)
-        }
-
-        if (gpsService != null) {
-            activity!!.stopService(gpsService)
-        }
-    }
-
-
-    override fun onResume() {
-        super.onResume()
-        if (this.broadcastReceiver == null) {
-            this.broadcastReceiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context, intent: Intent) {
-
-                    val latitude = intent.extras!!.getDouble("latitude")
-                    val longitude = intent.extras!!.getDouble("longitude")
-                    Position.update(latitude, longitude)
-
-                    DynamicContent.manageDynamicContent()
-                    if (DynamicContent.isActivated) {
-                        expandBottomSheet()
-                    }
-
-                    IntelligentDriving.manageIntelligentDrivingMode()
-                    if(IntelligentDriving.isActivated) {
-                        var isParcelTooLarge = false
-                        if(SizeDependentWaiting.isEnabled) {
-                            val parcel = ParcelRepository.shared.getCurrentParcel()
-                            if(parcel != null) {
-                                if(ParcelUtil.getParcelSize(parcel) == "XL") {
-                                    /* Is doing nothing if parcel is too large */
-                                    isParcelTooLarge = true
-                                }
-                            }
-                        }
-
-                        if(isParcelTooLarge == false) {
-                            val nextDeliveryLocation = ParcelRepository.shared.getNextParcel()
-                            var nextParkingArea = ParkingAreaUtil.getNearestParkingArea(nextDeliveryLocation)
-                            if (nextParkingArea == null) {
-                                nextParkingArea =
-                                    ParkingAreaRepository.shared.getParkingAreaById("parkingArea_-24828111#0_0_15")
-                            }
-                            postNextParkingAreaToServer(nextParkingArea)
-                            IntelligentDriving.reset()
-                        }
-                    }
-                }
-            }
-        }
-        activity?.registerReceiver(this.broadcastReceiver, IntentFilter("location_update"))
-    }
-
-
-    /* PERMISSIONS */
-    @TargetApi(VanAssistConfig.TARGET_API)
-    fun checkPermissions(): Boolean {
-        var result: Int
-        val listPermissionsNeeded = ArrayList<String>()
-        for (p in this.permissions) {
-            result = context!!.checkSelfPermission(p)
-            if (result != PackageManager.PERMISSION_GRANTED) {
-                listPermissionsNeeded.add(p)
-            }
-        }
-
-        if (!listPermissionsNeeded.isEmpty()) {
-            ActivityCompat.requestPermissions(
-                this.activity!!,
-                listPermissionsNeeded.toTypedArray(),
-                MapBoxConfig.MULTIPLE_PERMISSIONS
-            )
-            return false
-
-        }
-        return true
-    }
-
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissionsList: Array<String>,
-        grantResults: IntArray
-    ) {
-        when (requestCode) {
-            MapBoxConfig.MULTIPLE_PERMISSIONS -> {
-                if (grantResults.isNotEmpty()) {
-                    var permissionsDenied = ""
-                    for (per in permissionsList) {
-                        if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
-                            permissionsDenied += "\n" + per
-
-                        }
-
-                    }
-                    if (permissionsDenied != "") {
-                        showDialogOK(getString(R.string.permission_alert),
-                            DialogInterface.OnClickListener { _, which ->
-                                when (which) {
-                                    DialogInterface.BUTTON_POSITIVE -> checkPermissions()
-                                    DialogInterface.BUTTON_NEGATIVE -> {
-                                    }
-                                }
-                            })
-                    } else {
-
-                    }
-                }
-                return
-            }
-        }
-    }
-
-
     /* Created by Jasmin & Raluca
      * Function that creates a dialog.
      * @param: message: The message displayed on the dialog
@@ -1129,7 +1227,6 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             .create()
             .show()
     }
-
 
     private fun testTargetApi(): Boolean {
         if (Build.VERSION.SDK_INT < VanAssistConfig.TARGET_API) {
@@ -1149,65 +1246,11 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         }
     }
 
-
     /* Send next parkingArea to the server */
     fun postNextParkingAreaToServer(parkingArea: ParkingAreaEntity) {
         val api = VanAssistAPIController(activity!! as AppCompatActivity)
         api.postNextParkingLocation(parkingArea.id)
     }
-
-    /* EventHandler for interaction with the map */
-    override fun onMapClick(point: LatLng): Boolean {
-        if (this.wasclicked) {
-            val style = this.mapBoxMap.style
-            if (style != null) {
-
-                val selectedMarkerSymbolLayer = style.getLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED) as SymbolLayer
-
-                val pixel = this.mapBoxMap.projection.toScreenLocation(point)
-                val features = this.mapBoxMap.queryRenderedFeatures(pixel, MapBoxConfig.MARKER_STYLE_LAYER)
-                val selectedFeature = this.mapBoxMap.queryRenderedFeatures(
-                    pixel, MapBoxConfig.MARKER_STYLE_LAYER_SELECTED
-                )
-
-                if (selectedFeature.size > 0 && this.markerSelected) {
-                    return false
-                }
-
-                if (features.isEmpty()) {
-                    if (this.markerSelected) {
-                        deselectMarker(selectedMarkerSymbolLayer)
-                    }
-                    return false
-                }
-
-                val mutableList: MutableList<Feature> = arrayListOf()
-                mutableList.add(Feature.fromGeometry(features[0].geometry()))
-
-                val geoCoordinateJSON = JSONObject(features[0].geometry()!!.toJson())
-                val geoCoordinate = geoCoordinateJSON.getJSONArray("coordinates")
-
-                this.selectedParkingArea = features[0]
-
-                val longitude = geoCoordinate.getDouble(0)
-                val latitude = geoCoordinate.getDouble(1)
-                this.destination = Point.fromLngLat(longitude, latitude)
-                newAnimatedCamPos(LatLng(latitude, longitude), this.originalCamPos.zoom + 2, MapBoxConfig.CAM_POS_ANIMATION_IN_MS)
-
-                val source: GeoJsonSource = style.getSourceAs(MapBoxConfig.MARKER_SOURCE_SELECTED)!!
-                source.setGeoJson(FeatureCollection.fromFeatures(mutableList))
-
-                if (this.markerSelected) {
-                    deselectMarker(selectedMarkerSymbolLayer)
-                }
-                if (features.size > 0) {
-                    selectMarker(selectedMarkerSymbolLayer)
-                }
-            }
-        }
-        return true
-    }
-
 
     /* Handles the deselection of markers */
     private fun deselectMarker(iconLayer: SymbolLayer) {
@@ -1220,7 +1263,6 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         markerAnimator.start()
         this.markerSelected = false
     }
-
 
     /* Handles the selection of markers */
     private fun selectMarker(iconLayer: SymbolLayer) {
@@ -1236,7 +1278,6 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     }
 
-
     /* Finish the interaction with the map (get van) */
     private fun finishGetVanLocation() {
 
@@ -1247,7 +1288,6 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         }
         newCamPos(this.originalCamPos)
     }
-
 
     /* Finish the interaction with the map (set parkingArea) */
     private fun finishSetNextParkingArea() {
@@ -1285,7 +1325,6 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         }
         newCamPos(this.originalCamPos)
     }
-
 
     /* Created by Jasmin & Raluca
      * Function that includes offline navigation through the map */
@@ -1367,7 +1406,6 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             )
         }
     }
-
 
     fun expandBottomSheet() {
         this.bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_EXPANDED

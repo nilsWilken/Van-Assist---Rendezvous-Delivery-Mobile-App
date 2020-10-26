@@ -41,6 +41,7 @@
     <string name="ambient_intelligence_menu_title">Ambient Intelligence</string>
     <string name="park_here_title">Park Here</string>
     <string name="permission_alert">Writing and Location Services Permission required for this app. Do you want to change Permissions?</string>
+    <string name="parcel_status_reset">Reset parcel status</string>
 
 
     <!-- SPECIFIC VALUES -->
@@ -63,6 +64,7 @@
     <string name="deliveries_dialog_message">Where do you want to move the undone parcel?</string>
     <string name="parking_area_confirmation">Please adjust or directly confirm with Parking Button</string>
     <string name="select_next_parking_area">Do you want to select this as next parking location and show Route?</string>
+    <string name="parcel_status_reset_successful">Parcel status reset was successfull</string>
 
     <!-- ERROR HANDLING -->
     <string name="error_parcel_loading">Loading parcel failed</string>
@@ -80,6 +82,8 @@
     <string name="error_set_next_parking_location">Set next parking location failed</string>
     <string name="error_no_parcel_available">No parcel information available</string>
     <string name="error_courier_information_loading">Loading courier information failed</string>
+    <string name="error_current_van_location_loading">Loading current van location falied</string>
+    <string name="error_request_parcel_state_reset">Parcel state reset request failed</string>
     <string name="ambient_intelligence_activation_failed">Activation of the Ambient Intelligence Mode failed</string>
     <string name="ambient_intelligence_deactivation_failed">Deactivation of the Ambient Intelligence Mode failed</string>
     <string name="time_dependent_darkmode_activation_failed">Activation of the Time dependent Darkmode failed</string>

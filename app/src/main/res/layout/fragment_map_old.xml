@@ -11,7 +11,17 @@
     <com.mapbox.mapboxsdk.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        mapbox:mapbox_cameraTargetLat="49.42"
+        mapbox:mapbox_cameraTargetLng="8.68"
+        mapbox:mapbox_cameraZoom="14"
+        mapbox:mapbox_cameraZoomMin="2.0"
+        mapbox:mapbox_uiZoomGestures="true"
+        mapbox:mapbox_uiScrollGestures="true"
+        mapbox:mapbox_uiRotateGestures="true"
+        mapbox:mapbox_uiTiltGestures="true"
+        mapbox:mapbox_uiDoubleTapGestures="true"
+        mapbox:mapbox_uiQuickZoomGestures="true"/>
 
     <!--<include layout="@layout/content_map" />-->
     <!-- include bottom sheet -->

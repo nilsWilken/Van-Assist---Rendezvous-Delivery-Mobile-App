@@ -21,7 +21,12 @@ import de.dpd.vanassist.util.json.CourierJSONParser
 import de.dpd.vanassist.util.json.ParcelJSONParser
 import de.dpd.vanassist.util.json.ParkingAreaJSONParser
 import com.google.firebase.iid.FirebaseInstanceId
+import com.mapbox.geojson.Point
 import de.dpd.vanassist.config.FragmentTag
+import de.dpd.vanassist.config.VanAssistConfig
+import de.dpd.vanassist.database.entity.VanEntity
+import de.dpd.vanassist.database.repository.VanRepository
+import de.dpd.vanassist.util.json.VehicleJSONParser
 import de.dpd.vanassist.util.toast.Toast
 import okhttp3.*
 import java.io.IOException
@@ -92,7 +97,7 @@ class VanAssistAPIController(activity: AppCompatActivity) {
                                     CourierRepository.shared.insert(courier)
 
                                     if (CourierRepository.shared.getAll().count() == 1) {
-                                        loadAndSaveAllParcel()
+                                        //loadAndSaveAllParcel()
                                         dialog.dismiss()
                                         MapActivity.start(act)
                                     }
@@ -1068,6 +1073,42 @@ class VanAssistAPIController(activity: AppCompatActivity) {
             }
     }
 
+    fun updateFCMToken() {
+        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { instanceIdResult ->
+            val fcmToken = instanceIdResult.token
+
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+
+                            val courierId = CourierRepository.shared.getCourierId()!!
+
+                            val header = CourierJSONParser.createHeaderUpdateFCMToken(uid, courierId, fcmToken)
+                            val body = ParcelJSONParser.createRequestEmptyBody()
+                            val path = Path.UPDATE_FCM_TOKEN
+
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    try {
+                                    } catch (e: JSONException) {
+                                        Toast.createToast("Update of fcm token failed!")
+                                        e.printStackTrace()
+                                    }
+                                } else {
+                                    Toast.createToast("Update of fcm token failed!")
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast("Update of fcm token failed!")
+                    }
+                }
+        }
+    }
+
 
     /* Starts the simulation
      * This method needs to be executed by another framework than volley (in our case OkHttp3) since there was an issue with using Volley -> see report) */
@@ -1127,6 +1168,7 @@ class VanAssistAPIController(activity: AppCompatActivity) {
                                                 }
 
                                             } catch (e: JSONException) {
+                                                println(e.printStackTrace())
                                                 FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
                                                 Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
                                                 e.printStackTrace()
@@ -1259,6 +1301,65 @@ class VanAssistAPIController(activity: AppCompatActivity) {
     }
 
 
+    fun getCurrentVanLocation() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val path = Path.CURRENT_VAN_LOCATION
+                        val params = VehicleJSONParser.createHeaderGetCurrentPosition(uid)
+                        Log.i("VanAssistAPIController", "CALL GET CURRENT VAN LOCATION")
+                        apiController.get(path, params) { response ->
+                            if (response != null) {
+
+                                val strResp = response.toString()
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val currentLocationResponseObject = VehicleJSONParser.parseResponseToLocation(jsonObject)
+                                    Log.i("VanAssistAPIController", currentLocationResponseObject.toString())
+
+                                    val van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)
+                                    if(van == null) {
+                                        VanRepository.shared.insert(
+                                            VanEntity(
+                                                VanAssistConfig.VAN_ID,
+                                                currentLocationResponseObject.latitude(),
+                                                currentLocationResponseObject.longitude(),
+                                                true,
+                                                "CLOSED",
+                                                "IN DELIVERY",
+                                                "OK",
+                                                ""
+                                            )
+                                        )
+                                    }
+                                    else {
+                                        VanRepository.shared.updateVanLocationById(
+                                            VanAssistConfig.VAN_ID,
+                                            currentLocationResponseObject.latitude(),
+                                            currentLocationResponseObject.longitude()
+                                        )
+                                        Log.i("VanAssistAPIController", "Cpos: " + van.latitude + " " + van.longitude)
+                                    }
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                }
+            }
+    }
+
+
     /* Sends next Parking Location to Server */
     fun postNextParkingLocation(paID: String) {
         val user = FirebaseAuth.getInstance().currentUser
@@ -1293,6 +1394,47 @@ class VanAssistAPIController(activity: AppCompatActivity) {
                     }
                 } else {
                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
+                }
+            }
+    }
+
+    /* Sends next Parking Location to Server */
+    fun requestParcelStateReset() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val path = Path.PARCEL_STATE_RESET
+                        val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
+                        apiController.get(path, params) { response ->
+                            if (response != null) {
+
+                                val strResp = response.toString()
+                                try {
+                                    Log.i("VanAssistAPIController", strResp)
+                                    val json = JSONObject(strResp)
+                                    if(json.getInt("status") == 200) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.parcel_status_reset_successful))
+                                    }
+
+                                } catch (e: JSONException) {
+                                    Log.i("VanAssistAPIController", "Invalid string response received")
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_request_parcel_state_reset))
+                                    e.printStackTrace()
+
+                                }
+                            } else {
+                                Log.i("VanAssistAPIController", "Response is null!")
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_request_parcel_state_reset))
+                            }
+                        }
+                    }
+                } else {
+                    Log.i("VanAssistAPIController", "Task was not successfull!")
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_request_parcel_state_reset))
                 }
             }
     }

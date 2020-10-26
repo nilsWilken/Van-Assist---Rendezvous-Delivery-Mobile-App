@@ -6,7 +6,7 @@ class Path {
         /* Base Path */
         const val PORT = "8000"
         //const val BASE_PATH = "http://134.155.108.94:" + PORT + "/"
-        const val BASE_PATH = "http://134.155.108.132:" + PORT + "/"
+        const val BASE_PATH = "http://134.155.109.10:" + PORT + "/"
         //const val BASE_PATH = "http://127.0.0.1:" + PORT + "/"
         //const val BASE_PATH = "http://10.0.2.2:" + PORT + "/"
 
@@ -28,6 +28,9 @@ class Path {
         const val PARKING_NEXT = "vehicle/parkingArea/next"
         const val CHANGE_LANGUAGE = "/courier/language"
         const val PARCEL_ORDER = "parcel/order"
+        const val CURRENT_VAN_LOCATION = "/api/v1/fleet/vehicle/currpos"
+        const val PARCEL_STATE_RESET = "/parcel/resetByID"
+        const val UPDATE_FCM_TOKEN = "/courier/updateFCMToken"
 
         const val ENABLE_AMBIENT_INTELLIGENCE_MODE = "courier/ambient_intelligence/enable"
         const val DISABLE_AMBIENT_INTELLIGENCE_MODE = "courier/ambient_intelligence/disable"

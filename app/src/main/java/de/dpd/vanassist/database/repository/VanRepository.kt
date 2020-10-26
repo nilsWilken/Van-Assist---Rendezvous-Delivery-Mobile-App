@@ -22,4 +22,25 @@ class VanRepository {
     fun getVanById(vanId:String): VanEntity? {
         return vanDao.getVan(vanId)
     }
+
+    fun updateVanLocationById(id: String, latitude: Double, longitude: Double) {
+        vanDao.updateVanLatitude(id, latitude)
+        vanDao.updateVanLongitude(id, longitude)
+    }
+
+    fun updateVanLogisticStatusById(id: String, logistic_status: String) {
+        vanDao.updateVanLogisticStatus(logistic_status, id)
+    }
+
+    fun updateVanDoorStatusById(id: String, door_status: String) {
+        vanDao.updateVanDoorStatus(door_status, id)
+    }
+
+    fun updateVanProblemStatusById(id: String, problem_status: String) {
+        vanDao.updateVanProblemStatus(problem_status, id)
+    }
+
+    fun updateVanProblemMessageById(id: String, problem_message: String) {
+        vanDao.updateVanProblemMessage(problem_message, id)
+    }
 }

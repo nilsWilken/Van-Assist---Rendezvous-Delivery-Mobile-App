@@ -17,6 +17,18 @@ data class VanEntity(
     var longitude: Double,
 
     @ColumnInfo(name = "is_parking")
-    var isParking: Boolean?
+    var isParking: Boolean?,
+
+    @ColumnInfo(name = "door_status")
+    var doorStatus: String,
+
+    @ColumnInfo(name = "logistic_status")
+    var logisticStatus: String,
+
+    @ColumnInfo(name = "problem_status")
+    var problemStatus: String,
+
+    @ColumnInfo(name = "problem_message")
+    var problemMessage: String
 )
 

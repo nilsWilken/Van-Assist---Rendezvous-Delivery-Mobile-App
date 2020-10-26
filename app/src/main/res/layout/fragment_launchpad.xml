@@ -105,19 +105,19 @@
                 app:layout_constraintRight_toLeftOf="@id/ambient_intelligence"
         />
 
-        <Button android:id="@+id/ambient_intelligence"
-                android:layout_width="155dp"
-                android:layout_height="155dp"
-                android:drawableTop="@drawable/ic_help_red_70dp"
-                android:text="Intelligence"
-                android:padding="16dp"
-                android:layout_margin="8dp"
-                android:backgroundTint="@color/launchpadButtonColor"
-                app:layout_constraintTop_toBottomOf="@id/delivered_not_delivered"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toRightOf="@id/settings"
-                app:layout_constraintRight_toRightOf="parent"
-        />
+        <Button
+            android:id="@+id/ambient_intelligence"
+            android:layout_width="155dp"
+            android:layout_height="155dp"
+            android:layout_margin="8dp"
+            android:backgroundTint="@color/launchpadButtonColor"
+            android:drawableTop="@drawable/ic_help_red_70dp"
+            android:padding="16dp"
+            android:text="Vehicle Status"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/settings"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/delivered_not_delivered" />
 
 
 

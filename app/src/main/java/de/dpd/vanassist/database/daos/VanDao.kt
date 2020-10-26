@@ -25,4 +25,36 @@ interface VanDao {
     /* Get van by id */
     @Query("SELECT * FROM Van WHERE id == :id")
     fun getVan(id: String): VanEntity?
+
+    /* Update van latitude by id */
+    @Query( "UPDATE Van SET latitude = :latitude WHERE id = :id")
+    fun updateVanLatitude(id: String, latitude: Double)
+
+    /* Update van longitude by id */
+    @Query( "UPDATE Van SET longitude = :longitude WHERE id = :id")
+    fun updateVanLongitude(id: String, longitude: Double)
+
+    @Query( "SELECT problem_message FROM Van WHERE id == :id")
+    fun getVanProblemMessage(id: String): String
+
+    @Query ( "SELECT problem_status FROM Van WHERE id == :id")
+    fun getVanProblemStatus(id: String): String
+
+    @Query ("SELECT door_status FROM Van WHERE id == :id")
+    fun getVanDoorStatus(id: String): String
+
+    @Query ("SELECT logistic_status FROM Van WHERE id == :id")
+    fun getVanLogisticStatus(id: String): String
+
+    @Query ("UPDATE Van SET door_status = :door_status WHERE id = :id")
+    fun updateVanDoorStatus(door_status: String, id: String)
+
+    @Query ("UPDATE Van SET problem_status = :problem_status WHERE id = :id")
+    fun updateVanProblemStatus(problem_status: String, id: String)
+
+    @Query ("UPDATE Van SET problem_message = :problem_message WHERE id = :id")
+    fun updateVanProblemMessage(problem_message: String, id: String)
+
+    @Query ("UPDATE Van SET logistic_status = :logistic_status WHERE id = :id")
+    fun updateVanLogisticStatus(logistic_status: String, id: String)
 }

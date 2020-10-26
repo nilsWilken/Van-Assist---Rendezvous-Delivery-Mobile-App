@@ -17,7 +17,7 @@ class MapBoxConfig {
 
         private val BOUND_CORNER_SE = LatLng(49.4037, 8.7148)
 
-        const val MIN_ZOOM = 8.5
+        const val MIN_ZOOM = 10.5
         const val MAX_ZOOM = 18.5
 
         const val MULTIPLE_PERMISSIONS = 10

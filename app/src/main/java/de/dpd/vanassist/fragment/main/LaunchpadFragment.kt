@@ -16,6 +16,7 @@ import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.config.FragmentTag
 import de.dpd.vanassist.config.SimulationConfig
 import de.dpd.vanassist.util.FragmentRepo
+import de.dpd.vanassist.util.Vehicle
 import de.dpd.vanassist.util.parcel.ParcelState
 
 /* Launchpad Fragment */
@@ -155,11 +156,18 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
         /* Handles click on Ambient Intelligence Button */
         v.ambient_intelligence.setOnClickListener{
 
+            //activity
+            //    ?.supportFragmentManager
+            //    ?.beginTransaction()
+            //    ?.replace(R.id.map_activity, IntelligenceFragment(), FragmentTag.INTELLIGENCE)
+            //    ?.addToBackStack(FragmentTag.INTELLIGENCE)
+            //    ?.commit()
+
             activity
                 ?.supportFragmentManager
                 ?.beginTransaction()
-                ?.replace(R.id.map_activity, IntelligenceFragment(), FragmentTag.INTELLIGENCE)
-                ?.addToBackStack(FragmentTag.INTELLIGENCE)
+                ?.replace(R.id.map_activity, VehicleStatusFragment(), FragmentTag.VEHICLE_STATUS)
+                ?.addToBackStack(FragmentTag.VEHICLE_STATUS)
                 ?.commit()
         }
 
