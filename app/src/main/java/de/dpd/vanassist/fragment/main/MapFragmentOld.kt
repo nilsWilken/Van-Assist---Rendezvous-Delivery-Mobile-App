@@ -935,7 +935,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
     /* Manages the display of the van location in the map */
     private fun showVanLocation(zoom: Double, animation: Boolean) {
         val api = VanAssistAPIController(activity!! as AppCompatActivity)
-        api.getCurrentVanLocation()
+        api.getCurrentVanState()
 
         var van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)!!
         this.vehicleLocation = Point.fromLngLat(van.longitude, van.latitude)

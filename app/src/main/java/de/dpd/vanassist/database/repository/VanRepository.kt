@@ -43,4 +43,9 @@ class VanRepository {
     fun updateVanProblemMessageById(id: String, problem_message: String) {
         vanDao.updateVanProblemMessage(problem_message, id)
     }
+
+    fun updateVanById(id: String, latitude: Double, longitude: Double, isParking: Boolean, doorStatus: String,
+    logisticStatus: String, problemStatus: String, problemMessage: String) {
+        vanDao.updateVanById(id, latitude, longitude, isParking, doorStatus, logisticStatus, problemStatus, problemMessage)
+    }
 }

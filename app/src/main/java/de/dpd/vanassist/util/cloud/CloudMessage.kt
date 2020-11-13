@@ -12,5 +12,6 @@ class CloudMessage {
         const val VAN_PROBLEM = "van_problem"
         const val LOGISTIC_STATUS = "logistic_status"
         const val DOOR_STATUS = "door_status"
+        const val VAN_STATE = "van_state"
     }
 }

@@ -57,4 +57,8 @@ interface VanDao {
 
     @Query ("UPDATE Van SET logistic_status = :logistic_status WHERE id = :id")
     fun updateVanLogisticStatus(logistic_status: String, id: String)
+
+    @Query ("UPDATE Van SET latitude = :latitude, longitude = :longitude, is_parking = :isParking, door_status = :doorStatus, logistic_status = :logisticStatus, problem_status = :problemStatus, problem_message = :problemMessage WHERE id = :id")
+    fun updateVanById(id: String, latitude: Double, longitude: Double, isParking: Boolean, doorStatus: String, logisticStatus: String,
+    problemStatus: String, problemMessage: String)
 }

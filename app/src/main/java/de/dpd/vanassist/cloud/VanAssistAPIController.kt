@@ -1360,6 +1360,184 @@ class VanAssistAPIController(activity: AppCompatActivity) {
     }
 
 
+    fun getCurrentVanState() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val path = Path.CURRENT_VAN_STATE
+                        val params = VehicleJSONParser.createHeaderGetCurrentPosition(uid)
+                        Log.i("VanAssistAPIController", "CALL GET CURRENT VAN STATE")
+                        apiController.get(path, params) { response ->
+                            if (response != null) {
+
+                                val strResp = response.toString()
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val currentStateResponseObject = VehicleJSONParser.parseResponseToState(response)
+                                    Log.i("VanAssistAPIController", currentStateResponseObject.toString())
+
+                                    val van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)
+                                    if(van == null) {
+                                        VanRepository.shared.insert(
+                                            VanEntity(
+                                                VanAssistConfig.VAN_ID,
+                                                currentStateResponseObject.latitude,
+                                                currentStateResponseObject.longitude,
+                                                currentStateResponseObject.isParking,
+                                                currentStateResponseObject.doorStatus,
+                                                currentStateResponseObject.logisticStatus,
+                                                currentStateResponseObject.problemStatus,
+                                                currentStateResponseObject.problemMessage
+                                            )
+                                        )
+                                    }
+                                    else {
+                                        VanRepository.shared.updateVanById(
+                                            VanAssistConfig.VAN_ID,
+                                            currentStateResponseObject.latitude,
+                                            currentStateResponseObject.longitude,
+                                            currentStateResponseObject.isParking,
+                                            currentStateResponseObject.doorStatus,
+                                            currentStateResponseObject.logisticStatus,
+                                            currentStateResponseObject.problemStatus,
+                                            currentStateResponseObject.problemMessage
+                                        )
+                                        Log.i("VanAssistAPIController", "Cpos: " + van.latitude + " " + van.longitude)
+                                    }
+
+                                    var frag = FragmentRepo.mapActivity?.supportFragmentManager?.findFragmentByTag(FragmentTag.VEHICLE_STATUS)
+                                    if(frag != null && frag.isVisible) {
+                                        //frag.onResume()
+                                        val transaction = FragmentRepo.mapActivity?.supportFragmentManager?.beginTransaction()
+                                        transaction?.detach(frag)
+                                        transaction?.attach(frag)
+                                        transaction?.commit()
+                                    }
+
+                                    frag = FragmentRepo.mapActivity?.supportFragmentManager?.findFragmentByTag(FragmentTag.VEHICLE_PROBLEM_DETAILS)
+                                    if(frag != null && frag.isVisible) {
+                                        //frag.onResume()
+                                        val transaction = FragmentRepo.mapActivity?.supportFragmentManager?.beginTransaction()
+                                        transaction?.detach(frag)
+                                        transaction?.attach(frag)
+                                        transaction?.commit()
+                                    }
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                }
+            }
+    }
+
+    fun setProblemSolved() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = VehicleJSONParser.createHeaderSetProblemSolved(uid)
+                        val body = VehicleJSONParser.createRequestEmptyBody()
+                        val path = Path.PROBLEM_SOVLED
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                try {
+                                    this.getCurrentVanState()
+                                } catch (e: JSONException) {
+                                    Toast.createToast("PROBLEM SOLVED MESSAGE FAILED!")
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast("PROBLEM SOLVED MESSAGE FAILED!")
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast("PROBLEM SOLVED MESSAGE FAILED!")
+                }
+            }
+
+    }
+
+    fun sendDoorStatus(doorStatus: String) {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val header = VehicleJSONParser.createHeaderSetProblemSolved(uid)
+                        val body = VehicleJSONParser.createBodySendDoorStatus(doorStatus)
+                        val path = Path.SEND_DOOR_STATUS
+
+                        apiController.put(path, header, body) { response ->
+                            if (response != null) {
+                                try {
+                                    this.getCurrentVanState()
+                                } catch (e: JSONException) {
+                                    Toast.createToast("DOOR STATUS MESSAGE FAILED!")
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast("DOOR STATUS MESSAGE FAILED!")
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast("DOOR STATUS MESSAGE FAILED!")
+                }
+            }
+
+    }
+
+    fun sendTestProblem(message: String) {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener {
+                if(it.isSuccessful) {
+                    val uid = it.result!!.token
+                    if(uid != null) {
+                        val header = VehicleJSONParser.createHeaderSendTestProblem(uid)
+                        val body = VehicleJSONParser.createBodySendTestProblem(message)
+                        val path = Path.SEND_PROBLEM
+
+                        apiController.put(path, header, body) {
+                            if(it != null) {
+                                try{
+
+                                }catch(e: JSONException) {
+                                    Toast.createToast("SEND TEST PROBLEM FAILED!")
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast("SEND TEST PROBLEM FAILED!")
+                            }
+                        }
+                    }else {
+                        Toast.createToast("SEND TEST PROBLEM FAILED!")
+                    }
+                }
+            }
+    }
+
+
     /* Sends next Parking Location to Server */
     fun postNextParkingLocation(paID: String) {
         val user = FirebaseAuth.getInstance().currentUser

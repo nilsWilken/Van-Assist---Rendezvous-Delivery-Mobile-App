@@ -52,7 +52,7 @@ class MapActivity : AppCompatActivity() {
         /* Load all parcel on startup to check for updates */
         apiController.loadAndSaveAllParcel()
 
-        apiController.getCurrentVanLocation()
+        apiController.getCurrentVanState()
 
         apiController.updateFCMToken()
 
@@ -80,7 +80,7 @@ class MapActivity : AppCompatActivity() {
                 apiController.getAllParkingLocations()
             }
 
-            apiController.getCurrentVanLocation()
+            apiController.getCurrentVanState()
 
             startLaunchpadFragment()
         }

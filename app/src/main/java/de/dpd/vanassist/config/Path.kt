@@ -29,6 +29,10 @@ class Path {
         const val CHANGE_LANGUAGE = "/courier/language"
         const val PARCEL_ORDER = "parcel/order"
         const val CURRENT_VAN_LOCATION = "/api/v1/fleet/vehicle/currpos"
+        const val CURRENT_VAN_STATE = "/api/v1/fleet/vehicle/getCurrentState"
+        const val PROBLEM_SOVLED = "/api/v1/fleet/vehicle/exampleID/currentProblemSolved"
+        const val SEND_PROBLEM = "/api/v1/fleet/vehicle/exampleID/sendProblem"
+        const val SEND_DOOR_STATUS = "/api/v1/fleet/vehicle/setDoorStatus"
         const val PARCEL_STATE_RESET = "/parcel/resetByID"
         const val UPDATE_FCM_TOKEN = "/courier/updateFCMToken"
 
