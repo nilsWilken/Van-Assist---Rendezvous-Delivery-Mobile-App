@@ -26,7 +26,7 @@ class ChangeUsernameDialogFragment : androidx.fragment.app.DialogFragment() {
                     })
                 .setNegativeButton(getString(R.string.cancel),
                     DialogInterface.OnClickListener { dialog, id ->
-                        getDialog().cancel()
+                        getDialog()?.cancel()
                     })
             builder.create()
         } ?: throw IllegalStateException("Activity cannot be null")

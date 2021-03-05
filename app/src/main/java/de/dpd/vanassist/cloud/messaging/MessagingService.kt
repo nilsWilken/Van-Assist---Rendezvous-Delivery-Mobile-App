@@ -39,7 +39,7 @@ class MessagingService: FirebaseMessagingService() {
                 launchpadFragment!!.dialog!!.dismiss()
                 SimulationConfig.simulation_running = true
                 val mapFragment = MapFragmentOld.newInstance()
-                launchpadFragment.activity!!.supportFragmentManager
+                launchpadFragment.requireActivity().supportFragmentManager
                     ?.beginTransaction()
                     ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
                     ?.addToBackStack(FragmentTag.MAP)
@@ -65,8 +65,8 @@ class MessagingService: FirebaseMessagingService() {
             val mapFragment = FragmentRepo.mapFragmentOld
             if(mapFragment != null) {
                 if(mapFragment.activity != null) {
-                    mapFragment.activity!!.runOnUiThread {
-                        Toast.makeText(FragmentRepo.mapFragmentOld!!.context!!, "Vehicle arrived", Toast.LENGTH_LONG).show()
+                    mapFragment.requireActivity().runOnUiThread {
+                        Toast.makeText(FragmentRepo.mapFragmentOld!!.requireContext(), "Vehicle arrived", Toast.LENGTH_LONG).show()
                         val mapFragment = FragmentRepo.mapFragmentOld!!
                         //mapFragment.removeParkingLocationWhenVanHasParked()
                         val destination = mapFragment.destination
@@ -100,7 +100,7 @@ class MessagingService: FirebaseMessagingService() {
             val mapFragment = FragmentRepo.mapFragmentOld
             if(mapFragment != null) {
                 if(mapFragment.activity != null) {
-                    mapFragment.activity!!.runOnUiThread {
+                    mapFragment.requireActivity().runOnUiThread {
                         val mapFragment = FragmentRepo.mapFragmentOld!!
                         //mapFragment.addParkingLocationWhenVanStartDriving()
                         mapFragment.updateVanLocationWithoutZoom(destination)
@@ -124,7 +124,7 @@ class MessagingService: FirebaseMessagingService() {
                 fragmentTransaction!!.remove(prev)
             }
             val pFragment = VehicleProblemDialogFragment()
-            pFragment.show(fragmentTransaction, "van_problem")
+            pFragment.show(fragmentTransaction!!, "van_problem")
         }
 
     }

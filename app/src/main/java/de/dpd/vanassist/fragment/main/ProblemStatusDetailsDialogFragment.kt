@@ -16,6 +16,7 @@ import de.dpd.vanassist.database.repository.VanRepository
 import de.dpd.vanassist.util.FragmentRepo
 import kotlinx.android.synthetic.main.fragment_vehicle_problem_details.view.*
 import kotlinx.android.synthetic.main.fragment_vehicle_status.view.*
+import java.util.*
 
 class ProblemStatusDetailsDialogFragment : Fragment() {
 
@@ -50,6 +51,8 @@ class ProblemStatusDetailsDialogFragment : Fragment() {
         messageBuilder.insert(0, "\t")
 
         v.findViewById<TextView>(R.id.problem_details_problem_message_value_text_view)!!.text = messageBuilder.toString()
+
+        v.findViewById<TextView>(R.id.problem_details_problem_position_value_text_view)!!.text = "%.5f".format(van!!.latitude).replace(",", ".") + "; " + "%.5f".format(van!!.latitude).replace(",", ".")
 
         v.problem_details_set_new_parking_position.setOnClickListener {
             //activity?.findViewById<Button>(R.id.button_problem_status_show_details)!!.visibility = View.INVISIBLE

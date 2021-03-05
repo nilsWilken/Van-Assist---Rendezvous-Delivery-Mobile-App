@@ -42,7 +42,7 @@ class SettingsFragment : Fragment() {
 
         (activity as AppCompatActivity).supportActionBar?.title = "Settings"
 
-        val appLocale = Configuration(context!!.getResources().getConfiguration()).locale.toString()
+        val appLocale = Configuration(requireContext().getResources().getConfiguration()).locale.toString()
         val currentPos = LanguageManager.getPositionByCountryCode(appLocale)
         this.currentLanguage = currentPos
 
@@ -50,7 +50,7 @@ class SettingsFragment : Fragment() {
 
 
         this.countrySpinner = v.spinner
-        countryAdapter = CountryAdapter(context!!, countryList)
+        countryAdapter = CountryAdapter(requireContext(), countryList)
         this.countrySpinner.adapter = countryAdapter
         this.countrySpinner.setSelection(currentPos)
         this.countrySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
@@ -74,7 +74,7 @@ class SettingsFragment : Fragment() {
         val courier = CourierRepository.shared.getCourier()
         v.usernameButton.text = courier!!.firstName!!.trim() + " " + courier.lastName!!.trim()
 
-        val api = VanAssistAPIController(activity!! as AppCompatActivity)
+        val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
 
         v.parcelResetButton.setOnClickListener {
             api.requestParcelStateReset()
@@ -125,7 +125,7 @@ class SettingsFragment : Fragment() {
 
         v.logoutButton.setOnClickListener{
             val confirmDialog = LogoutDialogFragment()
-            confirmDialog.show(activity?.supportFragmentManager, "confirm")
+            confirmDialog.show(activity?.supportFragmentManager!!, "confirm")
         }
 
         v.goto_launchpad_from_settings.setOnClickListener { view ->
@@ -155,7 +155,7 @@ class SettingsFragment : Fragment() {
 
 
     private fun refreshActivity() {
-        activity!!.recreate()
+        requireActivity().recreate()
     }
 
 
@@ -203,7 +203,7 @@ class SettingsFragment : Fragment() {
     /* Set language code */
     fun setLocale(locale: Locale) {
 
-        val builder1 = AlertDialog.Builder(context!!)
+        val builder1 = AlertDialog.Builder(requireContext())
         builder1.setTitle(getString(R.string.language_alert_title))
         builder1.setMessage(getString(R.string.language_alert_message))
         builder1.setCancelable(true)
@@ -214,11 +214,11 @@ class SettingsFragment : Fragment() {
                 dialog.cancel()
                 val languageCode = locale.toString()
                 /* Change locally */
-                LanguageManager.setLocale(locale, context!!)
+                LanguageManager.setLocale(locale, requireContext())
                 CourierRepository.shared.updateLanguageCode(languageCode)
 
                 /* Change remote (async) */
-                val api = VanAssistAPIController(activity!! as AppCompatActivity)
+                val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
                 api.changeLanguage(locale.toString())
                 refreshActivity()
             })

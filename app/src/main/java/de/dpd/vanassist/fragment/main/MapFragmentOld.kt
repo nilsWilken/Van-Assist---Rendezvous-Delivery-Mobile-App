@@ -72,10 +72,11 @@ import com.mapbox.mapboxsdk.plugins.offline.utils.OfflineUtils
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
-import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher
-import com.mapbox.services.android.navigation.ui.v5.NavigationLauncherOptions
-import com.mapbox.services.android.navigation.ui.v5.route.NavigationMapRoute
-import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute
+import com.mapbox.navigation.ui.route.NavigationMapRoute
+//import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher
+//import com.mapbox.services.android.navigation.ui.v5.NavigationLauncherOptions
+//import com.mapbox.services.android.navigation.ui.v5.route.NavigationMapRoute
+//import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute
 
 import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.config.MapBoxConfig
@@ -102,6 +103,7 @@ import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.lang.reflect.TypeVariable
 
 import java.util.*
 
@@ -202,7 +204,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         mapboxMap.setStyle(Style.Builder().fromUrl(styleUrl)) {
             mapboxMap.setLatLngBoundsForCameraTarget(RESTRICTED_BOUNDS_AREA)
 
-            val locationComponentOptions = LocationComponentOptions.builder(this.context!!)
+            val locationComponentOptions = LocationComponentOptions.builder(this.requireContext())
                 .foregroundDrawable(R.drawable.mapbox_user_icon)
                 .foregroundTintColor(Color.MAGENTA)
                 .bearingTintColor(Color.MAGENTA)
@@ -212,7 +214,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 .build()
 
             val locationComponentActivationOptions = LocationComponentActivationOptions
-                .builder(this.context!!, it)
+                .builder(this.requireContext(), it)
                 .locationComponentOptions(locationComponentOptions)
                 .useDefaultLocationEngine(true)
                 .build()
@@ -239,14 +241,14 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
             mapboxMap.addOnMapClickListener(this)
 
-            this.locationEngine = LocationEngineProvider.getBestLocationEngine(this.context!!)
+            this.locationEngine = LocationEngineProvider.getBestLocationEngine(this.requireContext())
 
             LocationEngineRequest.Builder(MapBoxConfig.DEFAULT_INTERVAL_IN_MS)
                 .setPriority(LocationEngineRequest.PRIORITY_NO_POWER)
                 .setMaxWaitTime(MapBoxConfig.DEFAULT_MAX_WAIT_TIME)
                 .build()
 
-            offlineMap()
+            //offlineMap()
 
             if(this.dialog != null) {
                 this.dialog!!.dismiss()
@@ -266,12 +268,12 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
         val simulateRoute = false
 
-        val options = NavigationLauncherOptions.builder()
+         /* val options = NavigationLauncherOptions.builder()
             .directionsRoute(this.currentRoute)
             .shouldSimulateRoute(simulateRoute)
             .build()
 
-        NavigationLauncher.startNavigation(this.activity, options)
+        NavigationLauncher.startNavigation(this.activity, options)*/
     }
 
 
@@ -281,10 +283,10 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
      * @param: destination: the arriving point */
     private fun getRoute(origin_: Point, destination_: Point, profile: String) {
 
-        try {
+        /*try {
             val loc = this.mapBoxMap.locationComponent.lastKnownLocation as Location
             val bearing = loc.getBearing().toDouble()
-            NavigationRoute.builder(this.context!!)
+            NavigationRoute.builder(this.requireContext())
                 .accessToken(Mapbox.getAccessToken()!!)
                 .origin(origin_, bearing, MapBoxConfig.NAVIGATION_TOLERANCE)
                 .profile(profile)
@@ -316,7 +318,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 })
         } catch (e: SecurityException) {
             e.printStackTrace()
-        }
+        }*/
     }
 
 
@@ -326,7 +328,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             if (walking) {
                 profile = DirectionsCriteria.PROFILE_WALKING
             }
-            this.getRoute(origin_, destination_, profile)
+            //this.getRoute(origin_, destination_, profile)
 
         } catch (e: SecurityException) {
             e.printStackTrace()
@@ -447,7 +449,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         Mapbox.getInstance(
-            this.context!!,
+            this.requireContext(),
             MapBoxConfig.MAP_BOX_ACCESS_TOKEN
         )
         val v = inflater.inflate(R.layout.fragment_map_old, container, false)
@@ -470,8 +472,9 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
             this.currentParcel = ParcelRepository.shared.getCurrentParcel()
 
-            val api = VanAssistAPIController(activity!! as AppCompatActivity)
+            val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
 
+            //TODO: CHANGE THIS TO ALWAYS USE THE LOCATION REQUESTED FROM THE SERVER
             /* Set Default Van Location only first time after simulation start */
             /* /> not when simulation is running and it is only resumed */
             /* /> would overwrite last position */
@@ -549,7 +552,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             this.startGPSService()
 
             v.goto_launchpad.setOnClickListener { view ->
-                activity!!.onBackPressed()
+                requireActivity().onBackPressed()
             }
 
             v.fab.setOnClickListener {
@@ -582,7 +585,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
             /* Parcel Card */
             this.bottomSheetLinearLayout = v.bottom_sheet
-            this.bottomSheetBehavior = BottomSheetBehavior.from(this.bottomSheetLinearLayout)
+            this.bottomSheetBehavior = BottomSheetBehavior.from(this.bottomSheetLinearLayout!!)
             /* used for swiping button (do not collapse parcel card while button swipes) */
             var disabledCollapse = false
 
@@ -673,7 +676,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         v.fab_parkinglocation.setOnClickListener {
 
             if (ParcelRepository.shared.getCurrentParcel() != null) {
-                if (this.wasclicked && !this.routeShown) {
+                /*if (this.wasclicked && !this.routeShown) {
 
                     /* Second Interaction Step */
                     showDialogOK(getString(R.string.select_next_parking_area),
@@ -693,7 +696,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                                 }
                             }
                         })
-                } else if (!this.wasclicked) {
+                }*/ if (!this.wasclicked) {
                     /* First Interaction Step */
                     this.finishSetNextParkingArea()
                     this.finishGetVanLocation()
@@ -706,7 +709,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     Toast.createToast(getString(R.string.parking_area_confirmation))
 
                     /* set Custom vehicle marker */
-                    val icon = IconFactory.getInstance(this.activity!!)
+                    val icon = IconFactory.getInstance(requireActivity())
                     /* Add the marker to the map */
                     this.mapBoxMap.addMarker(
                         MarkerOptions()
@@ -719,7 +722,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                         /* Add Marker Image */
                         it.addImage(
                             MapBoxConfig.MARKER_IMAGE,
-                            getBitmapFromVectorDrawable(this.context!!, R.drawable.alpha_p_circle)
+                            getBitmapFromVectorDrawable(this.requireContext(), R.drawable.alpha_p_circle)
                         )
 
                         /* Add Selected Marker Image */
@@ -733,7 +736,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
                     fab_parkinglocation.setImageResource(R.drawable.ic_custom_parker_confirm)
                 }
-                if (this.wasclicked && this.routeShown) {
+                //if (this.wasclicked && this.routeShown) {
+                else if(this.wasclicked) {
                     /* Last Interaction Step */
                     this.postNextParkingAreaToServer()
                     /* finish the Interaction and set back to initial */
@@ -795,11 +799,11 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         super.onDestroy()
 
         if (this.broadcastReceiver != null) {
-            activity!!.unregisterReceiver(this.broadcastReceiver)
+            requireActivity().unregisterReceiver(this.broadcastReceiver)
         }
 
         if (gpsService != null) {
-            activity!!.stopService(gpsService)
+            requireActivity().stopService(gpsService)
         }
 
         if(this.dialog != null) {
@@ -813,7 +817,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         var result: Int
         val listPermissionsNeeded = ArrayList<String>()
         for (p in this.permissions) {
-            result = context!!.checkSelfPermission(p)
+            result = requireContext().checkSelfPermission(p)
             if (result != PackageManager.PERMISSION_GRANTED) {
                 listPermissionsNeeded.add(p)
             }
@@ -821,7 +825,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
         if (!listPermissionsNeeded.isEmpty()) {
             ActivityCompat.requestPermissions(
-                this.activity!!,
+                this.requireActivity(),
                 listPermissionsNeeded.toTypedArray(),
                 MapBoxConfig.MULTIPLE_PERMISSIONS
             )
@@ -934,14 +938,14 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     /* Manages the display of the van location in the map */
     private fun showVanLocation(zoom: Double, animation: Boolean) {
-        val api = VanAssistAPIController(activity!! as AppCompatActivity)
+        val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
         api.getCurrentVanState()
 
         var van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)!!
         this.vehicleLocation = Point.fromLngLat(van.longitude, van.latitude)
         Log.i("MapFragmentOld", "Current vehicle position: " + van.latitude + " " + van.longitude)
 
-        val icon = IconFactory.getInstance(this.activity!!)
+        val icon = IconFactory.getInstance(this.requireActivity())
         this.wasClickedVanLocation = true
         this.mapBoxMap.addMarker(
             MarkerOptions()
@@ -977,7 +981,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             this.finishSetNextParkingArea()
             this.finishPedestrianRouting()
 
-            val icon = IconFactory.getInstance(this.activity!!)
+            val icon = IconFactory.getInstance(this.requireActivity())
 
             this.wasClickedDeliveryLocation = true
 
@@ -1078,7 +1082,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     /* Shows the target parking position on the map during the navigation of the van */
     fun addParkingLocationWhenVanStartDriving() {
-        val icon = IconFactory.getInstance(this.activity!!)
+        val icon = IconFactory.getInstance(this.requireActivity())
         var markerIsSet = false
         for (marker in this.mapBoxMap.markers) {
             if (marker.title == MapBoxConfig.MARKER_TITLE_DESTINATION) {
@@ -1091,7 +1095,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 MarkerOptions()
                     .position(LatLng(this.destination.latitude(), this.destination.longitude()))
                     .title(MapBoxConfig.MARKER_TITLE_DESTINATION)
-                    .icon(icon.fromBitmap(getBitmapFromVectorDrawable(this.context!!, R.drawable.alpha_p_circle)))
+                    .icon(icon.fromBitmap(getBitmapFromVectorDrawable(this.requireContext(), R.drawable.alpha_p_circle)))
             )
         }
     }
@@ -1109,7 +1113,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
     /* Updates the van location without zooming to the van */
     fun updateVanLocationWithoutZoom(point: Point) {
         this.vehicleLocation = point
-        val icon = IconFactory.getInstance(this.activity!!)
+        val icon = IconFactory.getInstance(this.requireActivity())
         if (this.currentVanPosition != null) {
             this.currentVanPosition!!.remove()
         }
@@ -1210,8 +1214,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     /* Startes GPS as a service */
     private fun startGPSService() {
-        val gpsService = Intent(context!!.applicationContext, GPSService::class.java)
-        activity!!.startService(gpsService)
+        val gpsService = Intent(requireContext().applicationContext, GPSService::class.java)
+        requireActivity().startService(gpsService)
     }
 
 
@@ -1237,7 +1241,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     /* Send next parkingArea to the server */
     private fun postNextParkingAreaToServer() {
-        val api = VanAssistAPIController(activity!! as AppCompatActivity)
+        val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
         /* send over parkingArea retrieved from ID from Repo */
         if (this.selectedParkingArea != null) {
             api.postNextParkingLocation(this.selectedParkingArea!!.getStringProperty("PA ID"))
@@ -1248,7 +1252,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     /* Send next parkingArea to the server */
     fun postNextParkingAreaToServer(parkingArea: ParkingAreaEntity) {
-        val api = VanAssistAPIController(activity!! as AppCompatActivity)
+        val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
         api.postNextParkingLocation(parkingArea.id)
     }
 
@@ -1315,7 +1319,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
         /* reset the routes */
         if (this.navigationMapRoute != null) {
-            this.navigationMapRoute!!.removeRoute()
+            //this.navigationMapRoute!!.removeRoute()
             this.routeShown = false
         }
 
@@ -1330,7 +1334,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
      * Function that includes offline navigation through the map */
     private fun offlineMap() {
 
-        val offlineManager = OfflineManager.getInstance(this.activity!!)
+        val offlineManager = OfflineManager.getInstance(this.requireActivity())
 
         /* Create bounding box for offline region */
         val latLngBounds = LatLngBounds.Builder()
@@ -1390,14 +1394,14 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         })
 
         /* Customize the download notification's appearance */
-        val notificationOptions = NotificationOptions.builder(this.activity!!)
+        val notificationOptions = NotificationOptions.builder(this.requireActivity())
             .smallIconRes(R.drawable.mapbox_logo_icon)
             .returnActivity(this.activity!!::class.java.name)
             .build()
 
         if (!regionDownloaded) {
             /* Start downloading the map tiles for offline use */
-            OfflinePlugin.getInstance(this.activity!!).startDownload(
+            OfflinePlugin.getInstance(this.requireActivity()).startDownload(
                 OfflineDownloadOptions.builder()
                     .definition(definition)
                     .metadata(OfflineUtils.convertRegionName("Neuenheim"))

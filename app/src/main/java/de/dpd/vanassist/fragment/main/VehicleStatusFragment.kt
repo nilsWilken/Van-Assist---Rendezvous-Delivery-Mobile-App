@@ -14,6 +14,7 @@ import de.dpd.vanassist.config.VanAssistConfig
 import de.dpd.vanassist.database.repository.VanRepository
 import de.dpd.vanassist.util.FragmentRepo
 import kotlinx.android.synthetic.main.fragment_vehicle_status.view.*
+import java.util.*
 
 class VehicleStatusFragment : Fragment() {
 
@@ -33,7 +34,7 @@ class VehicleStatusFragment : Fragment() {
         }
 
         v.findViewById<TextView>(R.id.van_id_value_text_view)!!.text = van!!.id
-        v.findViewById<TextView>(R.id.van_position_value_text_view)!!.text = van!!.latitude.toString() + "," + van!!.longitude.toString()
+        v.findViewById<TextView>(R.id.van_position_value_text_view)!!.text = "%.5f".format(van!!.latitude).replace(",", ".") + "; " + "%.5f".format(van!!.latitude).replace(",", ".")
 
         val doorStatus = van!!.doorStatus
         v.findViewById<TextView>(R.id.van_doors_value_text_view)!!.text = van!!.doorStatus

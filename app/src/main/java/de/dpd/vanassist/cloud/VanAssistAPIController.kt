@@ -96,7 +96,7 @@ class VanAssistAPIController(activity: AppCompatActivity) {
                                     val courier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
                                     CourierRepository.shared.insert(courier)
 
-                                    if (CourierRepository.shared.getAll().count() == 1) {
+                                    if (CourierRepository.shared.getAll().size == 1) {
                                         //loadAndSaveAllParcel()
                                         dialog.dismiss()
                                         MapActivity.start(act)
@@ -1160,7 +1160,7 @@ class VanAssistAPIController(activity: AppCompatActivity) {
 
                                                     FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
                                                     val mapFragment = MapFragmentOld.newInstance()
-                                                    FragmentRepo.launchPadFragment!!.activity!!.supportFragmentManager
+                                                    FragmentRepo.launchPadFragment!!.requireActivity().supportFragmentManager
                                                         ?.beginTransaction()
                                                         ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
                                                         ?.addToBackStack(FragmentTag.MAP)

@@ -1,16 +1,25 @@
 package de.dpd.vanassist.database.repository
 
 import de.dpd.vanassist.database.AppDatabase
+import de.dpd.vanassist.database.daos.CourierDao
 import de.dpd.vanassist.database.entity.CourierEntity
 
 class CourierRepository {
-    private val courierDao = AppDatabase.shared.courierDao()
 
     companion object {
         /* Access variable for CourierRepository */
-        val shared: CourierRepository by lazy {
-            CourierRepository()
-        }
+        private var instance: CourierRepository? = null
+        private var courierDao: CourierDao? = null
+
+
+        val shared: CourierRepository
+            get() {
+                if (instance == null) {
+                    courierDao = AppDatabase.shared.courierDao()
+                    instance = CourierRepository()
+                }
+                return instance!!
+            }
     }
 
     /* Loads the ID of the courier from the database */
@@ -21,18 +30,18 @@ class CourierRepository {
 
     /* Get all records from the courier table */
     fun getAll(): List<CourierEntity> {
-        return courierDao.getAll()
+        return courierDao!!.getAll()
     }
 
     /* Insert courier record */
     fun insert(courier: CourierEntity) {
-        courierDao.insertCourier(courier)
+        courierDao!!.insertCourier(courier)
     }
 
     /* updates the verification token */
     fun updateVerificationToken(verificationToken: String) {
         getCourierId()?.let { courierId ->
-            courierDao.updateCourierVerificationToken(courierId, verificationToken)
+            courierDao!!.updateCourierVerificationToken(courierId, verificationToken)
         }
     }
 
@@ -40,12 +49,12 @@ class CourierRepository {
     fun updateLanguageCode(languageCode: String) {
         getCourier()?.let { courier ->
             courier.languageCode = languageCode
-            courierDao.insertCourier(courier)
+            courierDao!!.insertCourier(courier)
         }
     }
 
     /* delete all records from the courier table */
     fun deleteAll() {
-        courierDao.deleteAllFromTable()
+        courierDao!!.deleteAllFromTable()
     }
 }

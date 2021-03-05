@@ -68,7 +68,7 @@ class TabbedFragment : Fragment() {
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
 
-        this.parcelAdapter = PagerAdapter(fragmentManager!!)
+        this.parcelAdapter = PagerAdapter(parentFragmentManager)
         this.viewPager = v.pager
         this.viewPager.adapter = this.parcelAdapter
 
@@ -87,12 +87,12 @@ class TabbedFragment : Fragment() {
             return tabTitles[position]
         }
 
-        override fun getItem(position: Int): Fragment? {
+        override fun getItem(position: Int): Fragment {
 
             return when (position) {
                 0 -> delivered
                 1 -> notDelivered
-                else -> null
+                else -> notDelivered
             }
         }
 

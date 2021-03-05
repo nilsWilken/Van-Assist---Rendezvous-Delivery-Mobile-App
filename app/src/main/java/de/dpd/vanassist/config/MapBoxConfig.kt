@@ -7,9 +7,11 @@ class MapBoxConfig {
 
     companion object {
 
-        const val MAP_BOX_ACCESS_TOKEN = "pk.eyJ1IjoidmFuYXNzaXN0IiwiYSI6ImNqdTl2eDM0czJjaHY0M2xsYzg1bjFtMmYifQ.YkAR1cSNtoEbI_SSNKcrlg"
+        //const val MAP_BOX_ACCESS_TOKEN = "pk.eyJ1IjoidmFuYXNzaXN0IiwiYSI6ImNqdTl2eDM0czJjaHY0M2xsYzg1bjFtMmYifQ.YkAR1cSNtoEbI_SSNKcrlg"
+        const val MAP_BOX_ACCESS_TOKEN = "pk.eyJ1IjoibndpbGtlbiIsImEiOiJja2x3NHE0ZWMwZ3ZtMnZvNm1iZDVya3JvIn0._ac-Fy9nfqcQjJ9WhKqlkg"
 
-        const val MAP_BOX_LIGHT_STYLE = "mapbox://styles/vanassist/cju9ygw3o1pzi1fml5x9kcbdw"
+        //const val MAP_BOX_LIGHT_STYLE = "mapbox://styles/vanassist/cju9ygw3o1pzi1fml5x9kcbdw"
+        const val MAP_BOX_LIGHT_STYLE = "mapbox://styles/nwilken/cklw76c7b52zw17qncaxs6lwd"
         const val MAP_BOX_DARK_STYLE = "mapbox://styles/vanassist/cjv68g5pc0o7v1fqqqq86cma8"
 
         val OFFLINE_MAP_BOUND_NORTH_WEST = LatLng(49.4291, 8.6598)
