@@ -41,7 +41,7 @@ class TimeIntentReceiver constructor(act: AppCompatActivity) {
         setMinutes = 0
         main = act
         courier = CourierRepository.shared.getCourier()!!
-        api = VanAssistAPIController(main)
+        api = VanAssistAPIController(main, main.applicationContext)
 
         brMorning = object : BroadcastReceiver() {
 

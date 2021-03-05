@@ -50,7 +50,7 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
 
         /* Declare Button Listeners */
         v.start_day.setOnClickListener {
-            val apiController = VanAssistAPIController(activity as AppCompatActivity)
+            val apiController = VanAssistAPIController(activity as AppCompatActivity, requireContext())
 
             if(SimulationConfig.simulation_running) {
                 val mapFragment = MapFragmentOld.newInstance()
@@ -75,7 +75,7 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
              * Buttons will fadeOut and then start_btn will fadeIn */
             val fadeOut = AnimationUtils.loadAnimation(activity, R.anim.btn_fade_out)
 
-            val apiController = VanAssistAPIController(activity as AppCompatActivity)
+            val apiController = VanAssistAPIController(activity as AppCompatActivity, requireContext())
             apiController.stopSimulation()
 
             val fadeIn = AnimationUtils.loadAnimation(activity, R.anim.btn_fade_in)

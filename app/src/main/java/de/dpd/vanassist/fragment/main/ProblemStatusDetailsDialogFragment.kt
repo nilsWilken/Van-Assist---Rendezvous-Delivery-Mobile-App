@@ -59,7 +59,7 @@ class ProblemStatusDetailsDialogFragment : Fragment() {
             //activity?.findViewById<TextView>(R.id.van_problem_status_value_text_view)!!.text = "OK"
 
             val mapActivity = FragmentRepo.mapActivity
-            val apiController = VanAssistAPIController(mapActivity!!)
+            val apiController = VanAssistAPIController(mapActivity!!, mapActivity.applicationContext)
             apiController.setProblemSolved()
             activity?.onBackPressed()
         }
@@ -69,7 +69,7 @@ class ProblemStatusDetailsDialogFragment : Fragment() {
             //activity?.findViewById<TextView>(R.id.van_problem_status_value_text_view)!!.text = "OK"
 
             val mapActivity = FragmentRepo.mapActivity
-            val apiController = VanAssistAPIController(mapActivity!!)
+            val apiController = VanAssistAPIController(mapActivity!!, mapActivity.applicationContext)
             apiController.setProblemSolved()
             activity?.onBackPressed()
         }

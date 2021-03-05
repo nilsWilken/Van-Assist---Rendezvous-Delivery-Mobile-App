@@ -69,7 +69,10 @@ import com.mapbox.mapboxsdk.plugins.offline.model.NotificationOptions
 import com.mapbox.mapboxsdk.plugins.offline.model.OfflineDownloadOptions
 import com.mapbox.mapboxsdk.plugins.offline.offline.OfflinePlugin
 import com.mapbox.mapboxsdk.plugins.offline.utils.OfflineUtils
+import com.mapbox.mapboxsdk.style.layers.Property.NONE
+import com.mapbox.mapboxsdk.style.layers.Property.VISIBLE
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory.visibility
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import com.mapbox.navigation.ui.route.NavigationMapRoute
@@ -201,8 +204,9 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         if (courier?.darkMode!!) {
             styleUrl = styleUrlDark
         }
-        mapboxMap.setStyle(Style.Builder().fromUrl(styleUrl)) {
+        mapboxMap.setStyle(Style.Builder().fromUri(styleUrl)) {
             mapboxMap.setLatLngBoundsForCameraTarget(RESTRICTED_BOUNDS_AREA)
+
 
             val locationComponentOptions = LocationComponentOptions.builder(this.requireContext())
                 .foregroundDrawable(R.drawable.mapbox_user_icon)
@@ -247,6 +251,80 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 .setPriority(LocationEngineRequest.PRIORITY_NO_POWER)
                 .setMaxWaitTime(MapBoxConfig.DEFAULT_MAX_WAIT_TIME)
                 .build()
+
+
+            /* Add Marker Image */
+            it.addImage(
+                MapBoxConfig.MARKER_IMAGE,
+                getBitmapFromVectorDrawable(this.requireContext(), R.drawable.alpha_p_circle)
+            )
+
+            /* Add Selected Marker Image */
+            it.addImage(
+                MapBoxConfig.MARKER_IMAGE_SELECTED,
+                BitmapFactory.decodeResource(this.resources, R.drawable.ic_custom_parker_pin_red)
+            )
+
+            val features = ArrayList<Feature>()
+            this.parkingAreas = ParkingAreaRepository.shared.getAll()
+            val nextAutoPaID = "parkingArea_429024483#3_0_12"
+            if (!this.parkingAreas.isEmpty()) {
+                for (pa in this.parkingAreas) {
+                    if (pa.id != nextAutoPaID) {
+                        val feat = Feature.fromGeometry(Point.fromLngLat(pa.long_.toDouble(), pa.lat.toDouble()))
+                        feat.addStringProperty("PA ID", pa.id)
+                        features.add(feat)
+                    }
+                }
+            }
+
+            /* Source: A data source specifies the geographic coordinate where the image marker gets placed. */
+            it.addSource(
+                GeoJsonSource(
+                    MapBoxConfig.MARKER_SOURCE, FeatureCollection.fromFeatures(features)
+                )
+            )
+
+            /* Style layer: A style layer ties together the source and image and specifies how they are displayed on the map. */
+            it.addLayer(
+                SymbolLayer(MapBoxConfig.MARKER_STYLE_LAYER, MapBoxConfig.MARKER_SOURCE)
+                    .withProperties(
+                        PropertyFactory.iconAllowOverlap(true),
+                        PropertyFactory.iconIgnorePlacement(true),
+                        PropertyFactory.iconImage(MapBoxConfig.MARKER_IMAGE),
+                        PropertyFactory.visibility(NONE),
+
+                        /* Adjust the second number of the Float array based on the height of your marker image.
+                           This is because the bottom of the marker should be anchored to the coordinate point, rather
+                           than the middle of the marker being the anchor point on the map. */
+                        PropertyFactory.iconOffset(MapBoxConfig.ICON_OFFSET)
+                    )
+            )
+
+            it.addSource(
+                GeoJsonSource(
+                    MapBoxConfig.MARKER_SOURCE_SELECTED,
+                    FeatureCollection.fromFeatures(arrayListOf())
+                )
+            )
+
+            it.addLayer(
+                SymbolLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED, MapBoxConfig.MARKER_SOURCE_SELECTED)
+                    .withProperties(
+                        PropertyFactory.iconAllowOverlap(true),
+                        PropertyFactory.iconIgnorePlacement(true),
+                        PropertyFactory.iconOpacity(MapBoxConfig.MARKER_PROPERTY_ICON_OPACITY),
+                        PropertyFactory.textField(getString(R.string.park_here_title)),
+                        PropertyFactory.textAllowOverlap(true),
+                        PropertyFactory.textColor(Color.RED),
+                        PropertyFactory.textOffset(MapBoxConfig.MARKER_PROPERTY_TEXT_OFFSET),
+                        PropertyFactory.textSize(MapBoxConfig.MARKER_PROPERTY_TEXT_SIZE),
+                        PropertyFactory.iconImage(MapBoxConfig.MARKER_IMAGE_SELECTED),
+                        PropertyFactory.iconOffset(MapBoxConfig.ICON_OFFSET),
+                        PropertyFactory.visibility(NONE)
+
+                    )
+            )
 
             //offlineMap()
 
@@ -362,7 +440,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     /* The markers are added in this method */
     private fun addMarkers(loadedMapStyle: Style) {
-        val features = ArrayList<Feature>()
+       /* val features = ArrayList<Feature>()
         this.parkingAreas = ParkingAreaRepository.shared.getAll()
         val nextAutoPaID = "parkingArea_429024483#3_0_12"
         if (!this.parkingAreas.isEmpty()) {
@@ -387,7 +465,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             SymbolLayer(MapBoxConfig.MARKER_STYLE_LAYER, MapBoxConfig.MARKER_SOURCE)
                 .withProperties(
                     PropertyFactory.iconAllowOverlap(true),
-                    PropertyFactory.iconIgnorePlacement(false),
+                    PropertyFactory.iconIgnorePlacement(true),
                     PropertyFactory.iconImage(MapBoxConfig.MARKER_IMAGE),
 
                     /* Adjust the second number of the Float array based on the height of your marker image.
@@ -395,7 +473,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                        than the middle of the marker being the anchor point on the map. */
                     PropertyFactory.iconOffset(MapBoxConfig.ICON_OFFSET)
                 )
-        )
+        )*/
 
         /* Search for best parking area, if no one is found -> use default */
         val nextDeliveryLocation = ParcelRepository.shared.getCurrentParcel()
@@ -408,10 +486,16 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         this.destination = Point.fromLngLat(this.nextParkingArea!!.long_.toDouble(), this.nextParkingArea!!.lat.toDouble())
 
         /* Create new camera position */
-        newCamPos(LatLng(this.nextParkingArea!!.lat.toDouble(), this.nextParkingArea!!.long_.toDouble()), this.mapBoxMap.maxZoomLevel - 2)
+        newAnimatedCamPos(LatLng(this.nextParkingArea!!.lat.toDouble(), this.nextParkingArea!!.long_.toDouble()), MapBoxConfig.MAX_ZOOM - 3, 3000)
+
+        val mutableList: MutableList<Feature> = arrayListOf()
+        mutableList.add(Feature.fromGeometry(Point.fromLngLat(this.nextParkingArea!!.long_.toDouble(), this.nextParkingArea!!.lat.toDouble())))
+
+        val source: GeoJsonSource = loadedMapStyle.getSourceAs(MapBoxConfig.MARKER_SOURCE_SELECTED)!!
+        source.setGeoJson(FeatureCollection.fromFeatures(mutableList))
 
         /* add selected marker source */
-        loadedMapStyle.addSource(
+        /*loadedMapStyle.addSource(
             GeoJsonSource(
                 MapBoxConfig.MARKER_SOURCE_SELECTED,
                 Feature.fromGeometry(Point.fromLngLat(this.nextParkingArea!!.long_.toDouble(), this.nextParkingArea!!.lat.toDouble()))
@@ -433,7 +517,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     PropertyFactory.iconOffset(MapBoxConfig.ICON_OFFSET)
 
                 )
-        )
+        )*/
 
     }
 
@@ -472,7 +556,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
             this.currentParcel = ParcelRepository.shared.getCurrentParcel()
 
-            val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
+            val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
 
             //TODO: CHANGE THIS TO ALWAYS USE THE LOCATION REQUESTED FROM THE SERVER
             /* Set Default Van Location only first time after simulation start */
@@ -666,11 +750,11 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
         /* floating action buttons */
         v.fab_vanlocation.setOnClickListener {
-            showVanLocation(this.mapBoxMap.maxZoomLevel - 2, false)
+            showVanLocation(MapBoxConfig.MAX_ZOOM - 3, true)
         }
 
         v.fab_deliverylocation.setOnClickListener {
-            showNextDeliveryLocation(this.mapBoxMap.maxZoomLevel - 2, false)
+            showNextDeliveryLocation(MapBoxConfig.MAX_ZOOM - 3, true)
         }
 
         v.fab_parkinglocation.setOnClickListener {
@@ -703,8 +787,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     this.finishPedestrianRouting()
 
                     this.wasclicked = true
-                    this.mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED)
-                    this.mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE_SELECTED)
+                    //this.mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED)
+                    //this.mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE_SELECTED)
 
                     Toast.createToast(getString(R.string.parking_area_confirmation))
 
@@ -717,7 +801,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                             .icon(icon.fromResource(R.mipmap.ic_custom_dpd_van_cropped))
                     )
 
-                    this.mapBoxMap.getStyle {
+                   /* this.mapBoxMap.getStyle {
 
                         /* Add Marker Image */
                         it.addImage(
@@ -732,8 +816,12 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                         )
 
                         addMarkers(it)
-                    }
+                    }*/
 
+                    this.mapBoxMap.style!!.getLayer(MapBoxConfig.MARKER_STYLE_LAYER)!!.setProperties(visibility(VISIBLE))
+                    this.mapBoxMap.style!!.getLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED)!!.setProperties(visibility(VISIBLE))
+
+                    addMarkers(this.mapBoxMap.style!!)
                     fab_parkinglocation.setImageResource(R.drawable.ic_custom_parker_confirm)
                 }
                 //if (this.wasclicked && this.routeShown) {
@@ -912,7 +1000,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 val longitude = geoCoordinate.getDouble(0)
                 val latitude = geoCoordinate.getDouble(1)
                 this.destination = Point.fromLngLat(longitude, latitude)
-                newAnimatedCamPos(LatLng(latitude, longitude), this.originalCamPos.zoom + 2, MapBoxConfig.CAM_POS_ANIMATION_IN_MS)
+                newAnimatedCamPos(LatLng(latitude, longitude), this.mapBoxMap.maxZoomLevel - 3, MapBoxConfig.CAM_POS_ANIMATION_IN_MS)
 
                 val source: GeoJsonSource = style.getSourceAs(MapBoxConfig.MARKER_SOURCE_SELECTED)!!
                 source.setGeoJson(FeatureCollection.fromFeatures(mutableList))
@@ -938,7 +1026,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     /* Manages the display of the van location in the map */
     private fun showVanLocation(zoom: Double, animation: Boolean) {
-        val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
+        val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
         api.getCurrentVanState()
 
         var van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)!!
@@ -1138,6 +1226,10 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         this.mapBoxMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
     }
 
+    private fun getLastKnownLocation(): LatLng {
+        return LatLng(this.mapBoxMap.locationComponent!!.lastKnownLocation!!.latitude, this.mapBoxMap.locationComponent!!.lastKnownLocation!!.longitude)
+    }
+
 
     private fun newCamPos(cameraPosition: CameraPosition) {
         this.mapBoxMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
@@ -1241,7 +1333,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     /* Send next parkingArea to the server */
     private fun postNextParkingAreaToServer() {
-        val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
+        val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
         /* send over parkingArea retrieved from ID from Repo */
         if (this.selectedParkingArea != null) {
             api.postNextParkingLocation(this.selectedParkingArea!!.getStringProperty("PA ID"))
@@ -1252,7 +1344,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     /* Send next parkingArea to the server */
     fun postNextParkingAreaToServer(parkingArea: ParkingAreaEntity) {
-        val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
+        val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
         api.postNextParkingLocation(parkingArea.id)
     }
 
@@ -1290,7 +1382,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         for (m in this.mapBoxMap.markers) {
             this.mapBoxMap.removeMarker(m)
         }
-        newCamPos(this.originalCamPos)
+        //newCamPos(this.originalCamPos)
+        newAnimatedCamPos(this.getLastKnownLocation(), MapBoxConfig.MAX_ZOOM - 3, 3000)
     }
 
     /* Finish the interaction with the map (set parkingArea) */
@@ -1306,17 +1399,6 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             this.markerSelected = false
         }
 
-        /* strip all layers and sources */
-        val style = this.mapBoxMap.style
-        if (style != null) {
-            /* strip layers and sources */
-            this.mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER)
-            this.mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED)
-            this.mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE)
-            this.mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE_SELECTED)
-            fab_parkinglocation.setImageResource(R.drawable.ic_local_parking_black_24dp)
-        }
-
         /* reset the routes */
         if (this.navigationMapRoute != null) {
             //this.navigationMapRoute!!.removeRoute()
@@ -1327,7 +1409,24 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         for (m in this.mapBoxMap.markers) {
             this.mapBoxMap.removeMarker(m)
         }
-        newCamPos(this.originalCamPos)
+
+        /* strip all layers and sources */
+        val style = this.mapBoxMap.style
+       /* if (style != null) {
+            /* strip layers and sources */
+            this.mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER)
+            this.mapBoxMap.style?.removeLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED)
+            this.mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE)
+            this.mapBoxMap.style?.removeSource(MapBoxConfig.MARKER_SOURCE_SELECTED)
+            fab_parkinglocation.setImageResource(R.drawable.ic_local_parking_black_24dp)
+        }*/
+
+        style!!.getLayer(MapBoxConfig.MARKER_STYLE_LAYER)!!.setProperties(visibility(NONE))
+        style!!.getLayer(MapBoxConfig.MARKER_STYLE_LAYER_SELECTED)!!.setProperties(visibility(NONE))
+        fab_parkinglocation.setImageResource(R.drawable.ic_local_parking_black_24dp)
+
+        //newCamPos(this.originalCamPos)
+        newAnimatedCamPos(this.getLastKnownLocation(), MapBoxConfig.MAX_ZOOM - 3, 3000)
     }
 
     /* Created by Jasmin & Raluca

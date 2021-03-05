@@ -1,9 +1,11 @@
 package de.dpd.vanassist.cloud
 
 import android.app.ProgressDialog
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.util.Log
+import androidx.core.content.ContentProviderCompat.requireContext
 import org.json.JSONException
 import org.json.JSONObject
 import com.google.firebase.auth.FirebaseAuth
@@ -22,6 +24,8 @@ import de.dpd.vanassist.util.json.ParcelJSONParser
 import de.dpd.vanassist.util.json.ParkingAreaJSONParser
 import com.google.firebase.iid.FirebaseInstanceId
 import com.mapbox.geojson.Point
+import de.dpd.vanassist.combox.BluetoothLeDeliveryService
+import de.dpd.vanassist.combox.BluetoothLeServiceImpl
 import de.dpd.vanassist.config.FragmentTag
 import de.dpd.vanassist.config.VanAssistConfig
 import de.dpd.vanassist.database.entity.VanEntity
@@ -32,11 +36,14 @@ import okhttp3.*
 import java.io.IOException
 
 
-class VanAssistAPIController(activity: AppCompatActivity) {
+class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
 
     private val service = ServiceVolley()
     private val apiController = APIController(service)
     val main = activity
+
+    private val bluetoothLeService = BluetoothLeServiceImpl.getInstance(context)
+    private val bluetoothLeDeliveryService = BluetoothLeDeliveryService.getInstance(bluetoothLeService)
 
     private lateinit var auth: FirebaseAuth
 

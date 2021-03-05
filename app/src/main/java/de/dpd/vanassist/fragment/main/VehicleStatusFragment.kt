@@ -75,7 +75,7 @@ class VehicleStatusFragment : Fragment() {
             //problemDialog.show(activity?.supportFragmentManager, "vehicle_problem")
 
             val mapActivity = FragmentRepo.mapActivity
-            val apiController = VanAssistAPIController(mapActivity!!)
+            val apiController = VanAssistAPIController(mapActivity!!, mapActivity.applicationContext)
             apiController.sendTestProblem("The van has encountered a critical problem and requires your intervention to continue it's mission. Please head to the vehicle as soon as possible!")
 
 
@@ -83,7 +83,7 @@ class VehicleStatusFragment : Fragment() {
 
         v.button_open_close_vehicle.setOnClickListener {
             val mapActivity = FragmentRepo.mapActivity
-            val apiController = VanAssistAPIController(mapActivity!!)
+            val apiController = VanAssistAPIController(mapActivity!!, mapActivity.applicationContext)
 
             if(v.findViewById<TextView>(R.id.van_doors_value_text_view)!!.text == "OPEN") {
                 apiController.sendDoorStatus("CLOSED")

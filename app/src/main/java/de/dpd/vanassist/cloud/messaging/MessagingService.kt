@@ -59,7 +59,7 @@ class MessagingService: FirebaseMessagingService() {
         /* Handles response when vehicle is arrived in next parking area */
         if(name == CloudMessage.VEHICLE_IS_IN_NEXT_PARKING_AREA) {
             val mapActivity = FragmentRepo.mapActivity
-            val apiController = VanAssistAPIController(mapActivity!!)
+            val apiController = VanAssistAPIController(mapActivity!!, mapActivity.applicationContext)
             apiController.getCurrentVanState()
 
             val mapFragment = FragmentRepo.mapFragmentOld
@@ -115,7 +115,7 @@ class MessagingService: FirebaseMessagingService() {
             //mapActivity?.findViewById<Button>(R.id.button_problem_status_show_details)!!.visibility = View.VISIBLE
             //mapActivity?.findViewById<TextView>(R.id.van_problem_status_value_text_view)!!.text = "PROBLEM"
 
-            val apiController = VanAssistAPIController(mapActivity!!)
+            val apiController = VanAssistAPIController(mapActivity!!, mapActivity.applicationContext)
             apiController.getCurrentVanState()
 
             val fragmentTransaction = FragmentRepo.mapActivity?.supportFragmentManager?.beginTransaction()

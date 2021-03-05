@@ -42,7 +42,7 @@ class LoginFragment : androidx.fragment.app.Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v = inflater.inflate(R.layout.fragment_login, container, false)
 
-        this.api = VanAssistAPIController(activity as AppCompatActivity)
+        this.api = VanAssistAPIController(activity as AppCompatActivity, requireContext())
 
         val usernameLayout = v.userNameLayout as TextInputLayout
         usernameLayout.hint = getString(R.string.username)

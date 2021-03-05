@@ -98,7 +98,7 @@ class ParcelListFragment: androidx.fragment.app.Fragment() {
 
     fun changeParcelOrder(parcelId:String, newPosition:Int) {
 
-        VanAssistAPIController(activity as AppCompatActivity).updateParcelPosition(parcelId, newPosition)
+        VanAssistAPIController(activity as AppCompatActivity, requireContext()).updateParcelPosition(parcelId, newPosition)
     }
 
 

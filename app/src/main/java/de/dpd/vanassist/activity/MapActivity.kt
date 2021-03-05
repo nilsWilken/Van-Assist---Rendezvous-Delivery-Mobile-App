@@ -6,6 +6,7 @@ import android.view.MotionEvent
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContentProviderCompat.requireContext
 import com.google.firebase.auth.FirebaseAuth
 import de.dpd.vanassist.R
 import de.dpd.vanassist.cloud.VanAssistAPIController
@@ -48,7 +49,7 @@ class MapActivity : AppCompatActivity() {
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
 
-        val apiController = VanAssistAPIController(this)
+        val apiController = VanAssistAPIController(this, this.applicationContext)
         /* Load all parcel on startup to check for updates */
         apiController.loadAndSaveAllParcel()
 
@@ -75,7 +76,7 @@ class MapActivity : AppCompatActivity() {
         } else if (!PermissionHandler.permissionGranted(this)) {
             PermissionActivity.start(this)
         } else {
-            val apiController = VanAssistAPIController(this)
+            val apiController = VanAssistAPIController(this, this.applicationContext)
             if (ParkingAreaRepository.shared.getAll().isEmpty()) {
                 apiController.getAllParkingLocations()
             }
@@ -111,7 +112,7 @@ class MapActivity : AppCompatActivity() {
                 val themeSwap = trigger.setDarkModeTimes()
                 if (themeSwap) {
 
-                    val apiController = VanAssistAPIController(this)
+                    val apiController = VanAssistAPIController(this, this.applicationContext)
                     AlertDialog.Builder(this).setTitle(getString(R.string.ai_timeenableddarkmodeTitle))
                         .setMessage(getString(R.string.ai_timeenableddarkmode_message))
                         .setCancelable(true)

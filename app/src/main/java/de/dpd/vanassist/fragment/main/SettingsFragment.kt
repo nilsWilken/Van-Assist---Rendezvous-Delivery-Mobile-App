@@ -74,7 +74,7 @@ class SettingsFragment : Fragment() {
         val courier = CourierRepository.shared.getCourier()
         v.usernameButton.text = courier!!.firstName!!.trim() + " " + courier.lastName!!.trim()
 
-        val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
+        val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
 
         v.parcelResetButton.setOnClickListener {
             api.requestParcelStateReset()
@@ -218,7 +218,7 @@ class SettingsFragment : Fragment() {
                 CourierRepository.shared.updateLanguageCode(languageCode)
 
                 /* Change remote (async) */
-                val api = VanAssistAPIController(requireActivity() as AppCompatActivity)
+                val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
                 api.changeLanguage(locale.toString())
                 refreshActivity()
             })
