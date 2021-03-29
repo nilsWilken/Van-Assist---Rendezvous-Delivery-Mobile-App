@@ -21,7 +21,9 @@ class ComboxGattCallback(
 
     private var services: Map<UUID, BluetoothGattService> = emptyMap()
 
-    fun getCharacterisic(
+    var servicesDiscovered: Boolean = false
+
+    fun getCharacteristic(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
     ): BluetoothGattCharacteristic? {
@@ -40,10 +42,13 @@ class ComboxGattCallback(
                 BluetoothProfile.STATE_CONNECTED -> {
                     _connectionStatus.value = ConnectionStatus.Connected()
                     gatt.discoverServices()
+                    Log.i("BLEService", "Connection status changed (connected)!")
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     _connectionStatus.value = ConnectionStatus.NotConnected()
                     gatt.close();
+                    this.servicesDiscovered = false
+                    Log.i("BLEService", "Connection status changed (disconnected)!")
                 }
             }
         } else {
@@ -55,6 +60,10 @@ class ComboxGattCallback(
         if (status == GATT_INTERNAL_ERROR) {
             gatt.close()
             return;
+        }
+        if(status == BluetoothGatt.GATT_SUCCESS) {
+            this.servicesDiscovered = true
+            Log.i("BLEService", "Services discovered!")
         }
         when (status) {
             BluetoothGatt.GATT_SUCCESS ->
@@ -68,8 +77,8 @@ class ComboxGattCallback(
         characteristic: BluetoothGattCharacteristic,
         status: Int
     ) {
-        //Log.d(TAG, "read ${characteristic.uuid}  ${characteristic.value} short:${ByteBuffer.wrap(characteristic.value).short} string::${characteristic.value?.toString(
-        //  Charset.defaultCharset()) ?: ""}")
+        Log.d("BLEService", "read ${characteristic.uuid}  ${characteristic.value} short:${ByteBuffer.wrap(characteristic.value).short} string::${characteristic.value?.toString(
+          Charset.defaultCharset()) ?: ""}")
         channel.offer(
             BluetoothResult(
                 characteristic.uuid,
@@ -84,7 +93,7 @@ class ComboxGattCallback(
         characteristic: BluetoothGattCharacteristic,
         status: Int
     ) {
-        //Log.d(TAG, "write ${characteristic.uuid}  ${characteristic.value} short:${ByteBuffer.wrap(characteristic.value).short} string::${characteristic.value?.toString(Charset.defaultCharset()) ?: ""}")
+        Log.d("BLEService", "write ${characteristic.uuid}  ${characteristic.value} short:${ByteBuffer.wrap(characteristic.value).short} string::${characteristic.value?.toString(Charset.defaultCharset()) ?: ""}")
         channel.offer(
             BluetoothResult(
                 characteristic.uuid,

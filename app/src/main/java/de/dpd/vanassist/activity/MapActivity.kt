@@ -3,20 +3,19 @@ package de.dpd.vanassist.activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.MotionEvent
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.ContentProviderCompat.requireContext
 import com.google.firebase.auth.FirebaseAuth
 import de.dpd.vanassist.R
 import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.config.FragmentTag
+import de.dpd.vanassist.config.VanAssistConfig
 import de.dpd.vanassist.database.AppDatabase
 import de.dpd.vanassist.database.repository.CourierRepository
 import de.dpd.vanassist.database.repository.ParkingAreaRepository
-import de.dpd.vanassist.fragment.main.LaunchpadFragment
-import de.dpd.vanassist.fragment.main.MapFragmentOld
-import de.dpd.vanassist.intelligence.timeDependentDarkMode.TimeIntentReceiver
+import de.dpd.vanassist.fragment.main.launchpad.LaunchpadFragment
+import de.dpd.vanassist.fragment.main.logisticView.LogisticLaunchpadFragment
+import de.dpd.vanassist.fragment.main.map.MapFragmentOld
 import de.dpd.vanassist.util.FragmentRepo
 import de.dpd.vanassist.util.language.LanguageManager
 import de.dpd.vanassist.util.permission.PermissionHandler
@@ -75,6 +74,10 @@ class MapActivity : AppCompatActivity() {
             LoginActivity.start(this)
         } else if (!PermissionHandler.permissionGranted(this)) {
             PermissionActivity.start(this)
+        } else if(VanAssistConfig.USE_LOGISTICS_LAUNCHPAD) {
+            val apiController = VanAssistAPIController(this, this.applicationContext)
+            apiController.getCurrentVanState()
+            startLogisticsLaunchpadFragment()
         } else {
             val apiController = VanAssistAPIController(this, this.applicationContext)
             if (ParkingAreaRepository.shared.getAll().isEmpty()) {
@@ -82,6 +85,10 @@ class MapActivity : AppCompatActivity() {
             }
 
             apiController.getCurrentVanState()
+
+            //if (VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+                apiController.bluetoothLogin(true)
+            //}
 
             startLaunchpadFragment()
         }
@@ -98,14 +105,14 @@ class MapActivity : AppCompatActivity() {
         }
 
         /* Activate darkmode if necessary */
-        if (courier != null && courier.darkMode) {
+    /*    if (courier != null && courier.darkMode) {
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         } else {
             delegate.setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
-
+    */
         /* Set time-based darkmode */
-        if (courier != null) {
+    /*    if (courier != null) {
             val trigger = TimeIntentReceiver(this)
             if (courier.ambientIntelligenceMode && courier.timeBasedDarkMode) {
                 trigger.cancelAlarmService()
@@ -136,7 +143,7 @@ class MapActivity : AppCompatActivity() {
                 trigger.cancelAlarmService()
             }
         }
-
+    */
     }
 
 
@@ -144,6 +151,13 @@ class MapActivity : AppCompatActivity() {
         val launchpadFragment = LaunchpadFragment.newInstance()
         supportFragmentManager.beginTransaction()
             .replace(R.id.map_activity, launchpadFragment, FragmentTag.LAUNCHPAD)
+            .commitAllowingStateLoss()
+    }
+
+    private fun startLogisticsLaunchpadFragment() {
+        val logisticLaunchpadFragment = LogisticLaunchpadFragment.newInstance()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.map_activity, logisticLaunchpadFragment, FragmentTag.LAUNCHPAD)
             .commitAllowingStateLoss()
     }
 

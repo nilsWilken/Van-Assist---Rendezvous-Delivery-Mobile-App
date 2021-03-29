@@ -1,4 +1,4 @@
-package de.dpd.vanassist.fragment.main
+package de.dpd.vanassist.fragment.main.launchpad
 
 import android.graphics.Color
 import android.os.Bundle

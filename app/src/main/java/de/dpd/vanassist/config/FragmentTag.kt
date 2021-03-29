@@ -12,6 +12,7 @@ class FragmentTag {
         const val INTELLIGENCE = "intelligence"
         const val VEHICLE_STATUS = "vehicle_status"
         const val VEHICLE_PROBLEM_DETAILS = "problem_details"
+        const val LOGISTICS_LAUNCHPAD = "logistics_launchpad"
     }
 
 }

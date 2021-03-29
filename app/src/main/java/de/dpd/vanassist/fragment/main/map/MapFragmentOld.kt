@@ -1,4 +1,4 @@
-package de.dpd.vanassist.fragment.main
+package de.dpd.vanassist.fragment.main.map
 
 import android.Manifest
 import android.animation.ValueAnimator

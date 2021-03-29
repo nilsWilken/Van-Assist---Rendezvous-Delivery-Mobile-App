@@ -1,4 +1,4 @@
-package de.dpd.vanassist.fragment.main
+package de.dpd.vanassist.fragment.main.launchpad
 
 import android.app.ProgressDialog
 import android.os.Bundle
@@ -15,8 +15,9 @@ import android.view.animation.Animation.AnimationListener
 import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.config.FragmentTag
 import de.dpd.vanassist.config.SimulationConfig
+import de.dpd.vanassist.fragment.main.TabbedFragment
+import de.dpd.vanassist.fragment.main.map.MapFragmentOld
 import de.dpd.vanassist.util.FragmentRepo
-import de.dpd.vanassist.util.Vehicle
 import de.dpd.vanassist.util.parcel.ParcelState
 
 /* Launchpad Fragment */

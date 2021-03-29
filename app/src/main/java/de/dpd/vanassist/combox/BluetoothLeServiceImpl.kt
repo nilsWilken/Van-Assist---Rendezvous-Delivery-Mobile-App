@@ -51,6 +51,13 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
             }
     }
 
+    fun getServicesDiscovered(): Boolean {
+        if(bluetoothGattCallback != null) {
+            return bluetoothGattCallback!!.servicesDiscovered
+        }
+        return false
+    }
+
     override fun connect(): StateFlow<ConnectionStatus> {
         bluetoothGattCallback = ComboxGattCallback(channel, _connectionStatus).apply {
             val c = BluetoothConnection(context, this)
@@ -102,6 +109,18 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         return readCharacteristic(uuidService, uuidCharacteristicUUID).getPosition()
     }
 
+    override suspend fun writePosition(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID,
+        position: DoubleArray
+    ): BluetoothResult? {
+        val buffer = ByteBuffer.allocate(24)
+        buffer.putDouble(position[0])
+        buffer.putDouble(position[1])
+        buffer.putDouble(position[2])
+        return writeCharacteristic(uuidService, uuidCharacteristicUUID, buffer.array())
+    }
+
     override suspend fun readByte(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
@@ -150,12 +169,13 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         uuidCharacteristicUUID: UUID,
         value: ByteArray?
     ): BluetoothResult? {
+        Log.i("BLEService", "Write characteristic called!")
         getCharacterisic(uuidService, uuidCharacteristicUUID)?.apply {
             this.value = value
             bluetoothConnection?.writeCharacteristic(this)
             return waitForResult(this.uuid)
         }
-
+        Log.i("BLEService", "Write characteristic has an error!")
         return BluetoothResult(uuidService, null, 0)
     }
 
@@ -224,7 +244,7 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
 
 
     private fun getCharacterisic(uuidService: UUID, uuidCharacteristicUUID: UUID): BluetoothGattCharacteristic? {
-        return bluetoothGattCallback?.getCharacterisic(uuidService, uuidCharacteristicUUID)
+        return bluetoothGattCallback?.getCharacteristic(uuidService, uuidCharacteristicUUID)
     }
 
 

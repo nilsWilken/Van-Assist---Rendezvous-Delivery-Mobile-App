@@ -5,7 +5,7 @@ import de.dpd.vanassist.config.ParkingAreaConfig
 import de.dpd.vanassist.database.repository.CourierRepository
 import de.dpd.vanassist.database.repository.ParcelRepository
 import de.dpd.vanassist.database.repository.ParkingAreaRepository
-import de.dpd.vanassist.fragment.main.MapFragmentOld
+import de.dpd.vanassist.fragment.main.map.MapFragmentOld
 import de.dpd.vanassist.intelligence.intelligentDriving.IntelligentDriving
 import de.dpd.vanassist.util.parcel.ParcelUtil
 import de.dpd.vanassist.util.parkingArea.ParkingAreaUtil

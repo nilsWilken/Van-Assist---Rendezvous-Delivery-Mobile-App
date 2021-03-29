@@ -75,6 +75,14 @@ class BluetoothLeDeliveryService(val bluetoothLeService: BluetoothLeService) {
 
     }
 
+    suspend fun setNextStop(position: DoubleArray) {
+        bluetoothLeService.writePosition(
+            UUID_DELIVERY_SERVICE,
+            UUID_NEXT_STOP,
+            position
+        )
+    }
+
     suspend fun startDelivery() {
         bluetoothLeService.writeCharacteristic(
             UUID_DELIVERY_SERVICE,

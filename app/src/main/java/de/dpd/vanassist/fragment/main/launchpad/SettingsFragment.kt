@@ -1,4 +1,4 @@
-package de.dpd.vanassist.fragment.main
+package de.dpd.vanassist.fragment.main.launchpad
 
 import android.content.Intent
 import android.graphics.PorterDuff
@@ -23,7 +23,7 @@ import java.util.*
 import android.content.DialogInterface
 import android.content.res.Configuration
 import androidx.appcompat.app.AlertDialog
-import android.util.Log
+import de.dpd.vanassist.fragment.auth.LogoutDialogFragment
 import de.dpd.vanassist.util.language.LanguageManager
 
 

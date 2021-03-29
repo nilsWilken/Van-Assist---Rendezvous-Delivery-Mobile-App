@@ -1,5 +1,6 @@
 package de.dpd.vanassist.database.repository
 
+import androidx.lifecycle.LiveData
 import de.dpd.vanassist.database.AppDatabase
 import de.dpd.vanassist.database.daos.VanDao
 import de.dpd.vanassist.database.entity.VanEntity
@@ -21,6 +22,10 @@ class VanRepository {
     /* Get van by id */
     fun getVanById(vanId:String): VanEntity? {
         return vanDao.getVan(vanId)
+    }
+
+    fun getVanFlowById(vanId: String): LiveData<VanEntity> {
+        return vanDao.getVanAsFlow(vanId)
     }
 
     fun updateVanLocationById(id: String, latitude: Double, longitude: Double) {

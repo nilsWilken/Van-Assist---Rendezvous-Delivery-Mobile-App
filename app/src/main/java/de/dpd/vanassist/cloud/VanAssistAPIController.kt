@@ -16,7 +16,7 @@ import de.dpd.vanassist.database.entity.ParcelEntity
 import de.dpd.vanassist.database.repository.CourierRepository
 import de.dpd.vanassist.database.repository.ParcelRepository
 import de.dpd.vanassist.database.repository.ParkingAreaRepository
-import de.dpd.vanassist.fragment.main.MapFragmentOld
+import de.dpd.vanassist.fragment.main.map.MapFragmentOld
 import de.dpd.vanassist.util.*
 import de.dpd.vanassist.util.date.DateParser
 import de.dpd.vanassist.util.json.CourierJSONParser
@@ -26,12 +26,19 @@ import com.google.firebase.iid.FirebaseInstanceId
 import com.mapbox.geojson.Point
 import de.dpd.vanassist.combox.BluetoothLeDeliveryService
 import de.dpd.vanassist.combox.BluetoothLeServiceImpl
+import de.dpd.vanassist.combox.ConnectionStatus
 import de.dpd.vanassist.config.FragmentTag
 import de.dpd.vanassist.config.VanAssistConfig
+import de.dpd.vanassist.database.entity.ParkingAreaEntity
 import de.dpd.vanassist.database.entity.VanEntity
 import de.dpd.vanassist.database.repository.VanRepository
 import de.dpd.vanassist.util.json.VehicleJSONParser
 import de.dpd.vanassist.util.toast.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import okhttp3.*
 import java.io.IOException
 
@@ -44,8 +51,46 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
 
     private val bluetoothLeService = BluetoothLeServiceImpl.getInstance(context)
     private val bluetoothLeDeliveryService = BluetoothLeDeliveryService.getInstance(bluetoothLeService)
+    private val bleConnectionStatus: StateFlow<ConnectionStatus> = bluetoothLeService.connectionStatus
+
 
     private lateinit var auth: FirebaseAuth
+
+    fun checkConnectionStatus() {
+        if(this.bleConnectionStatus.value.description == ConnectionStatus.NotConnected().description) {
+            this.bluetoothLeService.connect()
+        }
+    }
+
+    fun bluetoothLogin(enable: Boolean) {
+
+        MainScope().launch(Dispatchers.Default) {
+            Log.i("BLEService", bleConnectionStatus.value.description)
+
+            if(!bluetoothLeService.getServicesDiscovered()) {
+                checkConnectionStatus()
+            }
+            while(!bluetoothLeService.getServicesDiscovered()) {
+                Thread.sleep(100)
+            }
+            Log.i("BLEService", bleConnectionStatus.value.description)
+            bluetoothLeDeliveryService.writeCredentialsUsername("vanassist@hs-offenburg.de")
+            bluetoothLeDeliveryService.writeCredentialsPassword("myPasssword2")
+            bluetoothLeDeliveryService.setConnect(if (enable) 1 else 2)
+
+            /*Log.i("BLEService", bluetoothLeDeliveryService.getVehicleId())
+            Log.i("BLEService", bluetoothLeDeliveryService.getDeliveryCount().toString())
+            Log.i(BLEService", bluetoothLeDeliveryService.getDeliveryMode().toString())
+            bluetoothLeDeliveryService.setVehicleId("TestID")
+            Log.i("BLEService", bluetoothLeDeliveryService.getVehicleId())*/
+        }
+    }
+
+    fun bluetoothLogout() {
+        MainScope().launch(Dispatchers.IO) {
+            bluetoothLeService.disconnect()
+        }
+    }
 
 
     /* Created by Axel Herbstreith and Jasmin Weimüller
@@ -131,136 +176,838 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
      * @return void
      **/
     fun loadAndSaveAllParcel() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
 
-                        val courier = CourierRepository.shared.getCourier()!!
-                        val courierId = courier.id
-                        val verificationToken = courier.verificationToken
-                        val params = ParcelJSONParser.createHeaderGetAllParcelRequest(uid, courierId, verificationToken)
-                        val path = Path.PARCEL_ALL
+                            val courier = CourierRepository.shared.getCourier()!!
+                            val courierId = courier.id
+                            val verificationToken = courier.verificationToken
+                            val params = ParcelJSONParser.createHeaderGetAllParcelRequest(uid, courierId, verificationToken)
+                            val path = Path.PARCEL_ALL
 
-                        apiController.get(path, params) { response ->
-                            if (response != null) {
-                                val strResp = response.toString()
-                                try {
-                                    val jsonObject = JSONObject(strResp)
-                                    val parcelResponseObject = ParcelJSONParser.parseResponseToParcelList(jsonObject)
-                                    CourierRepository.shared.updateVerificationToken(parcelResponseObject.verificationToken)
-                                    ParcelRepository.shared.insertAll(parcelResponseObject.parcelList)
-                                } catch (e: JSONException) {
+                            apiController.get(path, params) { response ->
+                                if (response != null) {
+                                    val strResp = response.toString()
+                                    try {
+                                        val jsonObject = JSONObject(strResp)
+                                        val parcelResponseObject = ParcelJSONParser.parseResponseToParcelList(jsonObject)
+                                        CourierRepository.shared.updateVerificationToken(parcelResponseObject.verificationToken)
+                                        ParcelRepository.shared.insertAll(parcelResponseObject.parcelList)
+                                    } catch (e: JSONException) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_loading))
+                                        e.printStackTrace()
+                                    }
+                                } else {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_loading))
-                                    e.printStackTrace()
                                 }
-                            } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_loading))
+                            }
+                        }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_loading))
+                    }
+                }
+        }
+        else {
+            MainScope().launch(Dispatchers.IO) {
+                try {
+                    if(!bluetoothLeService.getServicesDiscovered()) {
+                        checkConnectionStatus()
+                    }
+
+                    var deliveryCount = bluetoothLeDeliveryService.getDeliveryCount()!!
+                    val deliveries: MutableList<String> = ArrayList<String>()
+                    for (i in 0..deliveryCount) {
+                        deliveries.add(bluetoothLeDeliveryService.getDeliveryListItem(i.toShort()))
+                    }
+
+                    //TODO: Parse parcel list from retrieved strings
+                    //TODO: Put the parsed parcel entries into the database
+                }catch (e: Exception) {
+                    Toast.createToast("Loading parcel list failed!")
+                }
+            }
+        }
+    }
+
+    /* Starts the simulation
+     * This method needs to be executed by another framework than volley (in our case OkHttp3) since there was an issue with using Volley -> see report) */
+    fun startSimulation() {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { instanceIdResult ->
+                val fcmToken = instanceIdResult.token
+
+                val user = FirebaseAuth.getInstance().currentUser
+                user?.getIdToken(true)!!
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val uid = task.result!!.token
+                            if (uid != null) {
+
+                                val courierId = CourierRepository.shared.getCourierId()!!
+                                val url = Path.BASE_PATH + Path.SIMULATION_START
+                                val client = OkHttpClient()
+                                val secondsSinceMidnight = DateParser.getSecondsSinceMidnight().toString()
+
+                                val head = mutableMapOf<String, String>()
+                                head.put("uid", uid)
+                                head.put("courier_id", courierId)
+                                head.put("seconds_since_midnight", secondsSinceMidnight)
+                                head.put("fcm_token", fcmToken)
+                                val headerBuild = Headers.of(head)
+
+                                val request = Request.Builder().url(url).headers(headerBuild).build()
+
+
+
+                                client.newCall(request).enqueue(object : Callback {
+                                    override fun onFailure(call: Call, e: IOException) {
+                                        e.printStackTrace();
+                                    }
+
+                                    @Throws(IOException::class)
+                                    override fun onResponse(call: Call, response: Response) {
+                                        if (response.isSuccessful) {
+                                            if (response != null) {
+                                                val strResp = response.body()!!.string()
+                                                try {
+                                                    val jsonObject = JSONObject(strResp)
+                                                    Log.wtf("Test;", strResp)
+                                                    val data = jsonObject.getJSONObject("data")
+                                                    val simulationIsRunning = data.getBoolean("simulation_is_running")
+
+                                                    if (simulationIsRunning) {
+
+                                                        FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
+                                                        val mapFragment = MapFragmentOld.newInstance()
+                                                        FragmentRepo.launchPadFragment!!.requireActivity().supportFragmentManager
+                                                            ?.beginTransaction()
+                                                            ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
+                                                            ?.addToBackStack(FragmentTag.MAP)
+                                                            ?.commit()
+                                                    }
+
+                                                } catch (e: JSONException) {
+                                                    println(e.printStackTrace())
+                                                    FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
+                                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
+                                                    e.printStackTrace()
+                                                }
+                                            } else {
+                                                FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
+                                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
+                                            }
+                                        } else {
+                                            FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
+                                            Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
+                                        }
+                                    }
+                                })
                             }
                         }
                     }
-                } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_loading))
+            }
+        }
+        else {
+            MainScope().launch(Dispatchers.IO) {
+                try {
+                    if(!bluetoothLeService.getServicesDiscovered()) {
+                        checkConnectionStatus()
+                    }
+                    bluetoothLeDeliveryService.startDelivery()
+
+                    FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
+                    val mapFragment = MapFragmentOld.newInstance()
+                    FragmentRepo.launchPadFragment!!.requireActivity().supportFragmentManager
+                        ?.beginTransaction()
+                        ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
+                        ?.addToBackStack(FragmentTag.MAP)
+                        ?.commit()
+                }catch (e: Exception) {
+                    Toast.createToast("Starting delivery failed!")
                 }
             }
+        }
+    }
+
+
+    /* Created by Axel Herbstreith
+     * Stops the running simulation */
+    fun stopSimulation() {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
+                            val body = ParcelJSONParser.createRequestEmptyBody()
+                            val path = Path.SIMULATION_STOP
+
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    try {
+                                    } catch (e: JSONException) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
+                                        e.printStackTrace()
+                                    }
+                                } else {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
+                    }
+                }
+        }
+        else {
+            MainScope().launch(Dispatchers.IO) {
+                try {
+                    if(!bluetoothLeService.getServicesDiscovered()) {
+                        checkConnectionStatus()
+                    }
+                    bluetoothLeDeliveryService.endDelivery()
+                }catch (e: Exception) {
+                    Toast.createToast("Stopping delivery failed!")
+                }
+            }
+        }
+    }
+
+
+    /* This call updated the parcel order */
+    fun updateParcelPosition(parcelId: String, newPos: Int) {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val header = ParcelJSONParser.createHeaderUpdateParcelPosition(uid, courierId)
+                            val body = ParcelJSONParser.createRequestBodyUpdateParcelPosition(parcelId, newPos)
+
+                            val path = Path.PARCEL_ORDER
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    val strResp = response.toString()
+                                    try {
+                                        val jsonObject = JSONObject(strResp)
+                                        val parcelList =
+                                            ParcelJSONParser.parseResponseToParcelListWithoutVerificationToken(jsonObject)
+
+                                        ParcelRepository.shared.insertAll(parcelList)
+
+                                    } catch (e: JSONException) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_update_parcel_position))
+                                        e.printStackTrace()
+                                    }
+                                } else {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_update_parcel_position))
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_update_parcel_position))
+                    }
+                }
+        }
+    }
+
+    /* Sends next Parking Location to Server */
+    fun postNextParkingLocation(paID: String) {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+                            val pA = ParkingAreaRepository.shared.getParkingAreaById(paID)
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val path = Path.PARKING_NEXT
+                            val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
+                            val body = ParkingAreaJSONParser.createBodyPostNextParkingLocation(pA)
+                            apiController.post(path, params, body) { response ->
+                                if (response != null) {
+
+                                    val strResp = response.toString()
+                                    try {
+                                        val jsonObject = JSONObject(strResp)
+                                        val parkingAreaResponseObject =
+                                            ParkingAreaJSONParser.parseResponseToParkingAreaObjectSingle(jsonObject)
+
+                                    } catch (e: JSONException) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
+                                        e.printStackTrace()
+
+                                    }
+                                } else {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
+                    }
+                }
+        }
+        else {
+            MainScope().launch(Dispatchers.IO) {
+                try {
+                    if(!bluetoothLeService.getServicesDiscovered()) {
+                        checkConnectionStatus()
+                    }
+
+                    val pA = ParkingAreaRepository.shared.getParkingAreaById(paID)
+                    bluetoothLeDeliveryService.setNextStop(doubleArrayOf(pA.lat.toDouble(), pA.long_.toDouble(), 0.0))
+                }catch (e: Exception) {
+                    Toast.createToast("Stopping delivery failed!")
+                }
+            }
+        }
+    }
+
+    fun getCurrentVanState() {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+
+                            val path = Path.CURRENT_VAN_STATE
+                            val params = VehicleJSONParser.createHeaderGetCurrentPosition(uid)
+                            Log.i("VanAssistAPIController", "CALL GET CURRENT VAN STATE")
+                            apiController.get(path, params) { response ->
+                                if (response != null) {
+
+                                    val strResp = response.toString()
+                                    try {
+                                        val jsonObject = JSONObject(strResp)
+                                        val currentStateResponseObject = VehicleJSONParser.parseResponseToState(response)
+                                        Log.i("VanAssistAPIController", currentStateResponseObject.toString())
+
+                                        val van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)
+                                        if (van == null) {
+                                            VanRepository.shared.insert(
+                                                VanEntity(
+                                                    VanAssistConfig.VAN_ID,
+                                                    currentStateResponseObject.latitude,
+                                                    currentStateResponseObject.longitude,
+                                                    currentStateResponseObject.isParking,
+                                                    currentStateResponseObject.doorStatus,
+                                                    currentStateResponseObject.logisticStatus,
+                                                    currentStateResponseObject.problemStatus,
+                                                    currentStateResponseObject.problemMessage
+                                                )
+                                            )
+                                        } else {
+                                            VanRepository.shared.updateVanById(
+                                                VanAssistConfig.VAN_ID,
+                                                currentStateResponseObject.latitude,
+                                                currentStateResponseObject.longitude,
+                                                currentStateResponseObject.isParking,
+                                                currentStateResponseObject.doorStatus,
+                                                currentStateResponseObject.logisticStatus,
+                                                currentStateResponseObject.problemStatus,
+                                                currentStateResponseObject.problemMessage
+                                            )
+                                            Log.i("VanAssistAPIController", "Cpos: " + van.latitude + " " + van.longitude)
+                                        }
+                                    } catch (e: JSONException) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                                        e.printStackTrace()
+                                    }
+                                } else {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                    }
+                }
+        }
+        else {
+            MainScope().launch(Dispatchers.IO) {
+                try {
+                    if(!bluetoothLeService.getServicesDiscovered()) {
+                        checkConnectionStatus()
+                    }
+
+                    //BLUETOOTH SERVICE. GET VEHICLE STATUS (NOT IMPLEMENTED YET)
+
+                   /* val currentStateResponseObject = VehicleJSONParser.parseResponseToState(//INSERT BLUETOOTH STATUS RESPONSE))
+                    Log.i("VanAssistAPIController", currentStateResponseObject.toString())
+
+                    val van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)
+                    if (van == null) {
+                        VanRepository.shared.insert(
+                            VanEntity(
+                                VanAssistConfig.VAN_ID,
+                                currentStateResponseObject.latitude,
+                                currentStateResponseObject.longitude,
+                                currentStateResponseObject.isParking,
+                                currentStateResponseObject.doorStatus,
+                                currentStateResponseObject.logisticStatus,
+                                currentStateResponseObject.problemStatus,
+                                currentStateResponseObject.problemMessage
+                            )
+                        )
+                    } else {
+                        VanRepository.shared.updateVanById(
+                            VanAssistConfig.VAN_ID,
+                            currentStateResponseObject.latitude,
+                            currentStateResponseObject.longitude,
+                            currentStateResponseObject.isParking,
+                            currentStateResponseObject.doorStatus,
+                            currentStateResponseObject.logisticStatus,
+                            currentStateResponseObject.problemStatus,
+                            currentStateResponseObject.problemMessage
+                        )
+                        Log.i("VanAssistAPIController", "Cpos: " + van.latitude + " " + van.longitude)
+                    }*/
+                }catch (e: Exception) {
+                    Toast.createToast("Getting vehicle status failed!")
+                }
+            }
+        }
+    }
+
+    fun sendDoorStatus(doorStatus: String) {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val header = VehicleJSONParser.createHeaderSetProblemSolved(uid)
+                            val body = VehicleJSONParser.createBodySendDoorStatus(doorStatus)
+                            val path = Path.SEND_DOOR_STATUS
+
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    try {
+                                        this.getCurrentVanState()
+                                    } catch (e: JSONException) {
+                                        Toast.createToast("DOOR STATUS MESSAGE FAILED!")
+                                        e.printStackTrace()
+                                    }
+                                } else {
+                                    Toast.createToast("DOOR STATUS MESSAGE FAILED!")
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast("DOOR STATUS MESSAGE FAILED!")
+                    }
+                }
+        }
+        else {
+            MainScope().launch(Dispatchers.IO) {
+                try {
+                    if(!bluetoothLeService.getServicesDiscovered()) {
+                        checkConnectionStatus()
+                    }
+
+                    //BLUETOOTH SERVICE. SEND VEHICLE STATUS (DOORS_OPEN OR PARKING)
+
+                }catch (e: Exception) {
+                    Toast.createToast("Getting vehicle status failed!")
+                }
+            }
+        }
+    }
+
+    fun updateFCMToken() {
+        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { instanceIdResult ->
+            val fcmToken = instanceIdResult.token
+
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+
+                            val courierId = CourierRepository.shared.getCourierId()!!
+
+                            val header = CourierJSONParser.createHeaderUpdateFCMToken(uid, courierId, fcmToken)
+                            val body = ParcelJSONParser.createRequestEmptyBody()
+                            val path = Path.UPDATE_FCM_TOKEN
+
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    try {
+                                    } catch (e: JSONException) {
+                                        Toast.createToast("Update of fcm token failed!")
+                                        e.printStackTrace()
+                                    }
+                                } else {
+                                    Toast.createToast("Update of fcm token failed!")
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast("Update of fcm token failed!")
+                    }
+                }
+        }
+    }
+
+    fun getCurrentVanLocation() {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+
+                            val path = Path.CURRENT_VAN_LOCATION
+                            val params = VehicleJSONParser.createHeaderGetCurrentPosition(uid)
+                            Log.i("VanAssistAPIController", "CALL GET CURRENT VAN LOCATION")
+                            apiController.get(path, params) { response ->
+                                if (response != null) {
+
+                                    val strResp = response.toString()
+                                    try {
+                                        val jsonObject = JSONObject(strResp)
+                                        val currentLocationResponseObject = VehicleJSONParser.parseResponseToLocation(jsonObject)
+                                        Log.i("VanAssistAPIController", currentLocationResponseObject.toString())
+
+                                        val van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)
+                                        if (van == null) {
+                                            VanRepository.shared.insert(
+                                                VanEntity(
+                                                    VanAssistConfig.VAN_ID,
+                                                    currentLocationResponseObject.latitude(),
+                                                    currentLocationResponseObject.longitude(),
+                                                    true,
+                                                    "CLOSED",
+                                                    "IN DELIVERY",
+                                                    "OK",
+                                                    ""
+                                                )
+                                            )
+                                        } else {
+                                            VanRepository.shared.updateVanLocationById(
+                                                VanAssistConfig.VAN_ID,
+                                                currentLocationResponseObject.latitude(),
+                                                currentLocationResponseObject.longitude()
+                                            )
+                                            Log.i("VanAssistAPIController", "Cpos: " + van.latitude + " " + van.longitude)
+                                        }
+                                    } catch (e: JSONException) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                                        e.printStackTrace()
+                                    }
+                                } else {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
+                    }
+                }
+        }
+        else {
+            MainScope().launch(Dispatchers.IO) {
+                try {
+                    if(!bluetoothLeService.getServicesDiscovered()) {
+                        checkConnectionStatus()
+                    }
+
+                    val vehiclePosition = bluetoothLeDeliveryService.getVehiclePosition()
+
+                    val van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)
+                    if (van == null) {
+                        VanRepository.shared.insert(
+                            VanEntity(
+                                VanAssistConfig.VAN_ID,
+                                vehiclePosition[0],
+                                vehiclePosition[1],
+                                true,
+                                "CLOSED",
+                                "IN DELIVERY",
+                                "OK",
+                                ""
+                            )
+                        )
+                    } else {
+                        VanRepository.shared.updateVanLocationById(
+                            VanAssistConfig.VAN_ID,
+                            vehiclePosition[0],
+                            vehiclePosition[1]
+                        )
+                        Log.i("VanAssistAPIController", "Cpos: " + van.latitude + " " + van.longitude)
+                    }
+                }catch (e: Exception) {
+                    Toast.createToast("Getting vehicle position failed!")
+                }
+            }
+        }
+    }
+
+    fun setProblemSolved() {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val header = VehicleJSONParser.createHeaderSetProblemSolved(uid)
+                            val body = VehicleJSONParser.createRequestEmptyBody()
+                            val path = Path.PROBLEM_SOVLED
+
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    try {
+                                        this.getCurrentVanState()
+                                    } catch (e: JSONException) {
+                                        Toast.createToast("PROBLEM SOLVED MESSAGE FAILED!")
+                                        e.printStackTrace()
+                                    }
+                                } else {
+                                    Toast.createToast("PROBLEM SOLVED MESSAGE FAILED!")
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast("PROBLEM SOLVED MESSAGE FAILED!")
+                    }
+                }
+        }
+        else {
+            //SEND OPEN_DOORS STATUS?
+            //WHAT ARE THE DIFFERENT POSSIBILITIES TO SOLVE A PROBLEM (I THOUGHT CONTINUE MISSION AND OPEN_DOORS)
+        }
+
     }
 
     /* Created by Axel Herbstreith and Jasmin Weimüller
-     *
-     * Sends the updated parcel status to the server, when request was successful, the updated parcel information will be send back to frontend
-     * This updated parcel information are parsed and stored in the local db again, after this process, the parcel information in the parcel sheet (UI) will pe updated.
-     *
-     * @param
-     * @return void
-     **/
+ *
+ * Sends the updated parcel status to the server, when request was successful, the updated parcel information will be send back to frontend
+ * This updated parcel information are parsed and stored in the local db again, after this process, the parcel information in the parcel sheet (UI) will pe updated.
+ *
+ * @param
+ * @return void
+ **/
     fun confirmParcelDeliverySuccess(parcelId: String) {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-                        val courierId = CourierRepository.shared.getCourierId()!!
-                        val path = Path.PARCEL_CONFIRM_DELIVERY_SUCCESS
-                        val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
-                        val body = ParcelJSONParser.createBodyConfirmParcelRequest(parcelId)
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val path = Path.PARCEL_CONFIRM_DELIVERY_SUCCESS
+                            val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
+                            val body = ParcelJSONParser.createBodyConfirmParcelRequest(parcelId)
 
-                        apiController.put(path, header, body) { response ->
-                            if (response != null) {
-                                val strResp = response.toString()
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    val strResp = response.toString()
 
-                                try {
-                                    val jsonObject = JSONObject(strResp)
-                                    val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
-                                    ParcelRepository.shared.insert(parcel)
-                                    FragmentRepo.mapFragmentOld?.setParcelInformation(main)
-                                    if (FragmentRepo.parcelListFragmentDeliverySuccess != null) {
-                                        FragmentRepo.parcelListFragmentDeliverySuccess!!.updateAdapter()
+                                    try {
+                                        val jsonObject = JSONObject(strResp)
+                                        val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
+                                        ParcelRepository.shared.insert(parcel)
+                                        FragmentRepo.mapFragmentOld?.setParcelInformation(main)
+                                        if (FragmentRepo.parcelListFragmentDeliverySuccess != null) {
+                                            FragmentRepo.parcelListFragmentDeliverySuccess!!.updateAdapter()
+                                        }
+
+                                    } catch (e: JSONException) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_delivery_confirmation))
+                                        e.printStackTrace()
                                     }
-
-                                } catch (e: JSONException) {
+                                } else {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_delivery_confirmation))
-                                    e.printStackTrace()
                                 }
-                            } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_delivery_confirmation))
                             }
                         }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_delivery_confirmation))
                     }
-                } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_delivery_confirmation))
                 }
-            }
+        }
+        else {
+
+        }
     }
 
 
     /* Confirms that the courier failed to deliver the parcel */
     fun confirmParcelDeliveryFailure(parcelId: String) {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-                        val courierId = CourierRepository.shared.getCourierId()!!
-                        val path = Path.PARCEL_CONFIRM_DELIVERY_FAILURE
-                        val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
-                        val body = ParcelJSONParser.createBodyConfirmParcelRequest(parcelId)
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val path = Path.PARCEL_CONFIRM_DELIVERY_FAILURE
+                            val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
+                            val body = ParcelJSONParser.createBodyConfirmParcelRequest(parcelId)
 
-                        apiController.put(path, header, body) { response ->
-                            if (response != null) {
-                                val strResp = response.toString()
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    val strResp = response.toString()
 
-                                try {
-                                    val jsonObject = JSONObject(strResp)
-                                    val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
-                                    ParcelRepository.shared.insert(parcel)
-                                    FragmentRepo.mapFragmentOld?.setParcelInformation(main)
-                                    if (FragmentRepo.parcelListFragmentDeliveryFailure != null) {
-                                        FragmentRepo.parcelListFragmentDeliveryFailure!!.updateAdapter()
+                                    try {
+                                        val jsonObject = JSONObject(strResp)
+                                        val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
+                                        ParcelRepository.shared.insert(parcel)
+                                        FragmentRepo.mapFragmentOld?.setParcelInformation(main)
+                                        if (FragmentRepo.parcelListFragmentDeliveryFailure != null) {
+                                            FragmentRepo.parcelListFragmentDeliveryFailure!!.updateAdapter()
+                                        }
+                                    } catch (e: JSONException) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_delivery_confirmation))
+                                        e.printStackTrace()
                                     }
-                                } catch (e: JSONException) {
+                                } else {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_delivery_confirmation))
-                                    e.printStackTrace()
                                 }
-                            } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_delivery_confirmation))
-                            }
 
+                            }
                         }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_delivery_confirmation))
                     }
-                } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_parcel_delivery_confirmation))
                 }
-            }
+        }
     }
 
 
     /* Undo of the parcel delivery confirmation */
     fun undoParcelDeliveryConfirmation(parcel: ParcelEntity) {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
+                            val body = ParcelJSONParser.createBodyConfirmParcelRequest(parcel.id)
+                            val path = Path.PARCEL_DELIVERY_UNDO
 
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    val strResp = response.toString()
+
+                                    try {
+                                        val jsonObject = JSONObject(strResp)
+                                        val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
+                                        ParcelRepository.shared.insert(parcel)
+                                    } catch (e: JSONException) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_undo_parcel_delivery))
+                                        e.printStackTrace()
+                                    }
+                                } else {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_undo_parcel_delivery))
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_undo_parcel_delivery))
+                    }
+                }
+        }
+    }
+
+    fun sendTestProblem(message: String) {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener {
+                if(it.isSuccessful) {
+                    val uid = it.result!!.token
+                    if(uid != null) {
+                        val header = VehicleJSONParser.createHeaderSendTestProblem(uid)
+                        val body = VehicleJSONParser.createBodySendTestProblem(message)
+                        val path = Path.SEND_PROBLEM
+
+                        apiController.put(path, header, body) {
+                            if(it != null) {
+                                try{
+
+                                }catch(e: JSONException) {
+                                    Toast.createToast("SEND TEST PROBLEM FAILED!")
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast("SEND TEST PROBLEM FAILED!")
+                            }
+                        }
+                    }else {
+                        Toast.createToast("SEND TEST PROBLEM FAILED!")
+                    }
+                }
+            }
+    }
+
+    /* Loads all parking areas from backend */
+    fun getAllParkingLocations() {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)!!
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = task.result!!.token
+                    if (uid != null) {
+
+                        val courierId = CourierRepository.shared.getCourierId()!!
+                        val path = Path.PARKING_ALL
+                        val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
+
+                        apiController.get(path, params) { response ->
+                            if (response != null) {
+
+                                val strResp = response.toString()
+                                try {
+                                    val jsonObject = JSONObject(strResp)
+                                    val parkingAreaResponseObject = ParkingAreaJSONParser.parseResponseToParkingAreaObject(jsonObject)
+                                    ParkingAreaRepository.shared.insertAll(parkingAreaResponseObject)
+                                } catch (e: JSONException) {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_load_parking_location))
+                                    e.printStackTrace()
+                                }
+                            } else {
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_load_parking_location))
+                            }
+                        }
+                    }
+                } else {
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_load_parking_location))
+                }
+            }
+    }
+
+    /* Sends next Parking Location to Server */
+    fun requestParcelStateReset() {
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)!!
             .addOnCompleteListener { task ->
@@ -268,33 +1015,37 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                     val uid = task.result!!.token
                     if (uid != null) {
                         val courierId = CourierRepository.shared.getCourierId()!!
-                        val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
-                        val body = ParcelJSONParser.createBodyConfirmParcelRequest(parcel.id)
-                        val path = Path.PARCEL_DELIVERY_UNDO
-
-                        apiController.put(path, header, body) { response ->
+                        val path = Path.PARCEL_STATE_RESET
+                        val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
+                        apiController.get(path, params) { response ->
                             if (response != null) {
-                                val strResp = response.toString()
 
+                                val strResp = response.toString()
                                 try {
-                                    val jsonObject = JSONObject(strResp)
-                                    val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
-                                    ParcelRepository.shared.insert(parcel)
+                                    Log.i("VanAssistAPIController", strResp)
+                                    val json = JSONObject(strResp)
+                                    if(json.getInt("status") == 200) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.parcel_status_reset_successful))
+                                    }
+
                                 } catch (e: JSONException) {
-                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_undo_parcel_delivery))
+                                    Log.i("VanAssistAPIController", "Invalid string response received")
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_request_parcel_state_reset))
                                     e.printStackTrace()
+
                                 }
                             } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_undo_parcel_delivery))
+                                Log.i("VanAssistAPIController", "Response is null!")
+                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_request_parcel_state_reset))
                             }
                         }
                     }
                 } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_undo_parcel_delivery))
+                    Log.i("VanAssistAPIController", "Task was not successfull!")
+                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_request_parcel_state_reset))
                 }
             }
     }
-
 
     /* Created by Axel Herbstreith and Jasmin Weimüller
      *
@@ -1080,547 +1831,4 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
             }
     }
 
-    fun updateFCMToken() {
-        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { instanceIdResult ->
-            val fcmToken = instanceIdResult.token
-
-            val user = FirebaseAuth.getInstance().currentUser
-            user?.getIdToken(true)!!
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val uid = task.result!!.token
-                        if (uid != null) {
-
-                            val courierId = CourierRepository.shared.getCourierId()!!
-
-                            val header = CourierJSONParser.createHeaderUpdateFCMToken(uid, courierId, fcmToken)
-                            val body = ParcelJSONParser.createRequestEmptyBody()
-                            val path = Path.UPDATE_FCM_TOKEN
-
-                            apiController.put(path, header, body) { response ->
-                                if (response != null) {
-                                    try {
-                                    } catch (e: JSONException) {
-                                        Toast.createToast("Update of fcm token failed!")
-                                        e.printStackTrace()
-                                    }
-                                } else {
-                                    Toast.createToast("Update of fcm token failed!")
-                                }
-                            }
-                        }
-                    } else {
-                        Toast.createToast("Update of fcm token failed!")
-                    }
-                }
-        }
-    }
-
-
-    /* Starts the simulation
-     * This method needs to be executed by another framework than volley (in our case OkHttp3) since there was an issue with using Volley -> see report) */
-    fun startSimulation() {
-
-        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { instanceIdResult ->
-            val fcmToken = instanceIdResult.token
-
-            val user = FirebaseAuth.getInstance().currentUser
-            user?.getIdToken(true)!!
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val uid = task.result!!.token
-                        if (uid != null) {
-
-                            val courierId = CourierRepository.shared.getCourierId()!!
-                            val url = Path.BASE_PATH + Path.SIMULATION_START
-                            val client = OkHttpClient()
-                            val secondsSinceMidnight = DateParser.getSecondsSinceMidnight().toString()
-
-                            val head = mutableMapOf<String, String>()
-                            head.put("uid", uid)
-                            head.put("courier_id", courierId)
-                            head.put("seconds_since_midnight", secondsSinceMidnight)
-                            head.put("fcm_token", fcmToken)
-                            val headerBuild = Headers.of(head)
-
-                            val request = Request.Builder().url(url).headers(headerBuild).build()
-
-
-
-                            client.newCall(request).enqueue(object : Callback {
-                                override fun onFailure(call: Call, e: IOException) {
-                                    e.printStackTrace();
-                                }
-
-                                @Throws(IOException::class)
-                                override fun onResponse(call: Call, response: Response) {
-                                    if (response.isSuccessful) {
-                                        if (response != null) {
-                                            val strResp = response.body()!!.string()
-                                            try {
-                                                val jsonObject = JSONObject(strResp)
-                                                Log.wtf("Test;", strResp)
-                                                val data = jsonObject.getJSONObject("data")
-                                                val simulationIsRunning = data.getBoolean("simulation_is_running")
-
-                                                if (simulationIsRunning) {
-
-                                                    FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
-                                                    val mapFragment = MapFragmentOld.newInstance()
-                                                    FragmentRepo.launchPadFragment!!.requireActivity().supportFragmentManager
-                                                        ?.beginTransaction()
-                                                        ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
-                                                        ?.addToBackStack(FragmentTag.MAP)
-                                                        ?.commit()
-                                                }
-
-                                            } catch (e: JSONException) {
-                                                println(e.printStackTrace())
-                                                FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
-                                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
-                                                e.printStackTrace()
-                                            }
-                                        } else {
-                                            FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
-                                            Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
-                                        }
-                                    } else {
-                                        FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
-                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
-                                    }
-                                }
-                            })
-                        }
-                    }
-                }
-        }
-    }
-
-
-    /* Created by Axel Herbstreith
-     * Stops the running simulation */
-    fun stopSimulation() {
-
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-
-                        val courierId = CourierRepository.shared.getCourierId()!!
-                        val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
-                        val body = ParcelJSONParser.createRequestEmptyBody()
-                        val path = Path.SIMULATION_STOP
-
-                        apiController.put(path, header, body) { response ->
-                            if (response != null) {
-                                try {
-                                } catch (e: JSONException) {
-                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
-                                    e.printStackTrace()
-                                }
-                            } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
-                            }
-                        }
-                    }
-                } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
-                }
-            }
-    }
-
-
-    /* This call updated the parcel order */
-    fun updateParcelPosition(parcelId: String, newPos: Int) {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-
-                        val courierId = CourierRepository.shared.getCourierId()!!
-                        val header = ParcelJSONParser.createHeaderUpdateParcelPosition(uid, courierId)
-                        val body = ParcelJSONParser.createRequestBodyUpdateParcelPosition(parcelId, newPos)
-
-                        val path = Path.PARCEL_ORDER
-                        apiController.put(path, header, body) { response ->
-                            if (response != null) {
-                                val strResp = response.toString()
-                                try {
-                                    val jsonObject = JSONObject(strResp)
-                                    val parcelList = ParcelJSONParser.parseResponseToParcelListWithoutVerificationToken(jsonObject)
-
-                                    ParcelRepository.shared.insertAll(parcelList)
-
-                                } catch (e: JSONException) {
-                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_update_parcel_position))
-                                    e.printStackTrace()
-                                }
-                            } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_update_parcel_position))
-                            }
-                        }
-                    }
-                } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_update_parcel_position))
-                }
-            }
-    }
-
-
-    /* Loads all parking areas from backend */
-    fun getAllParkingLocations() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-
-                        val courierId = CourierRepository.shared.getCourierId()!!
-                        val path = Path.PARKING_ALL
-                        val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
-
-                        apiController.get(path, params) { response ->
-                            if (response != null) {
-
-                                val strResp = response.toString()
-                                try {
-                                    val jsonObject = JSONObject(strResp)
-                                    val parkingAreaResponseObject = ParkingAreaJSONParser.parseResponseToParkingAreaObject(jsonObject)
-                                    ParkingAreaRepository.shared.insertAll(parkingAreaResponseObject)
-                                } catch (e: JSONException) {
-                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_load_parking_location))
-                                    e.printStackTrace()
-                                }
-                            } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_load_parking_location))
-                            }
-                        }
-                    }
-                } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_load_parking_location))
-                }
-            }
-    }
-
-
-    fun getCurrentVanLocation() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-
-                        val path = Path.CURRENT_VAN_LOCATION
-                        val params = VehicleJSONParser.createHeaderGetCurrentPosition(uid)
-                        Log.i("VanAssistAPIController", "CALL GET CURRENT VAN LOCATION")
-                        apiController.get(path, params) { response ->
-                            if (response != null) {
-
-                                val strResp = response.toString()
-                                try {
-                                    val jsonObject = JSONObject(strResp)
-                                    val currentLocationResponseObject = VehicleJSONParser.parseResponseToLocation(jsonObject)
-                                    Log.i("VanAssistAPIController", currentLocationResponseObject.toString())
-
-                                    val van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)
-                                    if(van == null) {
-                                        VanRepository.shared.insert(
-                                            VanEntity(
-                                                VanAssistConfig.VAN_ID,
-                                                currentLocationResponseObject.latitude(),
-                                                currentLocationResponseObject.longitude(),
-                                                true,
-                                                "CLOSED",
-                                                "IN DELIVERY",
-                                                "OK",
-                                                ""
-                                            )
-                                        )
-                                    }
-                                    else {
-                                        VanRepository.shared.updateVanLocationById(
-                                            VanAssistConfig.VAN_ID,
-                                            currentLocationResponseObject.latitude(),
-                                            currentLocationResponseObject.longitude()
-                                        )
-                                        Log.i("VanAssistAPIController", "Cpos: " + van.latitude + " " + van.longitude)
-                                    }
-                                } catch (e: JSONException) {
-                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
-                                    e.printStackTrace()
-                                }
-                            } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
-                            }
-                        }
-                    }
-                } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
-                }
-            }
-    }
-
-
-    fun getCurrentVanState() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-
-                        val path = Path.CURRENT_VAN_STATE
-                        val params = VehicleJSONParser.createHeaderGetCurrentPosition(uid)
-                        Log.i("VanAssistAPIController", "CALL GET CURRENT VAN STATE")
-                        apiController.get(path, params) { response ->
-                            if (response != null) {
-
-                                val strResp = response.toString()
-                                try {
-                                    val jsonObject = JSONObject(strResp)
-                                    val currentStateResponseObject = VehicleJSONParser.parseResponseToState(response)
-                                    Log.i("VanAssistAPIController", currentStateResponseObject.toString())
-
-                                    val van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)
-                                    if(van == null) {
-                                        VanRepository.shared.insert(
-                                            VanEntity(
-                                                VanAssistConfig.VAN_ID,
-                                                currentStateResponseObject.latitude,
-                                                currentStateResponseObject.longitude,
-                                                currentStateResponseObject.isParking,
-                                                currentStateResponseObject.doorStatus,
-                                                currentStateResponseObject.logisticStatus,
-                                                currentStateResponseObject.problemStatus,
-                                                currentStateResponseObject.problemMessage
-                                            )
-                                        )
-                                    }
-                                    else {
-                                        VanRepository.shared.updateVanById(
-                                            VanAssistConfig.VAN_ID,
-                                            currentStateResponseObject.latitude,
-                                            currentStateResponseObject.longitude,
-                                            currentStateResponseObject.isParking,
-                                            currentStateResponseObject.doorStatus,
-                                            currentStateResponseObject.logisticStatus,
-                                            currentStateResponseObject.problemStatus,
-                                            currentStateResponseObject.problemMessage
-                                        )
-                                        Log.i("VanAssistAPIController", "Cpos: " + van.latitude + " " + van.longitude)
-                                    }
-
-                                    var frag = FragmentRepo.mapActivity?.supportFragmentManager?.findFragmentByTag(FragmentTag.VEHICLE_STATUS)
-                                    if(frag != null && frag.isVisible) {
-                                        //frag.onResume()
-                                        val transaction = FragmentRepo.mapActivity?.supportFragmentManager?.beginTransaction()
-                                        transaction?.detach(frag)
-                                        transaction?.attach(frag)
-                                        transaction?.commit()
-                                    }
-
-                                    frag = FragmentRepo.mapActivity?.supportFragmentManager?.findFragmentByTag(FragmentTag.VEHICLE_PROBLEM_DETAILS)
-                                    if(frag != null && frag.isVisible) {
-                                        //frag.onResume()
-                                        val transaction = FragmentRepo.mapActivity?.supportFragmentManager?.beginTransaction()
-                                        transaction?.detach(frag)
-                                        transaction?.attach(frag)
-                                        transaction?.commit()
-                                    }
-                                } catch (e: JSONException) {
-                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
-                                    e.printStackTrace()
-                                }
-                            } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
-                            }
-                        }
-                    }
-                } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_current_van_location_loading))
-                }
-            }
-    }
-
-    fun setProblemSolved() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-
-                        val courierId = CourierRepository.shared.getCourierId()!!
-                        val header = VehicleJSONParser.createHeaderSetProblemSolved(uid)
-                        val body = VehicleJSONParser.createRequestEmptyBody()
-                        val path = Path.PROBLEM_SOVLED
-
-                        apiController.put(path, header, body) { response ->
-                            if (response != null) {
-                                try {
-                                    this.getCurrentVanState()
-                                } catch (e: JSONException) {
-                                    Toast.createToast("PROBLEM SOLVED MESSAGE FAILED!")
-                                    e.printStackTrace()
-                                }
-                            } else {
-                                Toast.createToast("PROBLEM SOLVED MESSAGE FAILED!")
-                            }
-                        }
-                    }
-                } else {
-                    Toast.createToast("PROBLEM SOLVED MESSAGE FAILED!")
-                }
-            }
-
-    }
-
-    fun sendDoorStatus(doorStatus: String) {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-
-                        val courierId = CourierRepository.shared.getCourierId()!!
-                        val header = VehicleJSONParser.createHeaderSetProblemSolved(uid)
-                        val body = VehicleJSONParser.createBodySendDoorStatus(doorStatus)
-                        val path = Path.SEND_DOOR_STATUS
-
-                        apiController.put(path, header, body) { response ->
-                            if (response != null) {
-                                try {
-                                    this.getCurrentVanState()
-                                } catch (e: JSONException) {
-                                    Toast.createToast("DOOR STATUS MESSAGE FAILED!")
-                                    e.printStackTrace()
-                                }
-                            } else {
-                                Toast.createToast("DOOR STATUS MESSAGE FAILED!")
-                            }
-                        }
-                    }
-                } else {
-                    Toast.createToast("DOOR STATUS MESSAGE FAILED!")
-                }
-            }
-
-    }
-
-    fun sendTestProblem(message: String) {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener {
-                if(it.isSuccessful) {
-                    val uid = it.result!!.token
-                    if(uid != null) {
-                        val header = VehicleJSONParser.createHeaderSendTestProblem(uid)
-                        val body = VehicleJSONParser.createBodySendTestProblem(message)
-                        val path = Path.SEND_PROBLEM
-
-                        apiController.put(path, header, body) {
-                            if(it != null) {
-                                try{
-
-                                }catch(e: JSONException) {
-                                    Toast.createToast("SEND TEST PROBLEM FAILED!")
-                                    e.printStackTrace()
-                                }
-                            } else {
-                                Toast.createToast("SEND TEST PROBLEM FAILED!")
-                            }
-                        }
-                    }else {
-                        Toast.createToast("SEND TEST PROBLEM FAILED!")
-                    }
-                }
-            }
-    }
-
-
-    /* Sends next Parking Location to Server */
-    fun postNextParkingLocation(paID: String) {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-                        val pA = ParkingAreaRepository.shared.getParkingAreaById(paID)
-                        val courierId = CourierRepository.shared.getCourierId()!!
-                        val path = Path.PARKING_NEXT
-                        val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
-                        val body = ParkingAreaJSONParser.createBodyPostNextParkingLocation(pA)
-                        apiController.post(path, params, body) { response ->
-                            if (response != null) {
-
-                                val strResp = response.toString()
-                                try {
-                                    val jsonObject = JSONObject(strResp)
-                                    val parkingAreaResponseObject =
-                                        ParkingAreaJSONParser.parseResponseToParkingAreaObjectSingle(jsonObject)
-
-                                } catch (e: JSONException) {
-                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
-                                    e.printStackTrace()
-
-                                }
-                            } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
-                            }
-                        }
-                    }
-                } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
-                }
-            }
-    }
-
-    /* Sends next Parking Location to Server */
-    fun requestParcelStateReset() {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
-                        val courierId = CourierRepository.shared.getCourierId()!!
-                        val path = Path.PARCEL_STATE_RESET
-                        val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
-                        apiController.get(path, params) { response ->
-                            if (response != null) {
-
-                                val strResp = response.toString()
-                                try {
-                                    Log.i("VanAssistAPIController", strResp)
-                                    val json = JSONObject(strResp)
-                                    if(json.getInt("status") == 200) {
-                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.parcel_status_reset_successful))
-                                    }
-
-                                } catch (e: JSONException) {
-                                    Log.i("VanAssistAPIController", "Invalid string response received")
-                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_request_parcel_state_reset))
-                                    e.printStackTrace()
-
-                                }
-                            } else {
-                                Log.i("VanAssistAPIController", "Response is null!")
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_request_parcel_state_reset))
-                            }
-                        }
-                    }
-                } else {
-                    Log.i("VanAssistAPIController", "Task was not successfull!")
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_request_parcel_state_reset))
-                }
-            }
-    }
 }

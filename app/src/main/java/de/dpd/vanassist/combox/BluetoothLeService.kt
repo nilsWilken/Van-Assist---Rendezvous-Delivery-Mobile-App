@@ -58,6 +58,12 @@ interface BluetoothLeService {
         uuidCharacteristicUUID: UUID
     )
 
+    suspend fun writePosition(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID,
+        position: DoubleArray
+    ): BluetoothResult?
+
     suspend fun writeCharacteristic(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID,

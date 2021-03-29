@@ -18,5 +18,9 @@ class VanAssistConfig {
 
         const val CHAR_SET = "UTF-8"
 
+        const val USE_BLUETOOTH_INTERFACE = false
+
+        const val USE_LOGISTICS_LAUNCHPAD = false
+
     }
 }

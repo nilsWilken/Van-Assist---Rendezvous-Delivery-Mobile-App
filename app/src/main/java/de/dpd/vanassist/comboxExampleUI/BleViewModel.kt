@@ -109,7 +109,7 @@ class BleViewModel internal constructor(
 
         viewModelScope.launch(Dispatchers.IO) {
             if (notifyVehiclePositionLabel.value == "Subscribe Notification Vehicle Position") {
-                notifyVehiclePositionLabel.postValue("UnubscribeNotification Vehicle Position")
+                notifyVehiclePositionLabel.postValue("Unubscribe Notification Vehicle Position")
                 bluetoothLeDeliveryService.getVehiclePositionNotification().map { it.contentToString() }
                     .collect {
                         vehiclePositionNotifcation.postValue(it)

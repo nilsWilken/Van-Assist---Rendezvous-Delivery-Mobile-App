@@ -1,15 +1,11 @@
 package de.dpd.vanassist.cloud.messaging
 
-import android.view.View
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
-import androidx.fragment.app.Fragment
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import de.dpd.vanassist.R
 import de.dpd.vanassist.config.VanAssistConfig
-import de.dpd.vanassist.fragment.main.MapFragmentOld
+import de.dpd.vanassist.fragment.main.map.MapFragmentOld
 import de.dpd.vanassist.util.FragmentRepo
 import de.dpd.vanassist.util.cloud.CloudMessage
 import com.mapbox.geojson.Point
@@ -18,8 +14,7 @@ import de.dpd.vanassist.config.FragmentTag
 import de.dpd.vanassist.config.SimulationConfig
 import de.dpd.vanassist.database.entity.VanEntity
 import de.dpd.vanassist.database.repository.VanRepository
-import de.dpd.vanassist.fragment.main.VehicleProblemDialogFragment
-import kotlinx.android.synthetic.main.activity_map.view.*
+import de.dpd.vanassist.fragment.main.launchpad.VehicleProblemDialogFragment
 
 
 class MessagingService: FirebaseMessagingService() {

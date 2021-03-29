@@ -18,6 +18,7 @@ import android.view.animation.Animation
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.ScaleAnimation
 import android.view.animation.DecelerateInterpolator
+import de.dpd.vanassist.fragment.main.launchpad.ParcelListFragment
 import de.dpd.vanassist.util.FragmentRepo
 import de.dpd.vanassist.util.parcel.ParcelState
 

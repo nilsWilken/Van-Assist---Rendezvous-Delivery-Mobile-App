@@ -1,5 +1,6 @@
 package de.dpd.vanassist.database.daos
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -25,6 +26,9 @@ interface VanDao {
     /* Get van by id */
     @Query("SELECT * FROM Van WHERE id == :id")
     fun getVan(id: String): VanEntity?
+
+    @Query("SELECT * FROM Van WHERE id == :id")
+    fun getVanAsFlow(id: String): LiveData<VanEntity>
 
     /* Update van latitude by id */
     @Query( "UPDATE Van SET latitude = :latitude WHERE id = :id")
