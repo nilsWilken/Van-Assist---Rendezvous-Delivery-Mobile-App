@@ -25,7 +25,7 @@ data class ParcelEntity(
 
     val additionalAddressInformation: String? = null,
 
-    val deliveryPosition: Int,
+    var deliveryPosition: Int,
 
     val weight: Double,
 

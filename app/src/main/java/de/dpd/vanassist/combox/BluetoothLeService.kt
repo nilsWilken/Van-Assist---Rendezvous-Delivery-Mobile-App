@@ -33,6 +33,16 @@ interface BluetoothLeService {
         uuidCharacteristicUUID: UUID
     ): DoubleArray
 
+    suspend fun readNextStop(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): DoubleArray
+
+    suspend fun readVehicleStatus(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): ShortArray
+
     suspend fun readByte(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
@@ -43,10 +53,20 @@ interface BluetoothLeService {
         uuidCharacteristicUUID: UUID
     ): Flow<Byte?>
 
+    fun getShortNotification(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): Flow<Short?>
+
     fun getDoubleArrayNotification(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
     ): Flow<DoubleArray>
+
+    fun getVehicleStatusNotification(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): Flow<ShortArray>
 
     fun getStringNotification(
         uuidService: UUID,
@@ -61,7 +81,16 @@ interface BluetoothLeService {
     suspend fun writePosition(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID,
-        position: DoubleArray
+        position: DoubleArray,
+        z: Float,
+        orientation: Float
+    ): BluetoothResult?
+
+    suspend fun writeDeliveryStatus(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID,
+        paketID: Int,
+        deliveryStatus: Short
     ): BluetoothResult?
 
     suspend fun writeCharacteristic(
@@ -86,6 +115,12 @@ interface BluetoothLeService {
         uuidService: UUID,
         uuidCharacteristicUUID: UUID,
         value: Short
+    )
+
+    suspend fun writeShortArray(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID,
+        array: ShortArray?
     )
 
     fun disableNotification(

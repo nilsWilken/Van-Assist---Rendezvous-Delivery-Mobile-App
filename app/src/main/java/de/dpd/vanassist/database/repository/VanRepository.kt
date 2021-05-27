@@ -41,8 +41,12 @@ class VanRepository {
         vanDao.updateVanDoorStatus(door_status, id)
     }
 
-    fun updateVanProblemStatusById(id: String, problem_status: String) {
-        vanDao.updateVanProblemStatus(problem_status, id)
+//    fun updateVanProblemStatusById(id: String, problem_status: String) {
+//        vanDao.updateVanProblemStatus(problem_status, id)
+//    }
+
+    fun updateVehicleStatusById(id: String, vehicle_status: String) {
+        vanDao.updateVehicleStatus(vehicle_status, id)
     }
 
     fun updateVanProblemMessageById(id: String, problem_message: String) {

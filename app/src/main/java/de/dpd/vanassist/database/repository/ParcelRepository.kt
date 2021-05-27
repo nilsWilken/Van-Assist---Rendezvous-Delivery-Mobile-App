@@ -86,4 +86,12 @@ class ParcelRepository {
     fun deleteAll(){
         parcelDao!!.deleteAllFromTable()
     }
+
+    fun getParcelByDeliveryPosition(deliveryPosition: Int): ParcelEntity {
+        return parcelDao!!.getParcelByDeliveryPosition(deliveryPosition)
+    }
+
+    fun getParcelById(id: String): ParcelEntity {
+        return parcelDao!!.getParcelById(id)
+    }
 }

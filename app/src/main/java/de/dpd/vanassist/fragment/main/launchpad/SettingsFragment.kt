@@ -23,6 +23,8 @@ import java.util.*
 import android.content.DialogInterface
 import android.content.res.Configuration
 import androidx.appcompat.app.AlertDialog
+import de.dpd.vanassist.comboxExampleUI.BleFragment
+import de.dpd.vanassist.config.FragmentTag
 import de.dpd.vanassist.fragment.auth.LogoutDialogFragment
 import de.dpd.vanassist.util.language.LanguageManager
 
@@ -130,6 +132,15 @@ class SettingsFragment : Fragment() {
 
         v.goto_launchpad_from_settings.setOnClickListener { view ->
             activity?.onBackPressed()
+        }
+
+        v.settings_bluetoothOverview.setOnClickListener {
+            activity
+                ?.supportFragmentManager
+                ?.beginTransaction()
+                ?.replace(R.id.map_activity, BleFragment(), FragmentTag.BLUETOOTH_OVERVIEW)
+                ?.addToBackStack(FragmentTag.BLUETOOTH_OVERVIEW)
+                ?.commit()
         }
 
         return v

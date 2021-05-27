@@ -25,8 +25,8 @@ data class VanEntity(
     @ColumnInfo(name = "logistic_status")
     var logisticStatus: String,
 
-    @ColumnInfo(name = "problem_status")
-    var problemStatus: String,
+    @ColumnInfo(name = "vehicle_status")
+    var vehicleStatus: String,
 
     @ColumnInfo(name = "problem_message")
     var problemMessage: String

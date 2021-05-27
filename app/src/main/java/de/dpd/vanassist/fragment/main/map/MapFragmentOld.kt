@@ -38,6 +38,8 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 
+import androidx.lifecycle.Observer
+
 import kotlinx.android.synthetic.main.fragment_map_old.*
 
 import com.mapbox.android.core.location.LocationEngine
@@ -76,6 +78,7 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory.visibility
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import com.mapbox.navigation.ui.route.NavigationMapRoute
+import de.dpd.vanassist.activity.MapActivity
 //import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher
 //import com.mapbox.services.android.navigation.ui.v5.NavigationLauncherOptions
 //import com.mapbox.services.android.navigation.ui.v5.route.NavigationMapRoute
@@ -93,6 +96,7 @@ import de.dpd.vanassist.database.entity.VanEntity
 import de.dpd.vanassist.database.repository.ParcelRepository
 import de.dpd.vanassist.database.repository.ParkingAreaRepository
 import de.dpd.vanassist.database.repository.VanRepository
+import de.dpd.vanassist.fragment.main.launchpad.VehicleProblemDialogFragment
 import de.dpd.vanassist.intelligence.dynamicContent.DynamicContent
 import de.dpd.vanassist.intelligence.gamification.GamificationMode
 import de.dpd.vanassist.intelligence.intelligentDriving.IntelligentDriving
@@ -147,6 +151,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
     private lateinit var fabRotateClockwise: Animation
     private lateinit var fabRotateAnticlockwise: Animation
     private var isOpen = false
+
+    private var showVanLocationOnCreation = false
 
     private var broadcastReceiver: BroadcastReceiver? = null
 
@@ -332,6 +338,17 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 this.dialog!!.dismiss()
             }
         }
+
+        if(showVanLocationOnCreation) {
+            showVanLocation(MapBoxConfig.MAX_ZOOM - 3, true)
+        }
+
+        //Create observer that updates the van position when position updates are received
+        val vanObserver = Observer<VanEntity> { van ->
+            updateVanLocationWithoutZoom(Point.fromLngLat(van.longitude, van!!.latitude))
+        }
+
+        VanRepository.shared.getVanFlowById(VanAssistConfig.VAN_ID).observe(viewLifecycleOwner, vanObserver)
     }
 
 /*
@@ -621,7 +638,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     this.bottomSheetPhoneButton?.isEnabled = false
                 }
             }
-            bottomSheetPhoneButton!!.setOnClickListener {
+            /*bottomSheetPhoneButton!!.setOnClickListener {
                 if (currentParcel?.phoneNumber != null) {
                     try {
                         val callIntent = Intent(Intent.ACTION_CALL)
@@ -630,13 +647,14 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     } catch (activityException: ActivityNotFoundException) {
                     }
                 }
-            }
+            }*/
 
             this.setParcelInformation(activity as AppCompatActivity)
             this.startGPSService()
 
             v.goto_launchpad.setOnClickListener { view ->
-                requireActivity().onBackPressed()
+                //requireActivity().onBackPressed()
+                (activity as MapActivity).startLaunchpadFragmentWithBackstack()
             }
 
             v.fab.setOnClickListener {
@@ -835,6 +853,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 Toast.createToast(getString(R.string.error_no_parcel_available))
             }
         }
+
         return v
     }
 
@@ -1025,7 +1044,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
 
     /* Manages the display of the van location in the map */
-    private fun showVanLocation(zoom: Double, animation: Boolean) {
+    fun showVanLocation(zoom: Double, animation: Boolean) {
         val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
         api.getCurrentVanState()
 
@@ -1512,5 +1531,9 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     fun expandBottomSheet() {
         this.bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_EXPANDED
+    }
+
+    fun setShowVanLocationOnCreation() {
+        showVanLocationOnCreation = true
     }
 }

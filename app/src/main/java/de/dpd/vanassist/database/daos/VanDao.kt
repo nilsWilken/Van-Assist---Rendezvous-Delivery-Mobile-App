@@ -41,8 +41,11 @@ interface VanDao {
     @Query( "SELECT problem_message FROM Van WHERE id == :id")
     fun getVanProblemMessage(id: String): String
 
-    @Query ( "SELECT problem_status FROM Van WHERE id == :id")
-    fun getVanProblemStatus(id: String): String
+ //   @Query ( "SELECT problem_status FROM Van WHERE id == :id")
+ //   fun getVanProblemStatus(id: String): String
+
+    @Query ( "SELECT vehicle_status FROM Van WHERE id == :id")
+    fun getVehicleStatus(id: String): String
 
     @Query ("SELECT door_status FROM Van WHERE id == :id")
     fun getVanDoorStatus(id: String): String
@@ -53,8 +56,11 @@ interface VanDao {
     @Query ("UPDATE Van SET door_status = :door_status WHERE id = :id")
     fun updateVanDoorStatus(door_status: String, id: String)
 
-    @Query ("UPDATE Van SET problem_status = :problem_status WHERE id = :id")
-    fun updateVanProblemStatus(problem_status: String, id: String)
+    //@Query ("UPDATE Van SET problem_status = :problem_status WHERE id = :id")
+    //fun updateVanProblemStatus(problem_status: String, id: String)
+
+    @Query ("UPDATE Van SET vehicle_status = :vehicle_status WHERE id = :id")
+    fun updateVehicleStatus(vehicle_status: String, id: String)
 
     @Query ("UPDATE Van SET problem_message = :problem_message WHERE id = :id")
     fun updateVanProblemMessage(problem_message: String, id: String)
@@ -62,7 +68,7 @@ interface VanDao {
     @Query ("UPDATE Van SET logistic_status = :logistic_status WHERE id = :id")
     fun updateVanLogisticStatus(logistic_status: String, id: String)
 
-    @Query ("UPDATE Van SET latitude = :latitude, longitude = :longitude, is_parking = :isParking, door_status = :doorStatus, logistic_status = :logisticStatus, problem_status = :problemStatus, problem_message = :problemMessage WHERE id = :id")
+    @Query ("UPDATE Van SET latitude = :latitude, longitude = :longitude, is_parking = :isParking, door_status = :doorStatus, logistic_status = :logisticStatus, vehicle_status = :vehicleStatus, problem_message = :problemMessage WHERE id = :id")
     fun updateVanById(id: String, latitude: Double, longitude: Double, isParking: Boolean, doorStatus: String, logisticStatus: String,
-    problemStatus: String, problemMessage: String)
+    vehicleStatus: String, problemMessage: String)
 }

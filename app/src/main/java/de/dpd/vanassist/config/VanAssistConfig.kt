@@ -22,5 +22,7 @@ class VanAssistConfig {
 
         const val USE_LOGISTICS_LAUNCHPAD = false
 
+        const val USE_DEMO_SCENARIO_DATA = false
+
     }
 }

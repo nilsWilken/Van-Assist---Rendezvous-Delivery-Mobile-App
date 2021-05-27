@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import de.dpd.vanassist.R
+import de.dpd.vanassist.activity.MapActivity
 import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.config.FragmentTag
 import de.dpd.vanassist.config.VanAssistConfig
@@ -24,11 +25,15 @@ class VehicleStatusFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val v = inflater.inflate(R.layout.fragment_vehicle_status, container, false)
 
         val vanObserver = Observer<VanEntity> { van ->
             van_id_value_text_view.text = van!!.id
 
-            van_position_value_text_view.text = "%.5f".format(van!!.latitude).replace(",", ".") + "; " + "%.5f".format(van!!.latitude).replace(",", ".")
+            van_position_value_text_view.text = "%.5f".format(van!!.latitude).replace(",", ".") + "; " + "%.5f".format(van!!.longitude).replace(",", ".")
 
             van_doors_value_text_view.text = van!!.doorStatus
             if(van!!.doorStatus == "OPEN") {
@@ -38,23 +43,20 @@ class VehicleStatusFragment : Fragment() {
             }
 
             van_logistic_status_value_text_view.text = van!!.logisticStatus
-            van_problem_status_value_text_view.text = van!!.problemStatus
+            van_problem_status_value_text_view.text = van!!.vehicleStatus
 
-            if(van!!.problemStatus == "PROBLEM") {
+            if(van!!.vehicleStatus == "HARDFAULT" || van!!.vehicleStatus == "INTERVENTION" || van!!.vehicleStatus == "PROBLEM") {
                 button_problem_status_show_details.visibility = View.VISIBLE
             } else {
                 button_problem_status_show_details.visibility = View.INVISIBLE
             }
         }
 
-        VanRepository.shared.getVanFlowById(VanAssistConfig.VAN_ID).observe(this, vanObserver)
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val v = inflater.inflate(R.layout.fragment_vehicle_status, container, false)
+        VanRepository.shared.getVanFlowById(VanAssistConfig.VAN_ID).observe(viewLifecycleOwner, vanObserver)
 
         v.goto_launchpad_from_vehicle_status_menu.setOnClickListener {view ->
-            activity?.onBackPressed()
+            //activity?.onBackPressed()
+            (activity as MapActivity).startLaunchpadFragmentWithBackstack()
         }
 
         v.button_problem_status_show_details.setOnClickListener {

@@ -109,15 +109,53 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         return readCharacteristic(uuidService, uuidCharacteristicUUID).getPosition()
     }
 
+    override suspend fun readNextStop(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): DoubleArray {
+        return readCharacteristic(uuidService, uuidCharacteristicUUID).getNextStop()
+    }
+
+    override suspend fun readVehicleStatus(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): ShortArray {
+        return readCharacteristic(uuidService, uuidCharacteristicUUID).getVehicleStatus()
+    }
+
     override suspend fun writePosition(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID,
-        position: DoubleArray
+        position: DoubleArray,
+        z: Float,
+        orientation: Float
     ): BluetoothResult? {
-        val buffer = ByteBuffer.allocate(24)
+        val buffer = ByteBuffer.allocate(20)
         buffer.putDouble(position[0])
         buffer.putDouble(position[1])
-        buffer.putDouble(position[2])
+
+        val fArray = ByteArray(4)
+        ByteBuffer.wrap(fArray).putFloat(z)
+
+        buffer.put(fArray, 0, 2)
+
+        ByteBuffer.wrap(fArray).putFloat(orientation)
+        buffer.put(fArray, 0, 2)
+
+        //buffer.putFloat(z)
+        //buffer.putFloat(orientation)
+        return writeCharacteristic(uuidService, uuidCharacteristicUUID, buffer.array())
+    }
+
+    override suspend fun writeDeliveryStatus(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID,
+        paketID: Int,
+        deliveryStatus: Short
+    ): BluetoothResult? {
+        val buffer = ByteBuffer.allocate(5)
+        buffer.putInt(paketID)
+        buffer.putShort(deliveryStatus)
         return writeCharacteristic(uuidService, uuidCharacteristicUUID, buffer.array())
     }
 
@@ -138,12 +176,28 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         }
     }
 
+    override fun getShortNotification(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): Flow<Short?> {
+        setCharacteristicNotification(uuidService, uuidCharacteristicUUID)
+        return getSubscription(uuidCharacteristicUUID).map { it.getShort() }
+    }
+
     override fun getDoubleArrayNotification(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
     ): Flow<DoubleArray> {
         setCharacteristicNotification(uuidService, uuidCharacteristicUUID)
         return getSubscription(uuidCharacteristicUUID).map { it.getPosition() }
+    }
+
+    override fun getVehicleStatusNotification(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): Flow<ShortArray> {
+        setCharacteristicNotification(uuidService, uuidCharacteristicUUID)
+        return getSubscription(uuidCharacteristicUUID).map { it.getVehicleStatus() }
     }
 
     override fun getStringNotification(
@@ -196,6 +250,17 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         writeCharacteristic(uuidService, uuidCharacteristicUUID, ByteArray(1, { value }))
     }
 
+    override suspend fun writeShortArray(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID,
+        array: ShortArray?
+    ) {
+        val buffer = ByteBuffer.allocate(4)
+        buffer.putShort(array!![0])
+        buffer.putShort(array!![1])
+        writeCharacteristic(uuidService, uuidCharacteristicUUID, buffer.array())
+    }
+
     override suspend fun writeShort(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID,
@@ -218,15 +283,15 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
     }
 
     private suspend fun waitForResult(uuid: UUID): BluetoothResult {
-        val subsciption = channel.openSubscription()
+        val subscription = channel.openSubscription()
         val result = withTimeoutOrNull(TimeUnit.SECONDS.toMillis(TIMEOUT)) {
-            var bluetoothResult: BluetoothResult? = subsciption.receive()
+            var bluetoothResult: BluetoothResult? = subscription.receive()
             while (bluetoothResult == null || bluetoothResult.uuid != uuid) {
-                bluetoothResult = subsciption.receive()
+                bluetoothResult = subscription.receive()
             }
             bluetoothResult
         }
-        subsciption.cancel()
+        subscription.cancel()
         return result ?: BluetoothResult(uuid = uuid, value = null, status = 0)
     }
 
