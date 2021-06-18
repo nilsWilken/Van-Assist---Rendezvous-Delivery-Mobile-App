@@ -9,7 +9,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withTimeoutOrNull
 import java.nio.ByteBuffer
+import java.sql.Connection
 import java.util.*
+import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 
 private const val DEVICE_NAME = "VanAssist"
@@ -21,10 +23,12 @@ sealed class ConnectionStatus(val description : String) {
 
 }
 
+data class GattCallWOCharacteristic(val type: String, val uuidService: UUID, val uuidCharacteristic: UUID, val value: ByteArray?)
+
 @ExperimentalCoroutinesApi
 class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService {
 
-    private val TIMEOUT: Long = 2
+    private val TIMEOUT: Long = 20
 
     private val charset = Charsets.UTF_8
 
@@ -33,6 +37,8 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
     private var bluetoothGattCallback : ComboxGattCallback? = null
 
     private val channel = BroadcastChannel<BluetoothResult>(Channel.BUFFERED)
+
+    private var tmpQueue = ArrayBlockingQueue<GattCallWOCharacteristic>(20)
 
     override val connectionStatus : StateFlow<ConnectionStatus>
         get() =  _connectionStatus
@@ -59,11 +65,12 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
     }
 
     override fun connect(): StateFlow<ConnectionStatus> {
-        bluetoothGattCallback = ComboxGattCallback(channel, _connectionStatus).apply {
+        bluetoothGattCallback = ComboxGattCallback(channel, _connectionStatus, this).apply {
             val c = BluetoothConnection(context, this)
             c.scanForDevice(DEVICE_NAME, true)
             bluetoothConnection = c
         }
+        Log.i("BluetoothService", connectionStatus.value.description.toString())
         return connectionStatus
     }
 
@@ -109,6 +116,13 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         return readCharacteristic(uuidService, uuidCharacteristicUUID).getPosition()
     }
 
+    override suspend fun readTargetPosition(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): DoubleArray {
+        return readCharacteristic(uuidService, uuidCharacteristicUUID).getTargetPosition()
+    }
+
     override suspend fun readNextStop(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
@@ -127,19 +141,19 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         uuidService: UUID,
         uuidCharacteristicUUID: UUID,
         position: DoubleArray,
-        z: Float,
-        orientation: Float
+        z: Short,
+        orientation: Short
     ): BluetoothResult? {
         val buffer = ByteBuffer.allocate(20)
         buffer.putDouble(position[0])
         buffer.putDouble(position[1])
 
-        val fArray = ByteArray(4)
-        ByteBuffer.wrap(fArray).putFloat(z)
+        val fArray = ByteArray(2)
+        ByteBuffer.wrap(fArray).putShort(z)
 
         buffer.put(fArray, 0, 2)
 
-        ByteBuffer.wrap(fArray).putFloat(orientation)
+        ByteBuffer.wrap(fArray).putShort(orientation)
         buffer.put(fArray, 0, 2)
 
         //buffer.putFloat(z)
@@ -192,6 +206,14 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         return getSubscription(uuidCharacteristicUUID).map { it.getPosition() }
     }
 
+    override fun getTargetPositionNotification(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): Flow<DoubleArray> {
+        setCharacteristicNotification(uuidService, uuidCharacteristicUUID)
+        return getSubscription(uuidCharacteristicUUID).map { it.getTargetPosition() }
+    }
+
     override fun getVehicleStatusNotification(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
@@ -212,10 +234,28 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
     ) {
-        getCharacterisic(
+        /*getCharacterisic(
             uuidService,
             uuidCharacteristicUUID
-        )?.apply { bluetoothConnection?.setCharacteristicNotification(this) }
+        )?.apply { bluetoothConnection?.setCharacteristicNotification(this) }*/
+
+        val chara: BluetoothGattCharacteristic? = getCharacterisic(
+            uuidService,
+            uuidCharacteristicUUID
+        )
+
+        Log.i("BLEService", "SetCharacteristicNotification called")
+        if(chara == null) {
+            Log.i("BLEService", "Add element to tmp queue")
+            tmpQueue.add(GattCallWOCharacteristic("notification", uuidService, uuidCharacteristicUUID, null))
+        } else {
+            Log.i("BLEService", "Directly called")
+            /*getCharacterisic(
+                uuidService,
+                uuidCharacteristicUUID
+            )?.apply { bluetoothConnection?.setCharacteristicNotification(this) }*/
+            bluetoothConnection?.setCharacteristicNotification(chara)
+        }
     }
 
     override suspend fun writeCharacteristic(
@@ -224,13 +264,23 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         value: ByteArray?
     ): BluetoothResult? {
         Log.i("BLEService", "Write characteristic called!")
-        getCharacterisic(uuidService, uuidCharacteristicUUID)?.apply {
-            this.value = value
-            bluetoothConnection?.writeCharacteristic(this)
-            return waitForResult(this.uuid)
+
+        val chara: BluetoothGattCharacteristic? = getCharacterisic(uuidService, uuidCharacteristicUUID)
+
+        if(chara == null) {
+            tmpQueue.add(GattCallWOCharacteristic("write", uuidService, uuidCharacteristicUUID, value))
+            return waitForResult(uuidCharacteristicUUID)
+        } else {
+            bluetoothConnection?.writeCharacteristic(chara, value)
+            return waitForResult(chara.uuid)
         }
-        Log.i("BLEService", "Write characteristic has an error!")
-        return BluetoothResult(uuidService, null, 0)
+        /*getCharacterisic(uuidService, uuidCharacteristicUUID)?.apply {
+            //this.value = value
+            bluetoothConnection?.writeCharacteristic(this, value)
+            return waitForResult(this.uuid)
+        }*/
+        //Log.i("BLEService", "Write characteristic has an error!")
+        //return BluetoothResult(uuidService, null, 0)
     }
 
 
@@ -299,11 +349,22 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
     ): BluetoothResult {
-        getCharacterisic(uuidService, uuidCharacteristicUUID)?.apply {
+
+        val chara: BluetoothGattCharacteristic? = getCharacterisic(uuidService, uuidCharacteristicUUID)
+
+        if(chara == null) {
+            tmpQueue.add(GattCallWOCharacteristic("read", uuidService, uuidCharacteristicUUID, null))
+            return waitForResult(uuidCharacteristicUUID)
+        } else {
+            bluetoothConnection?.readCharacteristic(chara)
+            return waitForResult(chara.uuid)
+        }
+
+        /*getCharacterisic(uuidService, uuidCharacteristicUUID)?.apply {
             bluetoothConnection?.readCharacteristic(this).run {  }
             return waitForResult(this.uuid)
         }
-        return BluetoothResult(uuidService, null, 0)
+        return BluetoothResult(uuidService, null, 0)*/
     }
 
 
@@ -319,5 +380,43 @@ class BluetoothLeServiceImpl(private val context: Context) : BluetoothLeService 
         return channel.openSubscription().consumeAsFlow().filter {
             it.uuid == uuidCharacteristicUUID
         }
+    }
+
+    fun nextQueueElement(type: String, uuid: UUID?) {
+        bluetoothConnection!!.queryCharacteristic(type, uuid)
+    }
+
+    fun setIsConnected(isConnected: Boolean) {
+        bluetoothConnection!!.setIsConnected(isConnected)
+    }
+
+    fun emptyTmpQueue() {
+        Log.i("BLEService", "tmpQueueSize: " + tmpQueue.size)
+        var notificationCounter = 0
+        for(ele in tmpQueue) {
+            when(ele.type) {
+                "notification" -> {
+                    notificationCounter++
+                    setCharacteristicNotification(ele.uuidService, ele.uuidCharacteristic)
+                }
+                "write" -> {
+                    val characteristic = getCharacterisic(ele.uuidService, ele.uuidCharacteristic)
+                    bluetoothConnection!!.addQueueElement(GattCall("write", characteristic!!, ele.value))
+                }
+                "read" -> {
+                    val characteristic = getCharacterisic(ele.uuidService, ele.uuidCharacteristic)
+                    bluetoothConnection!!.addQueueElement(GattCall("read", characteristic!!, ele.value))
+                }
+            }
+        }
+        tmpQueue.clear()
+        if(notificationCounter == 0) {
+            nextQueueElement("", null)
+        }
+    }
+
+    fun emptyQueues() {
+        tmpQueue.clear()
+        bluetoothConnection?.emptyQueue()
     }
 }

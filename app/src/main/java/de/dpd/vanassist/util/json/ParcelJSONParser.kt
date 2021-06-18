@@ -71,6 +71,7 @@ class ParcelJSONParser: JSONParser() {
             val latitude = data.getString("latitude")
             val longitude = data.getString("longitude")
             val verificationToken = data.getString("verification_token")
+            val parkingArea = data.getString("parkingArea")
 
             return ParcelEntity(
                 id,
@@ -89,7 +90,8 @@ class ParcelJSONParser: JSONParser() {
                 length,
                 latitude,
                 longitude,
-                verificationToken
+                verificationToken,
+                parkingArea
             )
         }
 
@@ -122,6 +124,7 @@ class ParcelJSONParser: JSONParser() {
                 val latitude = parcelJSON.getString("latitude")
                 val longitude = parcelJSON.getString("longitude")
                 val verificationToken = parcelJSON.getString("verification_token")
+                val parkingArea = parcelJSON.getString("parkingArea")
 
                 val parcel = ParcelEntity(
                     id,
@@ -140,7 +143,8 @@ class ParcelJSONParser: JSONParser() {
                     length,
                     latitude,
                     longitude,
-                    verificationToken
+                    verificationToken,
+                    parkingArea
                 )
                 parcelList.add(parcel)
             }
@@ -167,6 +171,7 @@ class ParcelJSONParser: JSONParser() {
             val latitude = parcelJSON.getString("latitude")
             val longitude = parcelJSON.getString("longitude")
             val verificationToken = parcelJSON.getString("verification_token")
+            val parkingArea = parcelJSON.getString("parkingArea")
 
             val parcel = ParcelEntity(
                 id,
@@ -185,7 +190,8 @@ class ParcelJSONParser: JSONParser() {
                 length,
                 latitude,
                 longitude,
-                verificationToken
+                verificationToken,
+                parkingArea
             )
 
             return parcel
@@ -217,6 +223,7 @@ class ParcelJSONParser: JSONParser() {
                 val latitude = parcelJSON.getString("latitude")
                 val longitude = parcelJSON.getString("longitude")
                 val verificationToken = parcelJSON.getString("verification_token")
+                val parkingArea = parcelJSON.getString("parkingArea")
 
                 val parcel = ParcelEntity(
                     id,
@@ -235,7 +242,8 @@ class ParcelJSONParser: JSONParser() {
                     length,
                     latitude,
                     longitude,
-                    verificationToken
+                    verificationToken,
+                    parkingArea
                 )
                 parcelList.add(parcel)
             }

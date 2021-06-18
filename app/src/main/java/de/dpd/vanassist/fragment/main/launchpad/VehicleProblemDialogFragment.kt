@@ -20,8 +20,8 @@ class VehicleProblemDialogFragment : androidx.fragment.app.DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
 
         val builder1 = androidx.appcompat.app.AlertDialog.Builder(requireContext())
-        builder1.setTitle("Vehicle encountered a problem")
-        builder1.setMessage("The vehicle has encountered an unsolvable problem!")
+        builder1.setTitle(R.string.vehicle_problem_encountered)
+        builder1.setMessage(R.string.vehicle_problem_encountered_message)
         builder1.setCancelable(true)
 
         /* Builds the dialog to ask if the courier wants to log out */

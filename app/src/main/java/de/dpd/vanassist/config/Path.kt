@@ -26,6 +26,7 @@ class Path {
         const val PRIVACY = "https://www.vanassist.de/j/privacy"
         const val PARKING_ALL = "/vehicle/parkingArea/all"
         const val PARKING_NEXT = "vehicle/parkingArea/next"
+        const val PARKING_GET_NEXT = "/vehicle/parkingArea/getNext"
         const val CHANGE_LANGUAGE = "/courier/language"
         const val PARCEL_ORDER = "parcel/order"
         const val CURRENT_VAN_LOCATION = "/api/v1/fleet/vehicle/currpos"

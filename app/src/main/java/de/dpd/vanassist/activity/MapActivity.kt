@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import com.google.firebase.auth.FirebaseAuth
 import de.dpd.vanassist.R
@@ -39,6 +40,15 @@ import kotlinx.coroutines.launch
 @Suppress("DEPRECATION")
 class MapActivity : AppCompatActivity() {
     companion object {
+        val scope = MainScope()
+
+        var waitingForBluetoothResult = true
+        var characteristicUUID = ""
+
+        var vehicleStatusFlow = MutableLiveData<ShortArray>(null)
+        var vehiclePositionFlow = MutableLiveData<DoubleArray>(null)
+        var vehicleTargetFlow = MutableLiveData<DoubleArray>(null)
+
         /* Starts the MapActivity
         * -> Can be called from any other activity/fragment */
         fun start(act: AppCompatActivity) {
@@ -46,15 +56,17 @@ class MapActivity : AppCompatActivity() {
             act.startActivity(intent)
             act.finish()
         }
+
+        var currentErrorDisplayed = false
     }
 
     private lateinit var bluetoothLeService: BluetoothLeServiceImpl
     private lateinit var bluetoothLeDeliveryService: BluetoothLeDeliveryService
 
-    private var vehicleStatusFlow: Flow<ShortArray>? = null
-    private var vehiclePositionFlow: Flow<DoubleArray>? = null
-    private var vehicleTargetFlow: Flow<DoubleArray>? = null
-    private var errorMessageFlow: Flow<String>? = null
+    //private var vehicleStatusFlow: Flow<ShortArray>? = null
+    //private var vehiclePositionFlow: Flow<DoubleArray>? = null
+    //private var vehicleTargetFlow: Flow<DoubleArray>? = null
+    //private var errorMessageFlow: Flow<String>? = null
     private var logisticStatusFlow: Flow<Short?>? = null
 
     public override fun onResume() {
@@ -84,6 +96,7 @@ class MapActivity : AppCompatActivity() {
         apiController.getAllParkingLocations()
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -94,72 +107,14 @@ class MapActivity : AppCompatActivity() {
 
 
         if(VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
-            MainScope().launch(Dispatchers.IO) {
-                try {
-                    apiController.bluetoothLogin(true)
 
-                    vehicleStatusFlow = bluetoothLeDeliveryService.getVehicleStatusNotification()
-                    vehiclePositionFlow = bluetoothLeDeliveryService.getVehiclePositionNotification()
-                    vehicleTargetFlow = bluetoothLeDeliveryService.getTargetPositionNotification()
-                    errorMessageFlow = bluetoothLeDeliveryService.getErrorMessageNotification()
-                    logisticStatusFlow = bluetoothLeDeliveryService.getLogisticStatusNotification()
+        }
 
-
-                }catch (e: Exception) {
-                    Toast.createToast("Getting notifications failed!")
-                }
-            }
-
-            MainScope().launch(Dispatchers.IO) {
-                try {
-                    vehicleStatusFlow!!.collect {
-                        VanRepository.shared.updateVanLogisticStatusById(VanAssistConfig.VAN_ID, VehicleJSONParser.parseVehicleStatusFromShort(it[0]))
-                    }
-                }catch (e: Exception) {
-                    Toast.createToast("Collection of vehicle status flow failed!")
-                }
-            }
-
-            MainScope().launch(Dispatchers.IO) {
-                try {
-                    vehiclePositionFlow!!.collect {
-                        VanRepository.shared.updateVanLocationById(VanAssistConfig.VAN_ID, it[0], it[1])
-                    }
-                }catch (e: Exception) {
-                    Toast.createToast("Collection of vehicle position flow failed!")
-                }
-            }
-
-            MainScope().launch(Dispatchers.IO) {
-                try {
-
-                }catch (e: Exception) {
-                    Toast.createToast("Collection of vehicle target flow failed!")
-                }
-            }
-
-            MainScope().launch(Dispatchers.IO) {
-                try {
-                    errorMessageFlow!!.collect {
-                        VanRepository.shared.updateVanProblemMessageById(VanAssistConfig.VAN_ID, it)
-                    }
-                }catch (e: Exception) {
-                    Toast.createToast("Collection of vehicle status flow failed!")
-                }
-            }
-
-            MainScope().launch(Dispatchers.IO) {
-                try {
-                    logisticStatusFlow!!.collect {
-                        VanRepository.shared.updateVanLogisticStatusById(VanAssistConfig.VAN_ID, VehicleJSONParser.parseLogisticStatusFromShort(it!!))
-                    }
-                }catch (e: Exception) {
-                    Toast.createToast("Collection of logistic status flow failed!")
-                }
-            }
-
+        if(VanAssistConfig.USE_DEMO_SCENARIO_DATA || VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
             val vanObserver = Observer<VanEntity> { van ->
-                if(van!!.problemMessage != "") {
+                if(van!!.problemMessage != "" && !MapActivity.currentErrorDisplayed) {
+                    MapActivity.currentErrorDisplayed = true
+
                     val fragmentTransaction = FragmentRepo.mapActivity?.supportFragmentManager?.beginTransaction()
                     val prev = FragmentRepo.mapActivity?.supportFragmentManager?.findFragmentByTag("van_problem")
                     if (prev != null) {
@@ -171,6 +126,24 @@ class MapActivity : AppCompatActivity() {
             }
 
             VanRepository.shared.getVanFlowById(VanAssistConfig.VAN_ID).observe(this, vanObserver)
+
+            val vanPositionObserver = Observer<DoubleArray> { position ->
+                if(position != null) {
+                    VanRepository.shared.updateVanLocationById(VanAssistConfig.VAN_ID, position[0], position[1])
+                }
+            }
+
+            val vanStatusObserver = Observer<ShortArray> { status ->
+                if(status != null) {
+                    VanRepository.shared.updateVanLogisticStatusById(
+                        VanAssistConfig.VAN_ID,
+                        VehicleJSONParser.parseVehicleStatusFromShort(status[0])
+                    )
+                }
+            }
+
+            MapActivity.vehiclePositionFlow.observe(this, vanPositionObserver)
+            MapActivity.vehicleStatusFlow.observe(this, vanStatusObserver)
         }
 
         val firebaseUser = FirebaseAuth.getInstance().currentUser
@@ -194,7 +167,11 @@ class MapActivity : AppCompatActivity() {
                 apiController.getAllParkingLocations()
             }
 
-            apiController.getCurrentVanState()
+            if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+                apiController.getCurrentVanState()
+            } else {
+                apiController.checkConnectionStatus()
+            }
 
             //if (VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
                 //apiController.bluetoothLogin(true)
@@ -259,8 +236,10 @@ class MapActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
-        val apiController = VanAssistAPIController(this, this.applicationContext)
-        apiController.bluetoothLogout()
+        //val apiController = VanAssistAPIController(this, this.applicationContext)
+        //apiController.bluetoothLogout()
+        bluetoothLeService.emptyQueues()
+        bluetoothLeService.disconnect()
 
 
 

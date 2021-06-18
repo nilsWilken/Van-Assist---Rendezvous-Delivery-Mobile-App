@@ -5,6 +5,8 @@ import android.content.Context
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.iid.FirebaseInstanceId
 import de.dpd.vanassist.R
@@ -25,6 +27,7 @@ import de.dpd.vanassist.database.repository.ParkingAreaRepository
 import de.dpd.vanassist.database.repository.VanRepository
 import de.dpd.vanassist.fragment.main.map.MapFragmentOld
 import de.dpd.vanassist.util.FragmentRepo
+import de.dpd.vanassist.util.Vehicle
 import de.dpd.vanassist.util.date.DateParser
 import de.dpd.vanassist.util.json.CourierJSONParser
 import de.dpd.vanassist.util.json.ParcelJSONParser
@@ -33,6 +36,8 @@ import de.dpd.vanassist.util.json.VehicleJSONParser
 import de.dpd.vanassist.util.toast.Toast
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import okhttp3.*
 import org.json.JSONException
 import org.json.JSONObject
@@ -47,29 +52,87 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
 
     private val bluetoothLeService = BluetoothLeServiceImpl.getInstance(context)
     private val bluetoothLeDeliveryService = BluetoothLeDeliveryService.getInstance(bluetoothLeService)
-    private val bleConnectionStatus: StateFlow<ConnectionStatus> = bluetoothLeService.connectionStatus
+    private val bleConnectionStatus = bluetoothLeService.connectionStatus.asLiveData()
 
 
     private lateinit var auth: FirebaseAuth
 
     fun checkConnectionStatus() {
-        if(this.bleConnectionStatus.value.description == ConnectionStatus.NotConnected().description) {
+        /*if(this.bleConnectionStatus.value == null || this.bleConnectionStatus.value!!.description == ConnectionStatus.NotConnected().description) {
             this.bluetoothLeService.connect()
+            Thread.sleep(1000)
+        }*/
+        /*while(!bluetoothLeService.getServicesDiscovered()) {
+            Log.i("APICONTROLLER", this.bleConnectionStatus.value.toString())
+            bluetoothLeService.connect()
+            Thread.sleep(2000)
+        }*/
+
+        main.lifecycleScope.launch(Dispatchers.IO) {
+            bluetoothLeService.connect()
+        }.invokeOnCompletion {
+            startCollectionOfVehiclePosition()
+            startCollectionOfVehicleStatus()
+            Log.i("BLEService", "JobFINISHED")
+        }
+        /*while(this.bleConnectionStatus.value == null || this.bleConnectionStatus.value!!.description == ConnectionStatus.NotConnected().description) {
+            Thread.sleep(1000)
+        }*/
+    }
+
+    fun startCollectionOfVehiclePosition() {
+        main.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                bluetoothLeDeliveryService.getVehiclePositionNotification().map { it }
+                    .collect {
+                        MapActivity.vehiclePositionFlow.postValue(it)
+                    }
+
+            }catch (e: Exception) {
+                Toast.createToast("Collection of vehicle position flow failed!")
+            }
+        }
+    }
+
+    fun startCollectionOfVehicleStatus() {
+        main.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                bluetoothLeDeliveryService.getVehicleStatusNotification().map { it }
+                    .collect {
+                        MapActivity.vehicleStatusFlow.postValue(it)
+                    }
+
+            }catch (e: Exception) {
+                Toast.createToast("Collection of vehicle position flow failed!")
+            }
+        }
+    }
+
+    fun startCollectionOfTargetPosition() {
+        main.lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                bluetoothLeDeliveryService.getTargetPositionNotification().map { it }
+                    .collect {
+                        MapActivity.vehicleTargetFlow.postValue(it)
+                    }
+            }catch(e: Exception) {
+                Toast.createToast("Collection of vehicle target position flow failed!")
+            }
         }
     }
 
     fun bluetoothLogin(enable: Boolean) {
 
         MainScope().launch(Dispatchers.Default) {
-            Log.i("BLEService", bleConnectionStatus.value.description)
+            Log.i("BLEService", bleConnectionStatus.value!!.description)
 
             if(!bluetoothLeService.getServicesDiscovered()) {
                 checkConnectionStatus()
             }
-            while(!bluetoothLeService.getServicesDiscovered()) {
+            /*while(!bluetoothLeService.getServicesDiscovered()) {
                 Thread.sleep(100)
-            }
-            Log.i("BLEService", bleConnectionStatus.value.description)
+            }*/
+            Log.i("BLEService", bleConnectionStatus.value!!.description)
 
             withContext(Dispatchers.Default){bluetoothLeDeliveryService.writeCredentialsUsername("vanassist@hs-offenburg.de")}
             withContext(Dispatchers.Default){bluetoothLeDeliveryService.writeCredentialsPassword("myPasssword2")}
@@ -153,6 +216,10 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
      **/
     private fun loadAndSaveCourierInformation(act: AppCompatActivity, dialog: ProgressDialog?, userName: String) {
         if(!VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+            if(CourierRepository.shared.getAll().size != 0) {
+                CourierRepository.shared.deleteAll()
+            }
+
             val user = FirebaseAuth.getInstance().currentUser
             user?.getIdToken(true)!!
                 .addOnCompleteListener { task ->
@@ -171,7 +238,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                                         CourierRepository.shared.insert(courier)
 
                                         if (CourierRepository.shared.getAll().size == 1) {
-                                            //loadAndSaveAllParcel()
+                                            loadAndSaveAllParcel()
                                             dialog!!.dismiss()
                                             MapActivity.start(act)
                                         }
@@ -189,6 +256,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                 }
         }
         else {
+            CourierRepository.shared.deleteAll()
             val cInstance = CourierEntity(
                 "exampleID",
                 "Christian",
@@ -203,7 +271,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                 false,
                 false,
                 false,
-                "en_US",
+                "de_DE",
                 "exampleVerificationToken"
             )
             CourierRepository.shared.insert(cInstance)
@@ -227,6 +295,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
      **/
     fun loadAndSaveAllParcel() {
         if(!VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+            //UNTIL THE BLUETOOTH INTERFACE WAS NOT TESTED THE PARCELS SHOULD STILL BE LOADED FROM THE REST API
             if (!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
                 val user = FirebaseAuth.getInstance().currentUser
                 user?.getIdToken(true)!!
@@ -300,105 +369,110 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                 val parcel1 = ParcelEntity(
                     "p1",
                     0,
-                    "Max Mustermann",
-                    "01567234529",
+                    "Pro & Fi GmbH",
+                    null,
                     null,
                     0.0,
-                    "Heidelberg",
+                    "69120 Heidelberg",
                     "Berliner Straße 41",
                     null,
                     0,
                     10.0,
-                    24.0,
+                    25.0,
+                    3.0,
                     10.0,
-                    20.0,
                     "0.0",
                     "0.0",
-                    "abc"
+                    "abc",
+                    "H1"
                 )
                 ParcelRepository.shared.insert(parcel1)
 
                 val parcel2 = ParcelEntity(
                     "p2",
                     0,
-                    "Lustig 2 GmbH",
+                    "Start-Up & Go-Pro Gmb",
                     null,
                     null,
                     0.0,
-                    "Heidelberg",
+                    "69120 Heidelberg",
                     "Berliner Straße 41",
                     null,
                     1,
-                    10.0,
-                    24.0,
-                    10.0,
-                    20.0,
+                    5.0,
+                    25.0,
+                    5.0,
+                    25.0,
                     "0.0",
                     "0.0",
-                    "abc"
+                    "abc",
+                    "H1"
                 )
                 ParcelRepository.shared.insert(parcel2)
 
                 val parcel3 = ParcelEntity(
                     "p3",
                     0,
-                    "FireAlarm Inc.",
+                    "FantIdea GmbH & Co. KG",
                     null,
                     null,
                     0.0,
-                    "Heidelberg",
+                    "69120 Heidelberg",
                     "Berliner Straße 41",
                     null,
                     2,
                     10.0,
-                    24.0,
+                    35.0,
                     10.0,
-                    20.0,
+                    35.0,
                     "0.0",
                     "0.0",
-                    "abc"
+                    "abc",
+                    "H1"
                 )
                 ParcelRepository.shared.insert(parcel3)
 
                 val parcel4 = ParcelEntity(
                     "p4",
                     0,
-                    "Heidrun Weber",
+                    "Su-Personal GmbH",
                     null,
                     null,
                     0.0,
-                    "Heidelberg",
+                    "69120 Heidelberg",
                     "Berliner Straße 41",
                     null,
                     3,
-                    10.0,
-                    24.0,
-                    10.0,
+                    5.0,
+                    70.0,
+                    20.0,
                     20.0,
                     "0.0",
                     "0.0",
-                    "abc"
+                    "abc",
+                    "H1"
                 )
                 ParcelRepository.shared.insert(parcel4)
 
                 val parcel5 = ParcelEntity(
                     "p5",
                     0,
-                    "Yoga Becker",
+                    "Schall & Rauch GmbH",
                     null,
                     null,
                     0.0,
-                    "Heidelberg",
+                    "69120 Heidelberg",
                     "Berliner Straße 41",
                     null,
                     4,
-                    10.0,
-                    24.0,
-                    10.0,
-                    20.0,
+                    8.0,
+                    150.0,
+                    35.0,
+                    35.0,
                     "0.0",
                     "0.0",
-                    "abc"
+                    "abc",
+                    "H2"
                 )
                 ParcelRepository.shared.insert(parcel5)
 
@@ -410,90 +484,88 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
     /* Starts the simulation
      * This method needs to be executed by another framework than volley (in our case OkHttp3) since there was an issue with using Volley -> see report) */
     fun startSimulation() {
-        if(!VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
-            if (!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
-                FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { instanceIdResult ->
-                    val fcmToken = instanceIdResult.token
+        if(!VanAssistConfig.USE_DEMO_SCENARIO_DATA && !VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener { instanceIdResult ->
+                val fcmToken = instanceIdResult.token
 
-                    val user = FirebaseAuth.getInstance().currentUser
-                    user?.getIdToken(true)!!
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                val uid = task.result!!.token
-                                if (uid != null) {
+                val user = FirebaseAuth.getInstance().currentUser
+                user?.getIdToken(true)!!
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val uid = task.result!!.token
+                            if (uid != null) {
 
-                                    val courierId = CourierRepository.shared.getCourierId()!!
-                                    val url = Path.BASE_PATH + Path.SIMULATION_START
-                                    val client = OkHttpClient()
-                                    val secondsSinceMidnight = DateParser.getSecondsSinceMidnight().toString()
+                                val courierId = CourierRepository.shared.getCourierId()!!
+                                val url = Path.BASE_PATH + Path.SIMULATION_START
+                                val client = OkHttpClient()
+                                val secondsSinceMidnight = DateParser.getSecondsSinceMidnight().toString()
 
-                                    val head = mutableMapOf<String, String>()
-                                    head.put("uid", uid)
-                                    head.put("courier_id", courierId)
-                                    head.put("seconds_since_midnight", secondsSinceMidnight)
-                                    head.put("fcm_token", fcmToken)
-                                    val headerBuild = Headers.of(head)
+                                val head = mutableMapOf<String, String>()
+                                head.put("uid", uid)
+                                head.put("courier_id", courierId)
+                                head.put("seconds_since_midnight", secondsSinceMidnight)
+                                head.put("fcm_token", fcmToken)
+                                val headerBuild = Headers.of(head)
 
-                                    val request = Request.Builder().url(url).headers(headerBuild).build()
-
+                                val request = Request.Builder().url(url).headers(headerBuild).build()
 
 
-                                    client.newCall(request).enqueue(object : Callback {
-                                        override fun onFailure(call: Call, e: IOException) {
-                                            e.printStackTrace();
-                                        }
 
-                                        @Throws(IOException::class)
-                                        override fun onResponse(call: Call, response: Response) {
-                                            if (response.isSuccessful) {
-                                                if (response != null) {
-                                                    val strResp = response.body()!!.string()
-                                                    try {
-                                                        val jsonObject = JSONObject(strResp)
-                                                        Log.wtf("Test;", strResp)
-                                                        val data = jsonObject.getJSONObject("data")
-                                                        val simulationIsRunning = data.getBoolean("simulation_is_running")
+                                client.newCall(request).enqueue(object : Callback {
+                                    override fun onFailure(call: Call, e: IOException) {
+                                        e.printStackTrace();
+                                    }
 
-                                                        if (simulationIsRunning) {
+                                    @Throws(IOException::class)
+                                    override fun onResponse(call: Call, response: Response) {
+                                        if (response.isSuccessful) {
+                                            if (response != null) {
+                                                val strResp = response.body()!!.string()
+                                                try {
+                                                    val jsonObject = JSONObject(strResp)
+                                                    Log.wtf("Test;", strResp)
+                                                    val data = jsonObject.getJSONObject("data")
+                                                    val simulationIsRunning = data.getBoolean("simulation_is_running")
 
-                                                            FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
-                                                            val mapFragment = MapFragmentOld.newInstance()
-                                                            FragmentRepo.launchPadFragment!!.requireActivity().supportFragmentManager
-                                                                ?.beginTransaction()
-                                                                ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
-                                                                ?.addToBackStack(FragmentTag.MAP)
-                                                                ?.commit()
-                                                        }
+                                                    if (simulationIsRunning) {
 
-                                                    } catch (e: JSONException) {
-                                                        println(e.printStackTrace())
                                                         FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
-                                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
-                                                        e.printStackTrace()
+                                                        val mapFragment = MapFragmentOld.newInstance()
+                                                        FragmentRepo.launchPadFragment!!.requireActivity().supportFragmentManager
+                                                            ?.beginTransaction()
+                                                            ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
+                                                            ?.addToBackStack(FragmentTag.MAP)
+                                                            ?.commit()
                                                     }
-                                                } else {
+
+                                                } catch (e: JSONException) {
+                                                    println(e.printStackTrace())
                                                     FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
                                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
+                                                    e.printStackTrace()
                                                 }
                                             } else {
                                                 FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
                                                 Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
                                             }
+                                        } else {
+                                            FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
+                                            Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_start_simulation))
                                         }
-                                    })
-                                }
+                                    }
+                                })
                             }
                         }
-                }
-            } else {
-                MainScope().launch(Dispatchers.IO) {
+                    }
+            }
+        } else if(VanAssistConfig.USE_BLUETOOTH_INTERFACE) { MainScope().launch(Dispatchers.IO) {
                     try {
                         if (!bluetoothLeService.getServicesDiscovered()) {
                             checkConnectionStatus()
                         }
                         withContext(Dispatchers.IO) { bluetoothLeDeliveryService.startDelivery() }
 
-                        FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
+                        //FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
                         val mapFragment = MapFragmentOld.newInstance()
                         FragmentRepo.launchPadFragment!!.requireActivity().supportFragmentManager
                             ?.beginTransaction()
@@ -501,13 +573,14 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                             ?.addToBackStack(FragmentTag.MAP)
                             ?.commit()
                     } catch (e: Exception) {
+                        Log.e("APIController", e.stackTraceToString())
                         Toast.createToast("Starting delivery failed!")
                     }
                 }
-            }
         } else {
             //TODO: WHAT HAPPENS IN DEMO SCENARIO?
             val mapFragment = MapFragmentOld.newInstance()
+            mapFragment.setShowVanLocationOnCreation()
             FragmentRepo.launchPadFragment!!.requireActivity().supportFragmentManager
                 ?.beginTransaction()
                 ?.replace(R.id.map_activity, mapFragment, FragmentTag.MAP)
@@ -520,37 +593,36 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
     /* Created by Axel Herbstreith
      * Stops the running simulation */
     fun stopSimulation() {
-        if(!VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
-            if (!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
-                val user = FirebaseAuth.getInstance().currentUser
-                user?.getIdToken(true)!!
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            val uid = task.result!!.token
-                            if (uid != null) {
+        if(!VanAssistConfig.USE_DEMO_SCENARIO_DATA && !VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
 
-                                val courierId = CourierRepository.shared.getCourierId()!!
-                                val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
-                                val body = ParcelJSONParser.createRequestEmptyBody()
-                                val path = Path.SIMULATION_STOP
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
+                            val body = ParcelJSONParser.createRequestEmptyBody()
+                            val path = Path.SIMULATION_STOP
 
-                                apiController.put(path, header, body) { response ->
-                                    if (response != null) {
-                                        try {
-                                        } catch (e: JSONException) {
-                                            Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
-                                            e.printStackTrace()
-                                        }
-                                    } else {
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    try {
+                                    } catch (e: JSONException) {
                                         Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
+                                        e.printStackTrace()
                                     }
+                                } else {
+                                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
                                 }
                             }
-                        } else {
-                            Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
                         }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_stop_simulation))
                     }
-            } else {
+                }
+        } else if(VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
                 MainScope().launch(Dispatchers.IO) {
                     try {
                         if (!bluetoothLeService.getServicesDiscovered()) {
@@ -561,7 +633,6 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                         Toast.createToast("Stopping delivery failed!")
                     }
                 }
-            }
         } else {
             //TODO: WHAT HAPPENS WHEN DEMO SCENARIO IS USED?
         }
@@ -642,7 +713,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                                             val jsonObject = JSONObject(strResp)
                                             val parkingAreaResponseObject =
                                                 ParkingAreaJSONParser.parseResponseToParkingAreaObjectSingle(jsonObject)
-
+                                                FragmentRepo.mapFragmentOld!!.changeBottomSheet(1)
                                         } catch (e: JSONException) {
                                             Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
                                             e.printStackTrace()
@@ -657,7 +728,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                             Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
                         }
                     }
-            } else if(VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
+            } else if(VanAssistConfig.USE_BLUETOOTH_INTERFACE && !VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
                 MainScope().launch(Dispatchers.IO) {
                     try {
                         if (!bluetoothLeService.getServicesDiscovered()) {
@@ -670,14 +741,62 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                                 doubleArrayOf(
                                     pA.lat.toDouble(),
                                     pA.long_.toDouble()
-                                ), 0.0f, 0.0f
+                                ), 0, 0
                             )
                         }
+                        FragmentRepo.mapFragmentOld!!.changeBottomSheet(1)
                     } catch (e: Exception) {
                         Toast.createToast("Setting next parking location failed!")
                     }
                 }
+            } else {
+                FragmentRepo.mapFragmentOld!!.changeBottomSheet(1)
             }
+    }
+
+    fun getNextSuggestedParkingLocation() {
+        if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+            FragmentRepo.mapFragmentOld!!.changeBottomSheet(0)
+        }
+    }
+
+    fun getNextParkingArea(): ParkingAreaEntity? {
+        var parkingAreaResponseObject: ParkingAreaEntity? = null
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE && !VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
+                            val path = Path.PARKING_GET_NEXT
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
+
+                            apiController.get(path, params) { response ->
+                                if (response != null) {
+
+                                    val strResp = response.toString()
+                                    try {
+                                        val jsonObject = JSONObject(strResp)
+                                        parkingAreaResponseObject =
+                                            ParkingAreaJSONParser.parseResponseToParkingAreaObjectSingle(jsonObject)
+                                    } catch (e: JSONException) {
+                                        Toast.createToast("Error getting next parking location!")
+                                        e.printStackTrace()
+
+                                    }
+                                } else {
+                                    Toast.createToast("Error getting next parking location!")
+                                }
+                            }
+                        }
+                    } else {
+                        Toast.createToast("Error getting next parking location!")
+                    }
+                }
+        }
+        return parkingAreaResponseObject
     }
 
     fun getCurrentVanState() {
@@ -793,7 +912,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
     }
 
     fun sendDoorStatus(doorStatus: String) {
-        if(!VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+        if(!VanAssistConfig.USE_DEMO_SCENARIO_DATA && !VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
             if (!VanAssistConfig.USE_BLUETOOTH_INTERFACE) {
                 val user = FirebaseAuth.getInstance().currentUser
                 user?.getIdToken(true)!!
@@ -810,7 +929,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                                 apiController.put(path, header, body) { response ->
                                     if (response != null) {
                                         try {
-                                            this.getCurrentVanState()
+                                            getCurrentVanState()
                                         } catch (e: JSONException) {
                                             Toast.createToast("DOOR STATUS MESSAGE FAILED!")
                                             e.printStackTrace()
@@ -824,22 +943,28 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                             Toast.createToast("DOOR STATUS MESSAGE FAILED!")
                         }
                     }
-            } else {
-                MainScope().launch(Dispatchers.IO) {
-                    try {
-                        if (!bluetoothLeService.getServicesDiscovered()) {
-                            checkConnectionStatus()
-                        }
-
-                        if (doorStatus.equals("OPEN")) {
-                            Log.i("APIController", "OPEN DOORS REQUEST")
-                        }
-
-                        //BLUETOOTH SERVICE. SEND VEHICLE STATUS (DOORS_OPEN OR PARKING)
-
-                    } catch (e: Exception) {
-                        Toast.createToast("Getting vehicle status failed!")
+            }
+        } else if(VanAssistConfig.USE_BLUETOOTH_INTERFACE){
+            MainScope().launch(Dispatchers.IO) {
+                try {
+                    if (!bluetoothLeService.getServicesDiscovered()) {
+                        checkConnectionStatus()
                     }
+
+
+                    var status = 0
+
+                    if (doorStatus.equals("CLOSED")) {
+                        status = 3
+                    } else {
+                        status = 5
+                    }
+
+                    bluetoothLeDeliveryService.setVehicleStatus(status.toShort())
+
+
+                } catch (e: Exception) {
+                    Toast.createToast("Getting vehicle status failed!")
                 }
             }
         } else {
@@ -1014,7 +1139,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                                 apiController.put(path, header, body) { response ->
                                     if (response != null) {
                                         try {
-                                            this.getCurrentVanState()
+                                            getCurrentVanState()
                                         } catch (e: JSONException) {
                                             Toast.createToast("PROBLEM SOLVED MESSAGE FAILED!")
                                             e.printStackTrace()
@@ -1046,6 +1171,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                         }
 
                         //BLUETOOTH SERVICE. SEND VEHICLE STATUS (DOORS_OPEN OR PARKING)
+                        VanRepository.shared.updateVanProblemMessageById(VanAssistConfig.VAN_ID, "")
 
                     } catch (e: Exception) {
                         Toast.createToast("Getting vehicle status failed!")
@@ -1054,8 +1180,13 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
 
             }
         } else {
+            MapActivity.currentErrorDisplayed = false
             VanRepository.shared.updateVanProblemMessageById(VanAssistConfig.VAN_ID, "")
-            VanRepository.shared.updateVehicleStatusById(VanAssistConfig.VAN_ID, "PARKING")
+            if(option == 0) {
+                VanRepository.shared.updateVehicleStatusById(VanAssistConfig.VAN_ID, "PARKING")
+            } else if(option == 1) {
+                VanRepository.shared.updateVehicleStatusById(VanAssistConfig.VAN_ID, "AUTO_DRIVING")
+            }
         }
 
     }
@@ -1130,6 +1261,8 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
             val parcel = ParcelRepository.shared.getParcelById(parcelId)
             parcel.state = 1
             ParcelRepository.shared.insert(parcel)
+            FragmentRepo.mapFragmentOld!!.setParcelInformation(main)
+            FragmentRepo.mapFragmentOld!!.updateAdapter()
         }
     }
 
@@ -1197,6 +1330,8 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
             val parcel = ParcelRepository.shared.getParcelById(parcelId)
             parcel.state = 2
             ParcelRepository.shared.insert(parcel)
+            FragmentRepo.mapFragmentOld!!.setParcelInformation(main)
+            FragmentRepo.mapFragmentOld!!.updateAdapter()
         }
     }
 
@@ -1294,13 +1429,13 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
         }
         else {
             VanRepository.shared.updateVehicleStatusById(VanAssistConfig.VAN_ID, "HARDFAULT")
-            VanRepository.shared.updateVanProblemMessageById(VanAssistConfig.VAN_ID, "The van has encountered a serious problem that requires your intervention! Move to the vehicle as quickly as possible!")
+            VanRepository.shared.updateVanProblemMessageById(VanAssistConfig.VAN_ID, main.applicationContext.getString(R.string.vehicle_test_problem_message))
         }
     }
 
     /* Loads all parking areas from backend */
     fun getAllParkingLocations() {
-        if (!VanAssistConfig.USE_BLUETOOTH_INTERFACE && !VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+        if (!VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
             val user = FirebaseAuth.getInstance().currentUser
             user?.getIdToken(true)!!
                 .addOnCompleteListener { task ->
@@ -1474,6 +1609,10 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                     }
                 }
         } else {
+            if(FragmentRepo.mapFragmentOld != null) {
+                FragmentRepo.mapFragmentOld!!.resetParkingAreas()
+                FragmentRepo.mapFragmentOld!!.changeBottomSheet(0)
+            }
             val pList = ParcelRepository.shared.getAll()
 
             for(parcel in pList) {
@@ -2141,40 +2280,44 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
      * @return void
      **/
     fun changeLanguage(languageCode: String) {
-        val user = FirebaseAuth.getInstance().currentUser
-        user?.getIdToken(true)!!
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = task.result!!.token
-                    if (uid != null) {
+        if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE && !VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+            val user = FirebaseAuth.getInstance().currentUser
+            user?.getIdToken(true)!!
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = task.result!!.token
+                        if (uid != null) {
 
-                        val courierId = CourierRepository.shared.getCourierId()!!
-                        val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
-                        val body = CourierJSONParser.createRequestBodyChangeLanguage(languageCode)
-                        val path = Path.CHANGE_LANGUAGE
+                            val courierId = CourierRepository.shared.getCourierId()!!
+                            val header = ParcelJSONParser.createHeaderConfirmDeliveryRequest(uid, courierId)
+                            val body = CourierJSONParser.createRequestBodyChangeLanguage(languageCode)
+                            val path = Path.CHANGE_LANGUAGE
 
-                        apiController.put(path, header, body) { response ->
-                            if (response != null) {
-                                val strResp = response.toString()
+                            apiController.put(path, header, body) { response ->
+                                if (response != null) {
+                                    val strResp = response.toString()
 
-                                try {
-                                    val jsonObject = JSONObject(strResp)
-                                    val newCourier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
-                                    CourierRepository.shared.insert(newCourier)
+                                    try {
+                                        val jsonObject = JSONObject(strResp)
+                                        val newCourier = CourierJSONParser.parseResponseToCourierObject(jsonObject)
+                                        CourierRepository.shared.insert(newCourier)
 
-                                } catch (e: JSONException) {
+                                    } catch (e: JSONException) {
+                                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_change_language))
+                                        e.printStackTrace()
+                                    }
+                                } else {
                                     Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_change_language))
-                                    e.printStackTrace()
                                 }
-                            } else {
-                                Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_change_language))
                             }
                         }
+                    } else {
+                        Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_change_language))
                     }
-                } else {
-                    Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_change_language))
                 }
-            }
+        } else {
+            CourierRepository.shared.updateLanguageCode(languageCode)
+        }
     }
 
 

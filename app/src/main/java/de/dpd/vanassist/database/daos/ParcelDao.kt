@@ -39,4 +39,7 @@ interface ParcelDao {
 
     @Query( "SELECT * FROM Parcel WHERE id == :id")
     fun getParcelById(id: String): ParcelEntity
+
+    @Query( "SELECT * FROM Parcel WHERE parkingArea == :parkingArea")
+    fun getParcelsByParkingAreaName(parkingArea: String): List<ParcelEntity>
 }

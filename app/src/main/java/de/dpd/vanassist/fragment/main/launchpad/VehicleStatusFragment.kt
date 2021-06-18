@@ -37,13 +37,14 @@ class VehicleStatusFragment : Fragment() {
 
             van_doors_value_text_view.text = van!!.doorStatus
             if(van!!.doorStatus == "OPEN") {
-                button_open_close_vehicle.text = "CLOSE VAN"
+                button_open_close_vehicle.text = getString(R.string.close_doors)
             } else {
-                button_open_close_vehicle.text = "OPEN VAN"
+                button_open_close_vehicle.text = getString(R.string.open_doors)
             }
 
             van_logistic_status_value_text_view.text = van!!.logisticStatus
-            van_problem_status_value_text_view.text = van!!.vehicleStatus
+            van_status_value_text_view.text = van!!.vehicleStatus
+            //van_problem_status_value_text_view.text = van!!.
 
             if(van!!.vehicleStatus == "HARDFAULT" || van!!.vehicleStatus == "INTERVENTION" || van!!.vehicleStatus == "PROBLEM") {
                 button_problem_status_show_details.visibility = View.VISIBLE
@@ -71,7 +72,7 @@ class VehicleStatusFragment : Fragment() {
         v.button_test_dialog.setOnClickListener {
             val mapActivity = FragmentRepo.mapActivity
             val apiController = VanAssistAPIController(mapActivity!!, mapActivity.applicationContext)
-            apiController.sendTestProblem("The van has encountered a critical problem and requires your intervention to continue it's mission. Please head to the vehicle as soon as possible!")
+            apiController.sendTestProblem(getString(R.string.vehicle_test_problem_message))
         }
 
         v.button_open_close_vehicle.setOnClickListener {

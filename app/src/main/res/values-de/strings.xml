@@ -42,6 +42,27 @@
     <string name="park_here_title">Hier parken</string>
     <string name="permission_alert">Die App benötigt Schreib- und Standortzugriff. Möchtest du die Zugriffsrechte ändern?</string>
     <string name="parcel_status_reset">Pakete zurücksetzen</string>
+    <string name="next_parcels_overview">Zustellungen am aktuellen Haltepunkt</string>
+    <string name="address">Adresse</string>
+    <string name="next_parcels">Nächste Zustellungen</string>
+
+    <string name="vehicle_status">Fahrzeugstatus</string>
+    <string name="door_status">Türstatus:</string>
+    <string name="open_doors">Fahrzeug öffnen</string>
+    <string name="close_doors">Fahrzeug schließen</string>
+    <string name="logistic_status">Logistikstatus:</string>
+    <string name="problem_status">Problemstatus:</string>
+    <string name="test_alert">Testproblem senden</string>
+    <string name="position">Position:</string>
+    <string name="vehicle_problem_encountered">Fahrzeugfehler erkannt</string>
+    <string name="vehicle_problem_encountered_message">Das Fahrzeug befindet sich in einem Fehlerzustand!</string>
+    <string name="show_details">Details</string>
+    <string name="vehicle_problem_heading">Problemstatus</string>
+    <string name="problem_message">Fehlermeldung:</string>
+    <string name="show_on_map">Auf Karte anzeigen</string>
+    <string name="set_parking_position">Neuen Haltepunkt setzen</string>
+    <string name="continue_mission">Mission fortsetzen</string>
+    <string name="vehicle_test_problem_message">Es wurde ein kritisches Problem innerhalb des Fahrzeugsystems festgestellt: Einer oder mehrere Sensoren sind verschmutzt und müssen manuell gereinigt werden.</string>
 
 
 

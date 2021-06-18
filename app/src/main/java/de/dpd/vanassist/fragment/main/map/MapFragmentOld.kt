@@ -15,10 +15,6 @@ import android.location.Location
 import android.os.Bundle
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 
@@ -30,7 +26,9 @@ import kotlinx.android.synthetic.main.fragment_map_old.view.*
 import de.dpd.vanassist.controls.SwipeButton
 import android.net.Uri
 import android.os.Build
+import android.os.Parcel
 import android.util.Log
+import android.view.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
@@ -79,6 +77,7 @@ import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import com.mapbox.navigation.ui.route.NavigationMapRoute
 import de.dpd.vanassist.activity.MapActivity
+import de.dpd.vanassist.adapters.ParcelBottomSheetAdapter
 //import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher
 //import com.mapbox.services.android.navigation.ui.v5.NavigationLauncherOptions
 //import com.mapbox.services.android.navigation.ui.v5.route.NavigationMapRoute
@@ -105,14 +104,19 @@ import de.dpd.vanassist.util.FragmentRepo
 import de.dpd.vanassist.util.parcel.ParcelUtil
 import de.dpd.vanassist.util.parkingArea.ParkingAreaUtil
 import de.dpd.vanassist.util.toast.Toast
+import kotlinx.android.synthetic.main.bottom_sheet.view.swipe_btn
+import kotlinx.android.synthetic.main.bottom_sheet_v2.view.*
+import kotlinx.android.synthetic.main.parcel_information_card_bottom_sheet.view.*
 
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.lang.Thread.sleep
 import java.lang.reflect.TypeVariable
 
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 var requestSend = false
@@ -122,14 +126,23 @@ var requestSend = false
 class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListener {
 
     /* PARCEL CARD INTERACTION */
+    private var bottomSheetRecView: LinearLayout? = null
+    private var bottomSheetSingleParcel: LinearLayout? = null
     private var bottomSheetLinearLayout: LinearLayout? = null
     private var bottomSheetBehavior: BottomSheetBehavior<LinearLayout>? = null
+    private var disabledCollapse = false
     private var bottomSheetStreetName: TextView? = null
     private var bottomSheetStreetNameAdditionalInformation: TextView? = null
     private var bottomSheetRecipientName: TextView? = null
     private var bottomSheetRecipientNameAdditionalInformation: TextView? = null
     private var bottomSheetPhoneButton: Button? = null
+    private var bottomSheetSwipeButton: SwipeButton? = null
+    private lateinit var parcelAdapter: ParcelBottomSheetAdapter
+    private lateinit var recyclerView: androidx.recyclerview.widget.RecyclerView
     private var currentParcel: ParcelEntity? = null
+    private var bottomSheetState = 0
+    private var parkingLocationCounter = 0
+
     var dialog: ProgressDialog? = null
     private var currentVanPosition: Marker? = null
 
@@ -139,6 +152,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
     /* PARKING AREA INTERACTION */
     private lateinit var parkingAreas: List<ParkingAreaEntity>
     private var selectedParkingArea: Feature? = null
+    var lastParkingArea: ParkingAreaEntity? = null
+    var fSelectedParkingArea: ParkingAreaEntity? = null
     var nextParkingArea : ParkingAreaEntity? = null
     private var markerSelected = false
     var destination = Point.fromLngLat(0.0, 0.0)!!
@@ -160,7 +175,9 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
     companion object {
         var gpsService: Intent? = null
         fun newInstance(): MapFragmentOld {
-            FragmentRepo.mapFragmentOld = MapFragmentOld()
+            if(FragmentRepo.mapFragmentOld == null) {
+                FragmentRepo.mapFragmentOld = MapFragmentOld()
+            }
             return FragmentRepo.mapFragmentOld as MapFragmentOld
         }
     }
@@ -345,7 +362,11 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
         //Create observer that updates the van position when position updates are received
         val vanObserver = Observer<VanEntity> { van ->
-            updateVanLocationWithoutZoom(Point.fromLngLat(van.longitude, van!!.latitude))
+            if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+                updateVanLocation(Point.fromLngLat(van.longitude, van.latitude), MapBoxConfig.MAX_ZOOM - 3)
+            } else {
+                updateVanLocationWithoutZoom(Point.fromLngLat(van.longitude, van!!.latitude))
+            }
         }
 
         VanRepository.shared.getVanFlowById(VanAssistConfig.VAN_ID).observe(viewLifecycleOwner, vanObserver)
@@ -494,7 +515,13 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
         /* Search for best parking area, if no one is found -> use default */
         val nextDeliveryLocation = ParcelRepository.shared.getCurrentParcel()
-        this.nextParkingArea = ParkingAreaUtil.getNearestParkingArea(nextDeliveryLocation)
+
+        if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+            this.nextParkingArea = ParkingAreaUtil.getPredefinedNextParkingArea(this.fSelectedParkingArea!!.name)
+        } else {
+            this.nextParkingArea = ParkingAreaUtil.getNearestParkingArea(nextDeliveryLocation)
+        }
+
         if (this.nextParkingArea == null) {
             this.nextParkingArea = ParkingAreaRepository.shared.getParkingAreaById(ParkingAreaConfig.DEFAULT_PARKING_AREA)
         }
@@ -608,13 +635,33 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
 
             /* Config of bottom sheet aka parcel card */
-            this.bottomSheetStreetName = v.bottom_sheet_street_text_view as TextView
+            this.bottomSheetLinearLayout = v.bottom_sheet_v2
+            this.bottomSheetBehavior = BottomSheetBehavior.from(this.bottomSheetLinearLayout!!)
+
+            this.bottomSheetRecView = v.bottom_sheet_recView_panel
+            this.bottomSheetSingleParcel = v.bottom_sheet_singleParcel_panel
+
+            this.parcelAdapter = ParcelBottomSheetAdapter(this, this.bottomSheetBehavior!!)
+            this.parcelAdapter.setState(0)
+            this.parcelAdapter.setCourier(CourierRepository.shared.getCourier()!!)
+                //this.setParcelInformation(activity as AppCompatActivity)
+
+
+            this.recyclerView = v.bottom_sheet_recycler_view
+            this.recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this.context)
+            this.recyclerView.setHasFixedSize(true)
+            this.recyclerView.adapter = this.parcelAdapter
+
+            this.bottomSheetRecView!!.visibility = View.GONE
+            this.bottomSheetSingleParcel!!.visibility = View.VISIBLE
+
+            this.bottomSheetStreetName = v.bottom_sheet_street_text_view_bSheet_v2 as TextView
             this.bottomSheetStreetNameAdditionalInformation =
-                v.bottom_sheet_street_additional_information_text_view as TextView
-            this.bottomSheetRecipientName = v.bottom_sheet_recipient_name_text_view as TextView
+                v.bottom_sheet_street_additional_information_text_view_bSheet_v2 as TextView
+            this.bottomSheetRecipientName = v.bottom_sheet_recipient_name_text_view_bSheet_v2 as TextView
             this.bottomSheetRecipientNameAdditionalInformation =
-                v.bottom_sheet_recipient_name__additional_information_text_view as TextView
-            this.bottomSheetPhoneButton = v.bottom_sheet_phone_button as Button
+                v.bottom_sheet_recipient_name__additional_information_text_view_bSheet_v2 as TextView
+            this.bottomSheetPhoneButton = v.bottom_sheet_phone_button_bSheet_v2 as Button
 
             val courier = CourierRepository.shared.getCourier()
 
@@ -638,6 +685,52 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     this.bottomSheetPhoneButton?.isEnabled = false
                 }
             }
+
+            val swipeButtonExpandedListener = object : SwipeButton.OnSwipeButtonListener {
+                override fun OnSwipeButtonConfirm(v: View?) {
+                    var currentParcel: ParcelEntity? = null
+                    if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+                        currentParcel = ParcelRepository.shared.getCurrentParcelForParkingArea(lastParkingArea!!.name)
+                    } else {
+                        currentParcel = ParcelRepository.shared.getCurrentParcel()
+                    }
+                    if (currentParcel != null) {
+                        GamificationMode.run(context!!)
+                        DynamicContent.reset()
+                        SizeDependentWaiting.run(FragmentRepo.mapFragmentOld!!)
+                        api.confirmParcelDeliverySuccess(currentParcel!!.id)
+                    }
+                }
+
+                override fun OnSwipeButtonDecline(v: View?) {
+                    var currentParcel: ParcelEntity? = null
+                    if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+                        currentParcel = ParcelRepository.shared.getCurrentParcelForParkingArea(lastParkingArea!!.name)
+                    } else {
+                        currentParcel = ParcelRepository.shared.getCurrentParcel()
+                    }
+                    if (currentParcel != null) {
+                        GamificationMode.run(context!!)
+                        DynamicContent.reset()
+                        SizeDependentWaiting.run(FragmentRepo.mapFragmentOld!!)
+
+                        api.confirmParcelDeliveryFailure(currentParcel!!.id)
+                    }
+                }
+
+                override fun onSwipeButtonMoved(v: View) {
+                    setDisabledCollapes(true)
+                }
+
+                override fun OnSwipeButtonFaded(v: View?) {
+                    //bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_COLLAPSED
+                    FragmentRepo.mapFragmentOld!!.collapseBottomSheet()
+                }
+            }
+
+            this.bottomSheetSwipeButton = v.swipe_btn_bSheet_v2 as SwipeButton
+            this.bottomSheetSwipeButton!!.setSwipeListener(swipeButtonExpandedListener)
+
             /*bottomSheetPhoneButton!!.setOnClickListener {
                 if (currentParcel?.phoneNumber != null) {
                     try {
@@ -649,7 +742,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 }
             }*/
 
-            this.setParcelInformation(activity as AppCompatActivity)
+            //this.setParcelInformation(activity as AppCompatActivity)
+            //this.updateAdapter()
             this.startGPSService()
 
             v.goto_launchpad.setOnClickListener { view ->
@@ -686,18 +780,24 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             }
 
             /* Parcel Card */
-            this.bottomSheetLinearLayout = v.bottom_sheet
-            this.bottomSheetBehavior = BottomSheetBehavior.from(this.bottomSheetLinearLayout!!)
-            /* used for swiping button (do not collapse parcel card while button swipes) */
-            var disabledCollapse = false
+            //this.bottomSheetLinearLayout = v.bottom_sheet
+            /*this.bottomSheetLinearLayout = v.bottom_sheet_v2
+            this.bottomSheetBehavior = BottomSheetBehavior.from(this.bottomSheetLinearLayout!!)*/
 
-            v.topPanel.setOnTouchListener { _, _ ->
+            /* used for swiping button (do not collapse parcel card while button swipes) */
+            //var disabledCollapse = false
+
+            v.topPanel_bShet_v2.setOnTouchListener { _, _ ->
                 disabledCollapse = false
                 false
             }
+            /*v.bottom_sheet_pull_btn_v2.setOnTouchListener {_, _ ->
+                MapFragmentOld.disabledCollapse = false
+                false
+            }*/
 
             /* Set swipe listener to SwipeButton */
-            val swipeButtonExpandedListener = object : SwipeButton.OnSwipeButtonListener {
+           /* val swipeButtonExpandedListener = object : SwipeButton.OnSwipeButtonListener {
                 override fun OnSwipeButtonConfirm(v: View?) {
                     val currentParcel = ParcelRepository.shared.getCurrentParcel()
                     if (currentParcel != null) {
@@ -732,11 +832,11 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 }
             }
 
-            val swipeButton = v.swipe_btn as SwipeButton
-            swipeButton.setSwipeListener(swipeButtonExpandedListener)
+            val swipeButton = v.swipe_btn_v2 as SwipeButton
+            swipeButton.setSwipeListener(swipeButtonExpandedListener)*/
 
             /* Set on touch listener for Pull Line Button */
-            v.bottom_sheet_pull_btn.setOnClickListener {
+            v.bottom_sheet_pull_btn_bSheet_v2.setOnClickListener {
                 if (this.bottomSheetBehavior!!.state == BottomSheetBehavior.STATE_COLLAPSED) {
                     this.bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_EXPANDED
                 }
@@ -745,10 +845,14 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                 }
             }
 
-            this.bottomSheetBehavior!!.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            bottomSheetBehavior!!.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
                 override fun onSlide(bottomSheet: View, slideOffset: Float) {
                     v.fab.animate().scaleX(1 - slideOffset).scaleY(1 - slideOffset)
                         .setDuration(0).start()
+                    if(bottomSheetState == 0) {
+                        v.goto_launchpad.animate().scaleX(1 - slideOffset).scaleY(1 - slideOffset)
+                            .setDuration(0).start()
+                    }
 
                     if (this@MapFragmentOld.isOpen) {
                         collapseFloatingActionButton(v)
@@ -757,9 +861,12 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
                     v.fab.isClickable = newState != BottomSheetBehavior.STATE_EXPANDED
+                    if(bottomSheetState == 0) {
+                        v.goto_launchpad.isClickable = newState != BottomSheetBehavior.STATE_EXPANDED
+                    }
                     if (disabledCollapse) {
                         if (newState == BottomSheetBehavior.STATE_DRAGGING) {
-                            this@MapFragmentOld.bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_EXPANDED
+                            bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_EXPANDED
                         }
                     }
                 }
@@ -848,11 +955,18 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     this.postNextParkingAreaToServer()
                     /* finish the Interaction and set back to initial */
                     this.finishSetNextParkingArea()
+
+                    if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+                        this.changeBottomSheet(1)
+                    }
                 }
             } else {
                 Toast.createToast(getString(R.string.error_no_parcel_available))
             }
         }
+
+        this.changeBottomSheet(this.bottomSheetState)
+        this.resetParkingAreas()
 
         return v
     }
@@ -1286,39 +1400,86 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         this.isOpen = false
     }
 
+    private fun collapseHomeButton(v: View) {
+        v.goto_launchpad.startAnimation(this.fabClose)
+        v.goto_launchpad.isClickable = false
+    }
+
     /* Sets parcel information in the bottom sheet */
     fun setParcelInformation(con:AppCompatActivity) {
-        this.currentParcel = ParcelRepository.shared.getCurrentParcel()
-        if (this.currentParcel?.address == null) {
-            this.bottomSheetStreetName?.text = getString(R.string.no_data_available)
+        if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+            if(this.lastParkingArea == null) {
+                this.lastParkingArea = ParkingAreaRepository.shared.getParkingAreaByName("H1")
+            }
+            this.currentParcel = ParcelRepository.shared.getCurrentParcelForParkingArea(this.lastParkingArea!!.name)
         } else {
-            this.bottomSheetStreetName?.text = this.currentParcel?.address
+            this.currentParcel = ParcelRepository.shared.getCurrentParcel()
         }
 
-        if (this.currentParcel?.additionalAddressInformation == null) {
-            this.bottomSheetStreetNameAdditionalInformation?.text = con.getString(R.string.no_data_available)
-        } else {
-            this.bottomSheetStreetNameAdditionalInformation?.text = this.currentParcel?.additionalAddressInformation
+        if(this.currentParcel == null) {
+            this.changeBottomSheet(0)
+            VanRepository.shared.updateVanLocationById(VanAssistConfig.VAN_ID, this.fSelectedParkingArea!!.lat.toDouble(), this.fSelectedParkingArea!!.long_.toDouble())
         }
 
+        if(this.bottomSheetState == 0) {
+            var parcelList: ArrayList<ParcelEntity>? = null
 
-        if (this.currentParcel?.nameOfRecipient == null) {
-            this.bottomSheetRecipientName?.text = getString(R.string.no_data_available)
+            if(this.fSelectedParkingArea == null) {
+                this.fSelectedParkingArea = ParkingAreaRepository.shared.getParkingAreaByName("H1")
+            }
+
+            parcelList = ArrayList<ParcelEntity>(ParcelRepository.shared.getParcelsByParkingAreaName(this.fSelectedParkingArea!!.name).size)
+            parcelList.addAll(ParcelRepository.shared.getParcelsByParkingAreaName(this.fSelectedParkingArea!!.name))
+            this.parcelAdapter.setState(0)
+
+            this.parcelAdapter.setParcels(parcelList!!)
+            this.recyclerView.adapter!!.notifyDataSetChanged()
         } else {
-            this.bottomSheetRecipientName?.text = this.currentParcel?.nameOfRecipient
+            if (this.currentParcel?.address == null) {
+                this.bottomSheetStreetName?.text = getString(R.string.no_data_available)
+            } else {
+                this.bottomSheetStreetName?.text = this.currentParcel?.address
+            }
+
+            if (this.currentParcel?.additionalAddressInformation == null) {
+                this.bottomSheetStreetNameAdditionalInformation?.text = con.getString(R.string.no_data_available)
+            } else {
+                this.bottomSheetStreetNameAdditionalInformation?.text = this.currentParcel?.additionalAddressInformation
+            }
+
+
+            if (this.currentParcel?.nameOfRecipient == null) {
+                this.bottomSheetRecipientName?.text = getString(R.string.no_data_available)
+            } else {
+                this.bottomSheetRecipientName?.text = this.currentParcel?.nameOfRecipient
+            }
+
+
+            if (this.currentParcel?.additionalRecipientInformation == null) {
+                this.bottomSheetRecipientNameAdditionalInformation?.text = con.getString(R.string.no_data_available)
+            } else {
+                this.bottomSheetRecipientNameAdditionalInformation?.text = this.currentParcel?.additionalRecipientInformation
+            }
+
+            if (this.currentParcel?.phoneNumber != null) {
+                this.bottomSheetPhoneButton?.isEnabled = true
+            } else {
+                this.bottomSheetPhoneButton?.isEnabled = false
+            }
         }
+    }
 
-
-        if (this.currentParcel?.additionalRecipientInformation == null) {
-            this.bottomSheetRecipientNameAdditionalInformation?.text = con.getString(R.string.no_data_available)
-        } else {
-            this.bottomSheetRecipientNameAdditionalInformation?.text = this.currentParcel?.additionalRecipientInformation
-        }
-
-        if (this.currentParcel?.phoneNumber != null) {
-            this.bottomSheetPhoneButton?.isEnabled = true
-        } else {
-            this.bottomSheetPhoneButton?.isEnabled = false
+    fun updateAdapter() {
+        if(this.bottomSheetState == 0) {
+            var parcelList: List<ParcelEntity>? = null
+            if(this.fSelectedParkingArea == null) {
+                this.resetParkingAreas()
+            }
+            parcelList = ArrayList<ParcelEntity>(ParcelRepository.shared.getParcelsByParkingAreaName(this.fSelectedParkingArea!!.name).size)
+            parcelList.addAll(ParcelRepository.shared.getParcelsByParkingAreaName(this.fSelectedParkingArea!!.name))
+            this.parcelAdapter.setState(0)
+            this.parcelAdapter.setParcels(parcelList!!)
+            this.recyclerView.adapter!!.notifyDataSetChanged()
         }
     }
 
@@ -1356,7 +1517,15 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         /* send over parkingArea retrieved from ID from Repo */
         if (this.selectedParkingArea != null) {
             api.postNextParkingLocation(this.selectedParkingArea!!.getStringProperty("PA ID"))
+
+            this.lastParkingArea = ParkingAreaRepository.shared.getParkingAreaById(this.fSelectedParkingArea!!.id)
+
+            this.fSelectedParkingArea = ParkingAreaRepository.shared.getParkingAreaById(this.selectedParkingArea!!.getStringProperty("PA ID"))
+            this.selectedParkingArea = null
         } else {
+            this.lastParkingArea = ParkingAreaRepository.shared.getParkingAreaById(this.fSelectedParkingArea!!.id)
+
+            this.fSelectedParkingArea = ParkingAreaRepository.shared.getParkingAreaById(this.nextParkingArea!!.id)
             api.postNextParkingLocation(this.nextParkingArea!!.id)
         }
     }
@@ -1402,7 +1571,11 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             this.mapBoxMap.removeMarker(m)
         }
         //newCamPos(this.originalCamPos)
-        newAnimatedCamPos(this.getLastKnownLocation(), MapBoxConfig.MAX_ZOOM - 3, 3000)
+        if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+            newAnimatedCamPos(LatLng(this.lastParkingArea!!.lat.toDouble(), this.lastParkingArea!!.long_.toDouble()), MapBoxConfig.MAX_ZOOM - 3, 3000)
+        }else {
+            newAnimatedCamPos(this.getLastKnownLocation(), MapBoxConfig.MAX_ZOOM - 3, 3000)
+        }
     }
 
     /* Finish the interaction with the map (set parkingArea) */
@@ -1445,7 +1618,11 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         fab_parkinglocation.setImageResource(R.drawable.ic_local_parking_black_24dp)
 
         //newCamPos(this.originalCamPos)
-        newAnimatedCamPos(this.getLastKnownLocation(), MapBoxConfig.MAX_ZOOM - 3, 3000)
+        if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+            newAnimatedCamPos(LatLng(this.lastParkingArea!!.lat.toDouble(), this.lastParkingArea!!.long_.toDouble()), MapBoxConfig.MAX_ZOOM - 3, 3000)
+        }else {
+            newAnimatedCamPos(this.getLastKnownLocation(), MapBoxConfig.MAX_ZOOM - 3, 3000)
+        }
     }
 
     /* Created by Jasmin & Raluca
@@ -1535,5 +1712,41 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     fun setShowVanLocationOnCreation() {
         showVanLocationOnCreation = true
+    }
+
+    fun collapseBottomSheet() {
+        this.bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_COLLAPSED
+    }
+
+    fun setDisabledCollapes(disabledCollapse: Boolean) {
+        this.disabledCollapse = disabledCollapse
+        this.bottomSheetBehavior!!.isDraggable = !disabledCollapse
+    }
+
+    fun changeBottomSheet(state: Int) {
+        this.bottomSheetBehavior!!.state = BottomSheetBehavior.STATE_COLLAPSED
+
+        this.bottomSheetState = state
+
+        if(state == 0) {
+            this.updateAdapter()
+            this.bottomSheetSingleParcel!!.visibility = View.GONE
+            this.bottomSheetRecView!!.visibility = View.VISIBLE
+        } else {
+            this.setParcelInformation(activity as AppCompatActivity)
+            this.bottomSheetSingleParcel!!.visibility = View.VISIBLE
+
+            this.bottomSheetSwipeButton!!.removeAllViews()
+            this.bottomSheetSwipeButton!!.init(requireContext())
+
+            this.bottomSheetRecView!!.visibility = View.GONE
+        }
+    }
+
+    fun resetParkingAreas() {
+        this.lastParkingArea = ParkingAreaRepository.shared.getParkingAreaByName("H1")
+        this.nextParkingArea = ParkingAreaRepository.shared.getParkingAreaByName("H1")
+        this.fSelectedParkingArea = ParkingAreaRepository.shared.getParkingAreaByName("H1")
+        VanRepository.shared.updateVanLocationById(VanAssistConfig.VAN_ID, this.nextParkingArea!!.lat.toDouble(), this.nextParkingArea!!.long_.toDouble())
     }
 }

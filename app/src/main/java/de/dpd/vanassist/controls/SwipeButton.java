@@ -53,7 +53,7 @@ public class SwipeButton extends RelativeLayout {
     }
 
     /* Initialize SwipeButton */
-    private void init(Context context) {
+    public void init(Context context) {
         /*  add background of slider */
         RelativeLayout background = new RelativeLayout(context);
 

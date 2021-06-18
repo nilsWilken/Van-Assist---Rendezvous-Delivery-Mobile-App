@@ -1,9 +1,11 @@
 package de.dpd.vanassist.comboxExampleUI
 
 import androidx.lifecycle.*
+import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.combox.BluetoothLeDeliveryService
 import de.dpd.vanassist.combox.BluetoothLeDeviceService
 import de.dpd.vanassist.combox.BluetoothLeServiceImpl
+import de.dpd.vanassist.util.FragmentRepo
 import de.dpd.vanassist.util.json.VehicleJSONParser
 
 
@@ -169,9 +171,9 @@ class BleViewModel internal constructor(
         viewModelScope.launch(Dispatchers.IO) {
             if(notifyVehicleStatusLabel.value == "Subscribe Notification Vehicle Status") {
                 notifyVehicleStatusLabel.postValue("Unsubscribe Notification Vehicle Status")
-                bluetoothLeDeliveryService.getVehicleStatusNotification().map { it.toString() }
+                bluetoothLeDeliveryService.getVehicleStatusNotification().map { it }
                     .collect {
-                        vehicleStatusNotification.postValue(it)
+                        vehicleStatusNotification.postValue(it[0].toString())
                     }
             } else {
                 notifyVehicleStatusLabel.postValue("Subscribe Notification Vehicle Status")
@@ -345,7 +347,11 @@ class BleViewModel internal constructor(
 
     fun refreshVehicleStatus() {
         viewModelScope.launch {
-            vehicleStatus.value = VehicleJSONParser.parseVehicleStatusFromShort(bluetoothLeDeliveryService.getVehicleStatus()[0])
+            val status = bluetoothLeDeliveryService.getVehicleStatus()
+            if (status.size > 0) {
+                vehicleStatus.value =
+                    VehicleJSONParser.parseVehicleStatusFromShort(bluetoothLeDeliveryService.getVehicleStatus()[0])
+            }
         }
     }
 
@@ -366,7 +372,7 @@ class BleViewModel internal constructor(
             val position = DoubleArray(2)
             position[0] = 0.0
             position[1] = 0.0
-            bluetoothLeDeliveryService.driveToPosition(position, 0.0f, 0.0f)
+            bluetoothLeDeliveryService.driveToPosition(position, 0, 0)
         }
     }
 
@@ -446,8 +452,17 @@ class BleViewModel internal constructor(
         }
     }
 
+    fun startDataCollection() {
+        val api = VanAssistAPIController(FragmentRepo.mapActivity!!, FragmentRepo.mapActivity!!.applicationContext)
+        api.checkConnectionStatus()
+
+        //api.startCollectionOfVehiclePosition()
+        //Thread.sleep(1000)
+        //api.startCollectionOfVehicleStatus()
+    }
+
     override fun onCleared() {
-        bluetoothLeService.disconnect()
+        //bluetoothLeService.disconnect()
         super.onCleared()
 
     }

@@ -39,5 +39,7 @@ data class ParcelEntity(
 
     val longitude: String,
 
-    var verificationToken: String
+    var verificationToken: String,
+
+    val parkingArea: String
 )

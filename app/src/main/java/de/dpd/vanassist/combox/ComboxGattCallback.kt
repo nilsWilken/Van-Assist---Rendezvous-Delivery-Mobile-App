@@ -2,6 +2,7 @@ package de.dpd.vanassist.combox
 
 import android.bluetooth.*
 import android.util.Log
+import de.dpd.vanassist.activity.MapActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +17,8 @@ const val GATT_INTERNAL_ERROR = 129
 @ExperimentalCoroutinesApi
 class ComboxGattCallback(
     val channel: BroadcastChannel<BluetoothResult>,
-    private val _connectionStatus: MutableStateFlow<ConnectionStatus>
+    private val _connectionStatus: MutableStateFlow<ConnectionStatus>,
+    private val bleService: BluetoothLeServiceImpl
 ) : BluetoothGattCallback() {
 
     private var services: Map<UUID, BluetoothGattService> = emptyMap()
@@ -41,6 +43,7 @@ class ComboxGattCallback(
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     _connectionStatus.value = ConnectionStatus.Connected()
+                    bleService.setIsConnected(true)
                     gatt.discoverServices()
                     Log.i("BLEService", "Connection status changed (connected)!")
                 }
@@ -48,6 +51,7 @@ class ComboxGattCallback(
                     _connectionStatus.value = ConnectionStatus.NotConnected()
                     gatt.close();
                     this.servicesDiscovered = false
+                    bleService.setIsConnected(false)
                     Log.i("BLEService", "Connection status changed (disconnected)!")
                 }
             }
@@ -66,8 +70,11 @@ class ComboxGattCallback(
             Log.i("BLEService", "Services discovered!")
         }
         when (status) {
-            BluetoothGatt.GATT_SUCCESS ->
+            BluetoothGatt.GATT_SUCCESS -> {
                 services = gatt.services.map { it.uuid to it }.toMap()
+                bleService.emptyTmpQueue()
+                //bleService.nextQueueElement("", null)
+            }
             else -> Log.w(TAG, "onServicesDiscovered received: $status")
         }
     }
@@ -77,7 +84,7 @@ class ComboxGattCallback(
         characteristic: BluetoothGattCharacteristic,
         status: Int
     ) {
-        Log.d("BLEService", "read ${characteristic.uuid}  ${characteristic.value} short:${ByteBuffer.wrap(characteristic.value).short} string::${characteristic.value?.toString(
+        Log.i("BLEService", "read ${characteristic.uuid}  ${characteristic.value} short:${ByteBuffer.wrap(characteristic.value).short} string::${characteristic.value?.toString(
           Charset.defaultCharset()) ?: ""}")
         channel.offer(
             BluetoothResult(
@@ -86,6 +93,7 @@ class ComboxGattCallback(
                 status
             )
         )
+        bleService.nextQueueElement("onRead", characteristic.uuid)
     }
 
     override fun onCharacteristicWrite(
@@ -93,7 +101,7 @@ class ComboxGattCallback(
         characteristic: BluetoothGattCharacteristic,
         status: Int
     ) {
-        Log.d("BLEService", "write ${characteristic.uuid}  ${characteristic.value} short:${ByteBuffer.wrap(characteristic.value).short} string::${characteristic.value?.toString(Charset.defaultCharset()) ?: ""}")
+        Log.i("BLEService", "write ${characteristic.uuid}  ${characteristic.value} short:${ByteBuffer.wrap(characteristic.value).short} string::${characteristic.value?.toString(Charset.defaultCharset()) ?: ""}")
         channel.offer(
             BluetoothResult(
                 characteristic.uuid,
@@ -101,12 +109,18 @@ class ComboxGattCallback(
                 status
             )
         )
+        bleService.nextQueueElement("onWrite", characteristic.uuid)
     }
 
     override fun onCharacteristicChanged(
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic
     ) {
+        Log.i("BLEService", "changed ${characteristic.uuid} ${characteristic.value}")
+        if(MapActivity.waitingForBluetoothResult && characteristic.uuid.toString() == MapActivity.characteristicUUID) {
+            MapActivity.waitingForBluetoothResult = false
+            MapActivity.characteristicUUID = ""
+        }
         channel.offer(
             BluetoothResult(
                 characteristic.uuid,
@@ -114,6 +128,7 @@ class ComboxGattCallback(
                 0
             )
         )
+        bleService.nextQueueElement("onChange", characteristic.uuid)
     }
 
     fun onConnnectionFailure(s: String) {

@@ -33,6 +33,11 @@ interface BluetoothLeService {
         uuidCharacteristicUUID: UUID
     ): DoubleArray
 
+    suspend fun readTargetPosition(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): DoubleArray
+
     suspend fun readNextStop(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
@@ -63,6 +68,11 @@ interface BluetoothLeService {
         uuidCharacteristicUUID: UUID
     ): Flow<DoubleArray>
 
+    fun getTargetPositionNotification(
+        uuidService: UUID,
+        uuidCharacteristicUUID: UUID
+    ): Flow<DoubleArray>
+
     fun getVehicleStatusNotification(
         uuidService: UUID,
         uuidCharacteristicUUID: UUID
@@ -82,8 +92,8 @@ interface BluetoothLeService {
         uuidService: UUID,
         uuidCharacteristicUUID: UUID,
         position: DoubleArray,
-        z: Float,
-        orientation: Float
+        z: Short,
+        orientation: Short
     ): BluetoothResult?
 
     suspend fun writeDeliveryStatus(

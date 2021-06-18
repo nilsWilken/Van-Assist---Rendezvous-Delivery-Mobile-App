@@ -186,7 +186,7 @@ class BluetoothLeDeliveryService(val bluetoothLeService: BluetoothLeService) {
         )
     }
 
-    suspend fun driveToPosition(position: DoubleArray, z: Float, orientation: Float) {
+    suspend fun driveToPosition(position: DoubleArray, z: Short, orientation: Short) {
         bluetoothLeService.writePosition(
             UUID_VANASSIST_VEHICLE_SERVICE,
             UUID_VANASSIST_VEHICLE_SERVICE_DRIVE_TO_POSITION,
@@ -197,14 +197,14 @@ class BluetoothLeDeliveryService(val bluetoothLeService: BluetoothLeService) {
     }
 
     suspend fun getTargetPosition(): DoubleArray {
-        return bluetoothLeService.readPosition(
+        return bluetoothLeService.readTargetPosition(
             UUID_VANASSIST_VEHICLE_SERVICE,
             UUID_VANASSIST_VEHICLE_SERVICE_TARGET_POSITION
         )
     }
 
     fun getTargetPositionNotification(): Flow<DoubleArray> {
-        return bluetoothLeService.getDoubleArrayNotification(
+        return bluetoothLeService.getTargetPositionNotification(
             UUID_VANASSIST_VEHICLE_SERVICE,
             UUID_VANASSIST_VEHICLE_SERVICE_TARGET_POSITION
         )
@@ -225,10 +225,10 @@ class BluetoothLeDeliveryService(val bluetoothLeService: BluetoothLeService) {
     }
 
     suspend fun setVehicleStatus(status: Short) {
-        bluetoothLeService.writeShort(
+        bluetoothLeService.writeByte(
             UUID_VANASSIST_VEHICLE_SERVICE,
             UUID_VANASSIST_VEHICLE_SERVICE_VEHICLE_STATUS,
-            status
+            status.toByte()
         )
     }
 
@@ -290,10 +290,10 @@ class BluetoothLeDeliveryService(val bluetoothLeService: BluetoothLeService) {
     }
 
     suspend fun writeLogisticStatus(status: Short) {
-        bluetoothLeService.writeShort(
+        bluetoothLeService.writeByte(
             UUID_VANASSIST_LOGISTIC_SERVICE,
             UUID_VANASSIST_LOGISTIC_SERVICE_GET_LOGISTIC_STATUS,
-            status
+            status.toByte()
         )
     }
 

@@ -96,6 +96,23 @@
 
                 </LinearLayout>
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:onClick="@{view -> viewModel.startDataCollection() }"
+                        android:text="Start data collection" />
+
+
+                </LinearLayout>
+
 
                 <GridLayout
                     android:layout_width="match_parent"

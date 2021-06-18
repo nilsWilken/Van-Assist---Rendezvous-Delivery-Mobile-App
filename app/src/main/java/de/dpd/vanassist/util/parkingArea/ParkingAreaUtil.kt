@@ -38,5 +38,15 @@ class ParkingAreaUtil {
             }
             return parkingAreaWithShortestDistance
         }
+
+        fun getPredefinedNextParkingArea(lastParkingArea: String): ParkingAreaEntity? {
+            if(lastParkingArea == "H1") {
+                return ParkingAreaRepository.shared.getParkingAreaByName("H2")
+            } else if(lastParkingArea == "H2") {
+                return ParkingAreaRepository.shared.getParkingAreaByName("H3")
+            } else {
+                return ParkingAreaRepository.shared.getParkingAreaByName("H4")
+            }
+        }
     }
 }

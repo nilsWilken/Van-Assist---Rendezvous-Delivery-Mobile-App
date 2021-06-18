@@ -48,4 +48,8 @@ class ParkingAreaRepository {
     fun deleteAll(){
         parkingAreaDao!!.deleteAllFromTable()
     }
+
+    fun getParkingAreaByName(name: String): ParkingAreaEntity {
+        return parkingAreaDao!!.getParkingAreaByName(name)
+    }
 }

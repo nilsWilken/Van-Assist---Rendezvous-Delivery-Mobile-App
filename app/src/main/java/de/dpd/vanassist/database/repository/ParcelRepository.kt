@@ -1,5 +1,6 @@
 package de.dpd.vanassist.database.repository
 
+import android.os.Parcel
 import de.dpd.vanassist.database.daos.ParcelDao
 import de.dpd.vanassist.database.AppDatabase
 import de.dpd.vanassist.database.entity.ParcelEntity
@@ -26,6 +27,21 @@ class ParcelRepository {
     /* Get parcel with lowest delivery position */
     fun getCurrentParcel(): ParcelEntity? {
         val parcelList = getAll()
+        var position = parcelList.size +1
+        var currentParcel: ParcelEntity? = null
+        for(parcel in parcelList) {
+            if(parcel.state == ParcelState.PLANNED) {
+                if(position == parcelList.size +1 || position > parcel.deliveryPosition) {
+                    position = parcel.deliveryPosition
+                    currentParcel = parcel
+                }
+            }
+        }
+        return currentParcel
+    }
+
+    fun getCurrentParcelForParkingArea(parkingArea: String): ParcelEntity? {
+        val parcelList = parcelDao!!.getParcelsByParkingAreaName(parkingArea)
         var position = parcelList.size +1
         var currentParcel: ParcelEntity? = null
         for(parcel in parcelList) {
@@ -93,5 +109,9 @@ class ParcelRepository {
 
     fun getParcelById(id: String): ParcelEntity {
         return parcelDao!!.getParcelById(id)
+    }
+
+    fun getParcelsByParkingAreaName(parkingArea: String): List<ParcelEntity> {
+        return parcelDao!!.getParcelsByParkingAreaName(parkingArea)
     }
 }

@@ -8,7 +8,11 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.Handler
 import android.util.Log
+import de.dpd.vanassist.activity.MapActivity
 import java.util.*
+import java.util.concurrent.ArrayBlockingQueue
+
+data class GattCall(val operation: String, val characteristic: BluetoothGattCharacteristic, val value: ByteArray?)
 
 class BluetoothConnection(val context: Context, val gattCallback: ComboxGattCallback) {
 
@@ -21,6 +25,13 @@ class BluetoothConnection(val context: Context, val gattCallback: ComboxGattCall
     }
 
     private val handler = Handler()
+
+    private var gattBusy = false
+    private var notificationUUID: UUID? = null
+
+    private var queue = ArrayBlockingQueue<GattCall>(20)
+
+    private var isConnected = false
 
     var bluetoothGatt: BluetoothGatt? = null
 
@@ -58,12 +69,58 @@ class BluetoothConnection(val context: Context, val gattCallback: ComboxGattCall
         }
     }
 
-    fun writeCharacteristic(characteristic: BluetoothGattCharacteristic) {
-        bluetoothGatt?.writeCharacteristic(characteristic)
+    fun writeCharacteristic(characteristic: BluetoothGattCharacteristic, value: ByteArray?) {
+        queue.add(GattCall("write", characteristic, value))
+        if(!gattBusy && queue.size == 1) {
+            queryCharacteristic("", null)
+        }
+        //characteristic.value = value
+        //bluetoothGatt?.writeCharacteristic(characteristic)
     }
 
     fun readCharacteristic(characteristic: BluetoothGattCharacteristic) {
-        bluetoothGatt?.readCharacteristic(characteristic)
+        queue.add(GattCall("read", characteristic, null))
+        if(!gattBusy && queue.size == 1) {
+            queryCharacteristic("", null)
+        }
+        //bluetoothGatt?.readCharacteristic(characteristic)
+    }
+
+    fun queryCharacteristic(type: String, uuid: UUID?) {
+
+        if((type == "onChanged" && notificationUUID != uuid) || !isConnected) {
+            return
+        }
+        Log.i("BLEService", "Queue size: " + queue.size)
+        gattBusy = false
+        if(queue.size > 0) {
+            val call = queue.poll()
+            if (call.operation == "read") {
+                gattBusy = true
+                bluetoothGatt?.readCharacteristic(call.characteristic)
+            } else if (call.operation == "write") {
+                call.characteristic.value = call.value
+                gattBusy = true
+                bluetoothGatt?.writeCharacteristic(call.characteristic)
+            } else if (call.operation == "notification") {
+                if (bluetoothGatt == null) {
+                    Log.w("BluetoothLeService", "BluetoothAdapter not initialized")
+                }
+                gattBusy = true
+                bluetoothGatt?.let {
+                    val uuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+                    val descriptor = call.characteristic.getDescriptor(uuid)
+                    descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    it.writeDescriptor(descriptor)
+
+                    val successful = it.setCharacteristicNotification(call.characteristic, true)
+                    notificationUUID = call.characteristic.uuid
+                    if (successful) {
+                        notifications.add(call.characteristic)
+                    }
+                }
+            }
+        }
     }
 
     private val leScanCallback = object : ScanCallback() {
@@ -86,10 +143,15 @@ class BluetoothConnection(val context: Context, val gattCallback: ComboxGattCall
 
     fun setCharacteristicNotification(
         characteristic: BluetoothGattCharacteristic
-    ): Boolean {
+    ) {
+        queue.add(GattCall("notification", characteristic, null))
+        Log.i("BLEService", "Add notification to queue " + queue.size)
+        if(!gattBusy && queue.size == 1) {
+            queryCharacteristic("", null)
+        }
+        /*gattBusy = true
         if (bluetoothGatt == null) {
             Log.w("BluetoothLeService", "BluetoothAdapter not initialized")
-            return false
         }
         bluetoothGatt?.let {
             val uuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
@@ -101,10 +163,9 @@ class BluetoothConnection(val context: Context, val gattCallback: ComboxGattCall
             if (successful) {
                 notifications.add(characteristic)
             }
-            return successful
+            gattBusy = false
         }
-
-        return false
+        gattBusy = false*/
     }
 
     fun close() {
@@ -134,6 +195,18 @@ class BluetoothConnection(val context: Context, val gattCallback: ComboxGattCall
         }
 
         return false
+    }
+
+    fun setIsConnected(isConnected: Boolean) {
+        this.isConnected = isConnected
+    }
+
+    fun addQueueElement(element: GattCall) {
+        queue.add(element)
+    }
+
+    fun emptyQueue() {
+        queue.clear()
     }
 
 

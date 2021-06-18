@@ -113,7 +113,7 @@
             android:backgroundTint="@color/launchpadButtonColor"
             android:drawableTop="@drawable/ic_help_red_70dp"
             android:padding="16dp"
-            android:text="Vehicle Status"
+            android:text="@string/vehicle_status"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toRightOf="@id/settings"
             app:layout_constraintRight_toRightOf="parent"
