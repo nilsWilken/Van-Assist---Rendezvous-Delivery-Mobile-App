@@ -107,6 +107,10 @@ import de.dpd.vanassist.util.toast.Toast
 import kotlinx.android.synthetic.main.bottom_sheet.view.swipe_btn
 import kotlinx.android.synthetic.main.bottom_sheet_v2.view.*
 import kotlinx.android.synthetic.main.parcel_information_card_bottom_sheet.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 import org.json.JSONObject
 import retrofit2.Call
@@ -174,6 +178,7 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
     /* LOCATION SERVICE */
     companion object {
         var gpsService: Intent? = null
+        var gNextParkingArea: ParkingAreaEntity? = null
         fun newInstance(): MapFragmentOld {
             if(FragmentRepo.mapFragmentOld == null) {
                 FragmentRepo.mapFragmentOld = MapFragmentOld()
@@ -519,12 +524,22 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
         if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
             this.nextParkingArea = ParkingAreaUtil.getPredefinedNextParkingArea(this.fSelectedParkingArea!!.name)
         } else {
-            this.nextParkingArea = ParkingAreaUtil.getNearestParkingArea(nextDeliveryLocation)
+            //this.nextParkingArea = ParkingAreaUtil.getNearestParkingArea(nextDeliveryLocation)
+            val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
+
+            Log.i("MapFragment", "old next parking area: " + gNextParkingArea)
+
+            this.nextParkingArea = MapFragmentOld.gNextParkingArea
+            //api.getNextParkingArea()
+
         }
+
 
         if (this.nextParkingArea == null) {
             this.nextParkingArea = ParkingAreaRepository.shared.getParkingAreaById(ParkingAreaConfig.DEFAULT_PARKING_AREA)
         }
+
+        Log.i("MapFragment", "Next parking area: " + this.nextParkingArea)
 
         /* set nextParkingArea as default destination */
         this.destination = Point.fromLngLat(this.nextParkingArea!!.long_.toDouble(), this.nextParkingArea!!.lat.toDouble())
@@ -692,7 +707,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
                         currentParcel = ParcelRepository.shared.getCurrentParcelForParkingArea(lastParkingArea!!.name)
                     } else {
-                        currentParcel = ParcelRepository.shared.getCurrentParcel()
+                        //currentParcel = ParcelRepository.shared.getCurrentParcel()
+                        currentParcel = ParcelRepository.shared.getCurrentParcelForParkingArea(lastParkingArea!!.name)
                     }
                     if (currentParcel != null) {
                         GamificationMode.run(context!!)
@@ -918,13 +934,14 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     Toast.createToast(getString(R.string.parking_area_confirmation))
 
                     /* set Custom vehicle marker */
-                    val icon = IconFactory.getInstance(requireActivity())
+                    /*val icon = IconFactory.getInstance(requireActivity())
                     /* Add the marker to the map */
                     this.mapBoxMap.addMarker(
                         MarkerOptions()
                             .position(LatLng(this.vehicleLocation.latitude(), this.vehicleLocation.longitude()))
                             .icon(icon.fromResource(R.mipmap.ic_custom_dpd_van_cropped))
-                    )
+                    )*/
+                    this.showVanLocation(MapBoxConfig.MAX_ZOOM - 3, false)
 
                    /* this.mapBoxMap.getStyle {
 
@@ -956,9 +973,9 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
                     /* finish the Interaction and set back to initial */
                     this.finishSetNextParkingArea()
 
-                    if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+                    //if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
                         this.changeBottomSheet(1)
-                    }
+                    //}
                 }
             } else {
                 Toast.createToast(getString(R.string.error_no_parcel_available))
@@ -1159,8 +1176,8 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     /* Manages the display of the van location in the map */
     fun showVanLocation(zoom: Double, animation: Boolean) {
-        val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
-        api.getCurrentVanState()
+        //val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
+        //api.getCurrentVanState()
 
         var van = VanRepository.shared.getVanById(VanAssistConfig.VAN_ID)!!
         this.vehicleLocation = Point.fromLngLat(van.longitude, van.latitude)
@@ -1413,12 +1430,23 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
             }
             this.currentParcel = ParcelRepository.shared.getCurrentParcelForParkingArea(this.lastParkingArea!!.name)
         } else {
-            this.currentParcel = ParcelRepository.shared.getCurrentParcel()
+            //this.currentParcel = ParcelRepository.shared.getCurrentParcel()
+            if(this.lastParkingArea == null) {
+                this.lastParkingArea = ParkingAreaRepository.shared.getParkingAreaByName("H1")
+            }
+            Log.i("MapFragment", this.lastParkingArea.toString())
+            this.currentParcel = ParcelRepository.shared.getCurrentParcelForParkingArea(this.lastParkingArea!!.name)
         }
 
         if(this.currentParcel == null) {
             this.changeBottomSheet(0)
-            VanRepository.shared.updateVanLocationById(VanAssistConfig.VAN_ID, this.fSelectedParkingArea!!.lat.toDouble(), this.fSelectedParkingArea!!.long_.toDouble())
+            if(VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+                VanRepository.shared.updateVanLocationById(
+                    VanAssistConfig.VAN_ID,
+                    this.fSelectedParkingArea!!.lat.toDouble(),
+                    this.fSelectedParkingArea!!.long_.toDouble()
+                )
+            }
         }
 
         if(this.bottomSheetState == 0) {
@@ -1745,8 +1773,9 @@ class MapFragmentOld : Fragment(), OnMapReadyCallback, MapboxMap.OnMapClickListe
 
     fun resetParkingAreas() {
         this.lastParkingArea = ParkingAreaRepository.shared.getParkingAreaByName("H1")
-        this.nextParkingArea = ParkingAreaRepository.shared.getParkingAreaByName("H1")
+        this.nextParkingArea = ParkingAreaRepository.shared.getParkingAreaByName("H2")
         this.fSelectedParkingArea = ParkingAreaRepository.shared.getParkingAreaByName("H1")
-        VanRepository.shared.updateVanLocationById(VanAssistConfig.VAN_ID, this.nextParkingArea!!.lat.toDouble(), this.nextParkingArea!!.long_.toDouble())
+        MapFragmentOld.gNextParkingArea = null
+        VanRepository.shared.updateVanLocationById(VanAssistConfig.VAN_ID, this.lastParkingArea!!.lat.toDouble(), this.lastParkingArea!!.long_.toDouble())
     }
 }

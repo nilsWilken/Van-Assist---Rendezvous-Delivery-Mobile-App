@@ -526,7 +526,6 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                                                     Log.wtf("Test;", strResp)
                                                     val data = jsonObject.getJSONObject("data")
                                                     val simulationIsRunning = data.getBoolean("simulation_is_running")
-
                                                     if (simulationIsRunning) {
 
                                                         FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
@@ -537,7 +536,6 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                                                             ?.addToBackStack(FragmentTag.MAP)
                                                             ?.commit()
                                                     }
-
                                                 } catch (e: JSONException) {
                                                     println(e.printStackTrace())
                                                     FragmentRepo.launchPadFragment!!.dialog!!.dismiss()
@@ -710,10 +708,11 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
 
                                         val strResp = response.toString()
                                         try {
-                                            val jsonObject = JSONObject(strResp)
-                                            val parkingAreaResponseObject =
-                                                ParkingAreaJSONParser.parseResponseToParkingAreaObjectSingle(jsonObject)
+                                            //val jsonObject = JSONObject(strResp)
+                                            //val parkingAreaResponseObject =
+                                            //    ParkingAreaJSONParser.parseResponseToParkingAreaObjectSingle(jsonObject)
                                                 FragmentRepo.mapFragmentOld!!.changeBottomSheet(1)
+                                            getNextParkingArea()
                                         } catch (e: JSONException) {
                                             Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_set_next_parking_location))
                                             e.printStackTrace()
@@ -760,7 +759,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
         }
     }
 
-    fun getNextParkingArea(): ParkingAreaEntity? {
+    fun getNextParkingArea() {
         var parkingAreaResponseObject: ParkingAreaEntity? = null
         if(!VanAssistConfig.USE_BLUETOOTH_INTERFACE && !VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
             val user = FirebaseAuth.getInstance().currentUser
@@ -772,19 +771,23 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                             val path = Path.PARKING_GET_NEXT
                             val courierId = CourierRepository.shared.getCourierId()!!
                             val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
-
+                            Log.i("APIController", path)
                             apiController.get(path, params) { response ->
+                                Log.i("APIController", (response == null).toString())
                                 if (response != null) {
 
                                     val strResp = response.toString()
+                                    //Log.i("APIController", response.toString())
                                     try {
                                         val jsonObject = JSONObject(strResp)
                                         parkingAreaResponseObject =
                                             ParkingAreaJSONParser.parseResponseToParkingAreaObjectSingle(jsonObject)
+
+                                        MapFragmentOld.gNextParkingArea = parkingAreaResponseObject
+                                        Log.i("APIController", parkingAreaResponseObject.toString())
                                     } catch (e: JSONException) {
                                         Toast.createToast("Error getting next parking location!")
                                         e.printStackTrace()
-
                                     }
                                 } else {
                                     Toast.createToast("Error getting next parking location!")
@@ -796,7 +799,6 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                     }
                 }
         }
-        return parkingAreaResponseObject
     }
 
     fun getCurrentVanState() {
@@ -846,6 +848,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                                                     currentStateResponseObject.problemStatus,
                                                     currentStateResponseObject.problemMessage
                                                 )
+                                                Log.i("VanAssistAPIController", "Cpos: " + currentStateResponseObject.latitude + " " + currentStateResponseObject.longitude)
                                                 Log.i("VanAssistAPIController", "Cpos: " + van.latitude + " " + van.longitude)
                                             }
                                         } catch (e: JSONException) {
@@ -1221,6 +1224,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                                             val jsonObject = JSONObject(strResp)
                                             val parcel = ParcelJSONParser.parseDeliveryConfirm(jsonObject)
                                             ParcelRepository.shared.insert(parcel)
+                                            Log.i("APIController", "Received parcel. ID: " + parcel.id + " position: " + parcel.deliveryPosition + " state: " + parcel.state)
                                             FragmentRepo.mapFragmentOld?.setParcelInformation(main)
                                             if (FragmentRepo.parcelListFragmentDeliverySuccess != null) {
                                                 FragmentRepo.parcelListFragmentDeliverySuccess!!.updateAdapter()
@@ -1582,6 +1586,10 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                             val params = ParkingAreaJSONParser.createHeaderGetAllParkingAreasRequest(uid, courierId)
                             apiController.get(path, params) { response ->
                                 if (response != null) {
+                                    if(FragmentRepo.mapFragmentOld != null) {
+                                        FragmentRepo.mapFragmentOld!!.resetParkingAreas()
+                                        FragmentRepo.mapFragmentOld!!.changeBottomSheet(0)
+                                    }
 
                                     val strResp = response.toString()
                                     try {
@@ -1590,7 +1598,7 @@ class VanAssistAPIController(activity: AppCompatActivity, context: Context) {
                                         if (json.getInt("status") == 200) {
                                             Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.parcel_status_reset_successful))
                                         }
-
+                                    loadAndSaveAllParcel()
                                     } catch (e: JSONException) {
                                         Log.i("VanAssistAPIController", "Invalid string response received")
                                         Toast.createToast(FragmentRepo.mapActivity!!.getString(R.string.error_request_parcel_state_reset))

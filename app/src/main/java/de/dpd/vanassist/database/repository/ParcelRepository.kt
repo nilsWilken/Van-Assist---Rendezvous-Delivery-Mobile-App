@@ -42,7 +42,7 @@ class ParcelRepository {
 
     fun getCurrentParcelForParkingArea(parkingArea: String): ParcelEntity? {
         val parcelList = parcelDao!!.getParcelsByParkingAreaName(parkingArea)
-        var position = parcelList.size +1
+        var position = Integer.MAX_VALUE
         var currentParcel: ParcelEntity? = null
         for(parcel in parcelList) {
             if(parcel.state == ParcelState.PLANNED) {
