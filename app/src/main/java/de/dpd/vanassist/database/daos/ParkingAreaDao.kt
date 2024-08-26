@@ -32,4 +32,7 @@ interface ParkingAreaDao {
     @Query("SELECT * FROM ParkingArea")
     fun getAll(): List<ParkingAreaEntity>
 
+    @Query( "SELECT * FROM ParkingArea WHERE name == :name")
+    fun getParkingAreaByName(name: String): ParkingAreaEntity
+
 }

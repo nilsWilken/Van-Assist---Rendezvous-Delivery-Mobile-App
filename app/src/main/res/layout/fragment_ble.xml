@@ -1,0 +1,808 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="de.dpd.vanassist.comboxExampleUI.BleViewModel" />
+
+    </data>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        style="@style/AppTheme"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:minHeight="?attr/actionBarSize">
+
+        <com.google.android.material.appbar.AppBarLayout
+            style="@style/AppTheme"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                style="@style/AppTheme"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:elevation="0dp"
+                app:collapseIcon="@drawable/ic_keyboard_arrow_left_red_24dp" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <ScrollView
+            style="@style/AppTheme"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/colorSurface"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="18dp"
+                android:layout_marginTop="18dp"
+                android:layout_marginEnd="18dp"
+                android:layout_marginBottom="18dp"
+                android:orientation="vertical">
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:onClick="@{view -> viewModel.connect() }"
+                        android:text="Connect" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:onClick="@{view -> viewModel.disConnect() }"
+                        android:text="Disconnect" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:onClick="@{view -> viewModel.login(true) }"
+                        android:text="Login" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:onClick="@{view -> viewModel.onSendClick() }"
+                        android:text="Refresh All" />
+
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="2dp"
+                        android:onClick="@{view -> viewModel.startDataCollection() }"
+                        android:text="Start data collection" />
+
+
+                </LinearLayout>
+
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2">
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="18dp"
+                        android:text="Connection Status:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="18dp"
+                        android:text="@{viewModel.connectionStatus.description}" />
+                </GridLayout>
+
+
+                ‚
+
+                <TextView
+                    style="@style/AppTheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="18dp"
+                    android:text="Battery Service, Device Information Service"
+                    android:textSize="18sp" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2">
+
+                    <TextView
+                        android:id="@+id/batteryLevelLabel"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Battery Level:" />
+
+                    <TextView
+                        android:id="@+id/batteryLevelText"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.batteryLevel}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshBatteryLevel() }"
+                        android:text="Refresh Battery Level" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Battery Level Notification:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.batteryLevelNotification}" />
+
+                    <Button
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:layout_marginBottom="10dp"
+                        android:onClick="@{() -> viewModel.notifyBatteryLevel()}"
+                        android:text="@{viewModel.notifyBatteryLevelLabel}" />
+
+                    <TextView
+                        android:id="@+id/manufacturerLabel"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Manufacturer:" />
+
+                    <TextView
+                        android:id="@+id/manufacturerText"
+                        style="@style/AppTheme"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.manufactureNameString}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshManufacturerName() }"
+                        android:text="Refresh Manufacturer" />
+
+                    <TextView
+                        android:id="@+id/modelNumberStringLabel"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Model Number String:" />
+
+                    <TextView
+                        android:id="@+id/modelNumberStringText"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.modelNumberString}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshModelNumber() }"
+                        android:text="Refresh Model Number" />
+
+                    <TextView
+                        android:id="@+id/serialNumberStringLabel"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Serial Number:" />
+
+                    <TextView
+                        android:id="@+id/serialNumberStringText"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.serialNumberString}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshSerialNumber() }"
+                        android:text="Refresh Serial Number" />
+
+                    <TextView
+                        android:id="@+id/hardwareRevisionStringLabel"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hardware Revision:" />
+
+                    <TextView
+                        android:id="@+id/hardwareRevisionStringText"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.hardwareRevisionString}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshHardwareRevision() }"
+                        android:text="Refresh Hardware Revision" />
+
+                    <TextView
+                        android:id="@+id/firmwareRevisionStringLabel"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Firmware Revision:" />
+
+                    <TextView
+                        android:id="@+id/firmwareRevisionStringText"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.firmwareRevisionString}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshFirmwareRevision()}"
+                        android:text="Refresh Firmware Revision" />
+
+                </GridLayout>
+
+                <TextView
+                    style="@style/AppTheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="18dp"
+                    android:text="Configuration Service"
+                    android:textSize="18sp" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2">
+
+                    <TextView
+                        android:id="@+id/serviceEndpointLabel"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Service Endpoint:" />
+
+                    <EditText
+                        android:id="@+id/serviceEndpointText"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@={viewModel.serviceEndpoint}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshServiceEndpoint() }"
+                        android:text="Refresh Service Endpoint" />
+
+                </GridLayout>
+
+                <TextView
+                    style="@style/AppTheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="18dp"
+                    android:text="Delivery Service"
+                    android:textSize="18sp" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2">
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.onStartDeliveryClicked() }"
+                        android:text="Start Delivery" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.onEndDeliveryClicked() }"
+                        android:text="End Delivery" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Delivery Mode:" />
+
+                    <Switch
+                        style="@style/AppTheme"
+                        android:checked="@={viewModel.deliveryMode}"
+                        android:text="manual/automatic" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshDeliveryMode() }"
+                        android:text="Refresh Delivery Mode" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.writeChangedDeliveryMode() }"
+                        android:text="Set adjusted Delivery Mode" />
+
+
+                    <TextView
+                        android:id="@+id/deliveryCountLabel"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Delivery Count:" />
+
+                    <TextView
+                        android:id="@+id/deliveryCountText"
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.deliveryCount}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshDeliveryCount() }"
+                        android:text="Refresh Delivery Count" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Get Next Stop:" />
+
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.nextStop}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshNextStop() }"
+                        android:text="Refresh Next Stop" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.onNextDeliveryListItemClicked() }"
+                        android:text="Next Delivery List Item" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Delivery List Item:" />
+
+                    <EditText
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@={viewModel.deliveryListItemIndex}" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.deliveryListItemNotification}" />
+
+
+                </GridLayout>
+
+                <TextView
+                    style="@style/AppTheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="18dp"
+                    android:text="Vehicle Service"
+                    android:textSize="18sp" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2">
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle Id:" />
+
+                    <EditText
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:lines="1"
+                        android:text="@={viewModel.vehicleId}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshVehicleID() }"
+                        android:text="Refresh Vehicle ID" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Access Control:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.accessControl}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshAccessControl() }"
+                        android:text="Refresh Access Control" />
+
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle Position:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.vehiclePosition}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshVehiclePosition() }"
+                        android:text="Refresh Vehicle Position" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle Position Notifcation:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.vehiclePositionNotifcation}" />
+
+                    <Button
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:layout_marginBottom="10dp"
+                        android:onClick="@{() -> viewModel.notifyVehiclePosition()}"
+                        android:text="@{viewModel.notifyVehiclePositionLabel}" />
+
+                    />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle Drive To Example Position:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.exampleDriveToPositionLabel}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.writeExampleDriveToPosition() }"
+                        android:text="Drive To Example Position" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle Target Position:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.vehicleTargetPosition}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshVehicleTargetPosition() }"
+                        android:text="Refresh Target Position" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle Target Position Notifcation:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.vehicleTargetPositionNotification}" />
+
+                    <Button
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:layout_marginBottom="10dp"
+                        android:onClick="@{() -> viewModel.notifyVehicleTargetPosition()}"
+                        android:text="@{viewModel.notifyVehicleTargetPositionLabel}" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle Status:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.vehicleStatus}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshVehicleStatus() }"
+                        android:text="Refresh Vehicle Status" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle Status Notifcation:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.vehicleStatusNotification}" />
+
+                    <Button
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:layout_marginBottom="10dp"
+                        android:onClick="@{() -> viewModel.notifyVehicleStatus()}"
+                        android:text="@{viewModel.notifyVehicleStatusLabel}" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle Send Example Status:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.exampleSendVehicleStatusLabel}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.writeExampleVehicleStatus() }"
+                        android:text="Send Example Vehicle Status" />
+
+                </GridLayout>
+
+                <TextView
+                    style="@style/AppTheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="18dp"
+                    android:text="Status Information Service"
+                    android:textSize="18sp" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2">
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Primary Connection Status:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.primaryConnectionStatus}" />
+
+                    <com.google.android.material.button.MaterialButton
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:onClick="@{view -> viewModel.refreshPrimaryConnectionStatus() }"
+                        android:text="Refresh Primary Connection Status" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Secondary Connection Status:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.secondaryConnectionStatus}" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Service Connection Status:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.serviceConnectionStatus}" />
+                </GridLayout>
+
+
+                <TextView
+                    style="@style/AppTheme"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="18dp"
+                    android:text="Status and Error Service"
+                    android:textSize="18sp" />
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2">
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Error Message Notifcation:" />
+
+                    <TextView
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{viewModel.errorMessageNotification}" />
+
+                    <Button
+                        style="@style/AppTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_columnSpan="2"
+                        android:layout_marginBottom="10dp"
+                        android:onClick="@{() -> viewModel.notifyErrorMessage()}"
+                        android:text="@{viewModel.notifyErrorMessageLabel}" />
+
+
+                </GridLayout>
+
+
+            </LinearLayout>
+        </ScrollView>
+
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

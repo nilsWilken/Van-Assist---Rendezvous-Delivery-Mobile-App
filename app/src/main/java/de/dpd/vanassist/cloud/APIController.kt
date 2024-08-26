@@ -7,6 +7,8 @@ import org.json.JSONObject
  * Inspired by https://www.varvet.com/blog/kotlin-with-volley/ */
 class APIController constructor(serviceInjection: ServiceInterface): ServiceInterface {
 
+    private val service: ServiceInterface = serviceInjection
+
     override fun put(path: String, header: JSONObject, body:JSONObject, completionHandler: (response: JSONObject?) -> Unit) {
         service.put(path, header, body, completionHandler)
     }
@@ -18,8 +20,6 @@ class APIController constructor(serviceInjection: ServiceInterface): ServiceInte
     override fun get(path: String, header: JSONObject, completionHandler: (response: JSONObject?) -> Unit) {
         service.get(path, header, completionHandler)
     }
-
-    private val service: ServiceInterface = serviceInjection
 
     override fun post(path: String, header: JSONObject, body:JSONObject, completionHandler: (response: JSONObject?) -> Unit) {
         service.post(path, header, body, completionHandler)

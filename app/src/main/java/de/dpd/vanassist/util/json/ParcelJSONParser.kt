@@ -71,6 +71,7 @@ class ParcelJSONParser: JSONParser() {
             val latitude = data.getString("latitude")
             val longitude = data.getString("longitude")
             val verificationToken = data.getString("verification_token")
+            val parkingArea = data.getString("parkingArea")
 
             return ParcelEntity(
                 id,
@@ -89,7 +90,8 @@ class ParcelJSONParser: JSONParser() {
                 length,
                 latitude,
                 longitude,
-                verificationToken
+                verificationToken,
+                parkingArea
             )
         }
 
@@ -122,6 +124,7 @@ class ParcelJSONParser: JSONParser() {
                 val latitude = parcelJSON.getString("latitude")
                 val longitude = parcelJSON.getString("longitude")
                 val verificationToken = parcelJSON.getString("verification_token")
+                val parkingArea = parcelJSON.getString("parkingArea")
 
                 val parcel = ParcelEntity(
                     id,
@@ -140,14 +143,59 @@ class ParcelJSONParser: JSONParser() {
                     length,
                     latitude,
                     longitude,
-                    verificationToken
+                    verificationToken,
+                    parkingArea
                 )
                 parcelList.add(parcel)
             }
             return ParcelListResponseObject(parcelList, parcelListVerificationToken)
         }
 
+        fun parseBluetoothParcelResponse(response: JSONObject): ParcelEntity {
+            val parcelJSON = response.getJSONObject("parcel")
 
+            val id = parcelJSON.getString("id")
+            val state = parcelJSON.getInt("state")
+            val phoneNumber = TypeParser.optString(parcelJSON,"phone_number")
+            val nameOfRecipient = parcelJSON.getString("name_of_recipient")
+            val additionalRecipientInformation = TypeParser.optString(parcelJSON,"additional_recipient_information")
+            val floor = parcelJSON.getDouble("floor")
+            val address = parcelJSON.getString("address")
+            val city = parcelJSON.getString("city")
+            val additionalAddressInformation = TypeParser.optString(parcelJSON,"additional_address_information")
+            val deliveryPosition = parcelJSON.getInt("delivery_position")
+            val weight = parcelJSON.getDouble("weight")
+            val width = parcelJSON.getDouble("width")
+            val height = parcelJSON.getDouble("height")
+            val length = parcelJSON.getDouble("length")
+            val latitude = parcelJSON.getString("latitude")
+            val longitude = parcelJSON.getString("longitude")
+            val verificationToken = parcelJSON.getString("verification_token")
+            val parkingArea = parcelJSON.getString("parkingArea")
+
+            val parcel = ParcelEntity(
+                id,
+                state,
+                nameOfRecipient,
+                phoneNumber,
+                additionalRecipientInformation,
+                floor,
+                city,
+                address,
+                additionalAddressInformation,
+                deliveryPosition,
+                weight,
+                width,
+                height,
+                length,
+                latitude,
+                longitude,
+                verificationToken,
+                parkingArea
+            )
+
+            return parcel
+        }
 
         fun parseResponseToParcelListWithoutVerificationToken(response: JSONObject): ArrayList<ParcelEntity> {
             val status = response.getInt("status")
@@ -175,6 +223,7 @@ class ParcelJSONParser: JSONParser() {
                 val latitude = parcelJSON.getString("latitude")
                 val longitude = parcelJSON.getString("longitude")
                 val verificationToken = parcelJSON.getString("verification_token")
+                val parkingArea = parcelJSON.getString("parkingArea")
 
                 val parcel = ParcelEntity(
                     id,
@@ -193,7 +242,8 @@ class ParcelJSONParser: JSONParser() {
                     length,
                     latitude,
                     longitude,
-                    verificationToken
+                    verificationToken,
+                    parkingArea
                 )
                 parcelList.add(parcel)
             }

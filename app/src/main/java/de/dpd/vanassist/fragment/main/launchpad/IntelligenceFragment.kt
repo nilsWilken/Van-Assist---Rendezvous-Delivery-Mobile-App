@@ -1,4 +1,4 @@
-package de.dpd.vanassist.fragment.main
+package de.dpd.vanassist.fragment.main.launchpad
 
 import android.graphics.Color
 import android.os.Bundle
@@ -32,7 +32,7 @@ class IntelligenceFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val v = inflater.inflate(R.layout.fragment_intelligence, container, false)
 
-        api = VanAssistAPIController(activity!! as AppCompatActivity)
+        api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
         timeDependentDarkmode = TimeIntentReceiver(FragmentRepo.mapActivity as AppCompatActivity)
 
         val courier = CourierRepository.shared.getCourier()!!
@@ -68,7 +68,7 @@ class IntelligenceFragment : Fragment() {
                     timeDependentDarkmode!!.cancelAlarmService()
                     val themeSwap =  timeDependentDarkmode!!.setDarkModeTimes()
                     if (themeSwap){
-                        val builder1 = AlertDialog.Builder(context!!)
+                        val builder1 = AlertDialog.Builder(requireContext())
                         builder1.setTitle(getString(R.string.ai_timeenableddarkmodeTitle))
                         builder1.setMessage(getString(R.string.ai_timeenableddarkmode_message))
                         builder1.setCancelable(true)

@@ -10,7 +10,7 @@
     <!--</style>-->
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar.Bridge">
         <item name="colorPrimary">@color/logoRed</item>
         <item name="colorPrimaryDark">@color/logoGrey</item>
         <item name="colorAccent">@color/logoRed</item>

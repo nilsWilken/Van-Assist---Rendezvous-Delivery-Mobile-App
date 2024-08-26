@@ -1,10 +1,9 @@
-package de.dpd.vanassist.fragment.main
+package de.dpd.vanassist.fragment.main.launchpad
 
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
-import androidx.fragment.app.DialogFragment
 import de.dpd.vanassist.R
 
 /**
@@ -26,7 +25,7 @@ class ChangeUsernameDialogFragment : androidx.fragment.app.DialogFragment() {
                     })
                 .setNegativeButton(getString(R.string.cancel),
                     DialogInterface.OnClickListener { dialog, id ->
-                        getDialog().cancel()
+                        getDialog()?.cancel()
                     })
             builder.create()
         } ?: throw IllegalStateException("Activity cannot be null")

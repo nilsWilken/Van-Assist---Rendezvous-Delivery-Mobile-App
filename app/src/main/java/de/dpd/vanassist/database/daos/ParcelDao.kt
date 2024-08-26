@@ -33,4 +33,13 @@ interface ParcelDao {
     /* Get all parcel with certain state */
     @Query("SELECT * FROM Parcel WHERE state == :state")
     fun getParcelsByState(state: Int) : List<ParcelEntity>
+
+    @Query( "SELECT * FROM Parcel WHERE deliveryPosition == :deliveryPosition")
+    fun getParcelByDeliveryPosition(deliveryPosition: Int): ParcelEntity
+
+    @Query( "SELECT * FROM Parcel WHERE id == :id")
+    fun getParcelById(id: String): ParcelEntity
+
+    @Query( "SELECT * FROM Parcel WHERE parkingArea == :parkingArea")
+    fun getParcelsByParkingAreaName(parkingArea: String): List<ParcelEntity>
 }

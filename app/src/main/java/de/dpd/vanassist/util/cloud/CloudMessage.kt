@@ -9,5 +9,9 @@ class CloudMessage {
         const val CURRENT_VAN_LOCATION = "current_van_location"
         const val LATITUDE = "latitude"
         const val LONGITUDE = "longitude"
+        const val VAN_PROBLEM = "van_problem"
+        const val LOGISTIC_STATUS = "logistic_status"
+        const val DOOR_STATUS = "door_status"
+        const val VAN_STATE = "van_state"
     }
 }

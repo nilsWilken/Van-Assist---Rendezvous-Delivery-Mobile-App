@@ -6,7 +6,7 @@ import androidx.annotation.RequiresApi
 import android.util.Log
 import com.mapbox.android.core.location.LocationEngineCallback
 import com.mapbox.android.core.location.LocationEngineResult
-import de.dpd.vanassist.fragment.main.MapFragmentOld
+import de.dpd.vanassist.fragment.main.map.MapFragmentOld
 import java.lang.Exception
 
 class LocationListeningCallback (fragmentOld: MapFragmentOld) :

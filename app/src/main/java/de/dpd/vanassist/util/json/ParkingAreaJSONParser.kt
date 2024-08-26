@@ -69,7 +69,7 @@ class ParkingAreaJSONParser: JSONParser() {
         fun parseResponseToParkingAreaObjectSingle(response: JSONObject): ParkingAreaEntity {
             val status = response.get("status")
             val message = TypeParser.optString(response, "message")
-            val data = response.getJSONObject("data")
+            val data = response.getJSONObject("data").getJSONObject("next_parking_area")
 
             val parkingAreaId = data.getString("id")
             val name = TypeParser.optString(data, "name")

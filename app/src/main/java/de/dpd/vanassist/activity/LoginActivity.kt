@@ -35,7 +35,7 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        startLogInFragment()
+        this.startLogInFragment()
     }
 
     /* Starts the LoginFragment */

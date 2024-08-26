@@ -1,4 +1,4 @@
-package de.dpd.vanassist.fragment.main
+package de.dpd.vanassist.fragment.main.launchpad
 
 import de.dpd.vanassist.R
 import de.dpd.vanassist.adapters.ParcelInformationAdapter
@@ -15,7 +15,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.ItemTouchHelper
-import android.util.Log
 import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.database.repository.CourierRepository
 import de.dpd.vanassist.util.FragmentRepo
@@ -98,7 +97,7 @@ class ParcelListFragment: androidx.fragment.app.Fragment() {
 
     fun changeParcelOrder(parcelId:String, newPosition:Int) {
 
-        VanAssistAPIController(activity as AppCompatActivity).updateParcelPosition(parcelId, newPosition)
+        VanAssistAPIController(activity as AppCompatActivity, requireContext()).updateParcelPosition(parcelId, newPosition)
     }
 
 

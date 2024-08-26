@@ -18,6 +18,7 @@ import android.view.animation.Animation
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.ScaleAnimation
 import android.view.animation.DecelerateInterpolator
+import de.dpd.vanassist.fragment.main.launchpad.ParcelListFragment
 import de.dpd.vanassist.util.FragmentRepo
 import de.dpd.vanassist.util.parcel.ParcelState
 
@@ -68,7 +69,7 @@ class TabbedFragment : Fragment() {
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
 
-        this.parcelAdapter = PagerAdapter(fragmentManager!!)
+        this.parcelAdapter = PagerAdapter(parentFragmentManager)
         this.viewPager = v.pager
         this.viewPager.adapter = this.parcelAdapter
 
@@ -87,12 +88,12 @@ class TabbedFragment : Fragment() {
             return tabTitles[position]
         }
 
-        override fun getItem(position: Int): Fragment? {
+        override fun getItem(position: Int): Fragment {
 
             return when (position) {
                 0 -> delivered
                 1 -> notDelivered
-                else -> null
+                else -> notDelivered
             }
         }
 

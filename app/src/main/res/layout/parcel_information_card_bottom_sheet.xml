@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parcel_information_card_bottom_sheet"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_dialog"
+    android:orientation="vertical"
+    app:behavior_hideable="false"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="141dp"
+        tools:layout_editor_absoluteY="120dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/next_delivery_address"
+            android:textSize="15sp" />
+
+        <HorizontalScrollView android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="50dp"
+            android:layout_marginStart="40dp">
+
+            <TextView
+                android:id="@+id/bottom_sheet_street_text_view_v2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_edittext_dark"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:scrollHorizontally="true"
+                tools:text=""/>
+        </HorizontalScrollView>
+
+        <TextView
+            android:id="@+id/bottom_sheet_street_additional_information_text_view_v2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="40dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="50dp"
+            android:textSize="15sp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            tools:text="" />
+    </LinearLayout>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="20dp" />
+
+    <LinearLayout
+        android:id="@+id/bottomPanel_v2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/customer_info_v2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:text= "@string/customer_information" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:orientation="horizontal">
+
+            <HorizontalScrollView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="40dp"
+                android:layout_marginEnd="10dp"
+                app:layout_constraintEnd_toStartOf="@id/bottom_sheet_phone_button_v2"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/bottom_sheet_recipient_name_text_view_v2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scrollHorizontally="true"
+                    android:textColor="@color/widget_edittext_dark"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:text="" />
+            </HorizontalScrollView>
+
+            <Button
+                android:id="@+id/bottom_sheet_phone_button_v2"
+                android:layout_width="49dp"
+                android:layout_height="30dp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/custom_call_button_selector" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <TextView
+            android:id="@+id/bottom_sheet_recipient_name__additional_information_text_view_v2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="50dp"
+            android:textSize="15sp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            tools:text="" />
+
+        <de.dpd.vanassist.controls.SwipeButton
+            android:id="@+id/swipe_btn_v2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+</LinearLayout>

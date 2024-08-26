@@ -2,6 +2,7 @@ package de.dpd.vanassist.util.json
 
 import de.dpd.vanassist.database.entity.CourierEntity
 import de.dpd.vanassist.util.TypeParser
+import okhttp3.Headers
 import org.json.JSONObject
 
 class CourierJSONParser: JSONParser() {
@@ -18,6 +19,15 @@ class CourierJSONParser: JSONParser() {
             params.put("uid", uid)
             params.put("user_name", userName)
             return params
+        }
+
+        fun createHeaderUpdateFCMToken(uid:String, courierId:String, fcmToken:String): JSONObject {
+            val head = JSONObject()
+            head.put("uid", uid)
+            head.put("courier_id", courierId)
+            head.put("fcm_token", fcmToken)
+
+            return head
         }
 
 

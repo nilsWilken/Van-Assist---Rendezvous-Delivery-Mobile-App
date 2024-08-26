@@ -30,7 +30,7 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
     private lateinit var parcelList: ArrayList<ParcelEntity>
     private var expandedPosition = -1
     private lateinit var touchHelper : ItemTouchHelper
-    private val api = VanAssistAPIController(fragment.activity as AppCompatActivity)
+    private val api = VanAssistAPIController(fragment.activity as AppCompatActivity, fragment.requireContext())
     private lateinit var courier: CourierEntity
     private var state = 0
 
@@ -92,7 +92,7 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
             val inflater = fragment.layoutInflater
             if (state == 1) {
                 val dialogView = inflater.inflate(R.layout.undo_dialog_delivered, null)
-                val builder1 = androidx.appcompat.app.AlertDialog.Builder(fragment.context!!)
+                val builder1 = androidx.appcompat.app.AlertDialog.Builder(fragment.requireContext())
                 builder1.setView(dialogView)
                 builder1.setTitle(fragment.getString(R.string.deliveries_dialog_title))
                 builder1.setMessage(fragment.getString(R.string.deliveries_dialog_message))
@@ -130,7 +130,7 @@ class ParcelInformationAdapter(private val fragment: androidx.fragment.app.Fragm
                 builder1.create().show()
             } else if (state == ParcelState.DELIVERY_FAILURE) {
                 val dialogView = inflater.inflate(R.layout.undo_dialog_undelivered, null)
-                val builder1 = androidx.appcompat.app.AlertDialog.Builder(fragment.context!!)
+                val builder1 = androidx.appcompat.app.AlertDialog.Builder(fragment.requireContext())
                 builder1.setView(dialogView)
                 builder1.setTitle(fragment.getString(R.string.deliveries_dialog_title))
                 builder1.setMessage(fragment.getString(R.string.deliveries_dialog_message))

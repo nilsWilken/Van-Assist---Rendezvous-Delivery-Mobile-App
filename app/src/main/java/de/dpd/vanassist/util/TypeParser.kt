@@ -37,5 +37,13 @@ class TypeParser {
                 return json.getInt(key)
             }
         }
+
+        fun optDouble(json:JSONObject, key:String): Double {
+            if(json.isNull(key)) {
+                return 0.0
+            } else {
+                return json.getDouble(key)
+            }
+        }
     }
 }

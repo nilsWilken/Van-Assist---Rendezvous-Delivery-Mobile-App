@@ -25,7 +25,7 @@ data class ParcelEntity(
 
     val additionalAddressInformation: String? = null,
 
-    val deliveryPosition: Int,
+    var deliveryPosition: Int,
 
     val weight: Double,
 
@@ -39,5 +39,7 @@ data class ParcelEntity(
 
     val longitude: String,
 
-    var verificationToken: String
+    var verificationToken: String,
+
+    val parkingArea: String
 )

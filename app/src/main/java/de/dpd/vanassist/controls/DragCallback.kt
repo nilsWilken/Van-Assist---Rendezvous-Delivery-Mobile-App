@@ -1,9 +1,8 @@
 package de.dpd.vanassist.controls
 
 import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.RecyclerView
 import de.dpd.vanassist.adapters.ParcelInformationAdapter
-import de.dpd.vanassist.fragment.main.ParcelListFragment
+import de.dpd.vanassist.fragment.main.launchpad.ParcelListFragment
 import de.dpd.vanassist.util.FragmentRepo
 
 

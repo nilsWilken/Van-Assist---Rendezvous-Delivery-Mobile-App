@@ -1,4 +1,4 @@
-package de.dpd.vanassist.fragment.main
+package de.dpd.vanassist.fragment.main.launchpad
 
 import android.app.ProgressDialog
 import android.os.Bundle
@@ -15,6 +15,9 @@ import android.view.animation.Animation.AnimationListener
 import de.dpd.vanassist.cloud.VanAssistAPIController
 import de.dpd.vanassist.config.FragmentTag
 import de.dpd.vanassist.config.SimulationConfig
+import de.dpd.vanassist.config.VanAssistConfig
+import de.dpd.vanassist.fragment.main.TabbedFragment
+import de.dpd.vanassist.fragment.main.map.MapFragmentOld
 import de.dpd.vanassist.util.FragmentRepo
 import de.dpd.vanassist.util.parcel.ParcelState
 
@@ -49,8 +52,9 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
 
         /* Declare Button Listeners */
         v.start_day.setOnClickListener {
-            val apiController = VanAssistAPIController(activity as AppCompatActivity)
+            val apiController = VanAssistAPIController(activity as AppCompatActivity, requireContext())
 
+            //I think SimulationConfig.simulation_running is never changed!
             if(SimulationConfig.simulation_running) {
                 val mapFragment = MapFragmentOld.newInstance()
 
@@ -60,10 +64,12 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
                     ?.addToBackStack(FragmentTag.MAP)
                     ?.commit()
             } else {
-                apiController.startSimulation()
-                this.dialog = ProgressDialog.show(context, "", getString(R.string.start_simulation___), true)
+                if(!VanAssistConfig.USE_DEMO_SCENARIO_DATA) {
+                    this.dialog = ProgressDialog.show(context, "", getString(R.string.start_simulation___), true)
+                }
                 FragmentRepo.launchPadFragment = this
                 SimulationConfig.dayStarted = true
+                apiController.startSimulation()
             }
         }
 
@@ -74,7 +80,7 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
              * Buttons will fadeOut and then start_btn will fadeIn */
             val fadeOut = AnimationUtils.loadAnimation(activity, R.anim.btn_fade_out)
 
-            val apiController = VanAssistAPIController(activity as AppCompatActivity)
+            val apiController = VanAssistAPIController(activity as AppCompatActivity, requireContext())
             apiController.stopSimulation()
 
             val fadeIn = AnimationUtils.loadAnimation(activity, R.anim.btn_fade_in)
@@ -155,11 +161,18 @@ class LaunchpadFragment : androidx.fragment.app.Fragment() {
         /* Handles click on Ambient Intelligence Button */
         v.ambient_intelligence.setOnClickListener{
 
+            //activity
+            //    ?.supportFragmentManager
+            //    ?.beginTransaction()
+            //    ?.replace(R.id.map_activity, IntelligenceFragment(), FragmentTag.INTELLIGENCE)
+            //    ?.addToBackStack(FragmentTag.INTELLIGENCE)
+            //    ?.commit()
+
             activity
                 ?.supportFragmentManager
                 ?.beginTransaction()
-                ?.replace(R.id.map_activity, IntelligenceFragment(), FragmentTag.INTELLIGENCE)
-                ?.addToBackStack(FragmentTag.INTELLIGENCE)
+                ?.replace(R.id.map_activity, VehicleStatusFragment(), FragmentTag.VEHICLE_STATUS)
+                ?.addToBackStack(FragmentTag.VEHICLE_STATUS)
                 ?.commit()
         }
 

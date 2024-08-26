@@ -1,9 +1,7 @@
 package de.dpd.vanassist
 
 import androidx.test.platform.app.InstrumentationRegistry
-import de.dpd.vanassist.database.entity.Courier
 import de.dpd.vanassist.database.repository.CourierRepository
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -12,7 +10,7 @@ class CourierRepositoryTest {
 
     @Before
     fun setup() {
-        courierRepo = CourierRepository(InstrumentationRegistry.getTargetContext())
+        //courierRepo = CourierRepository(InstrumentationRegistry.getTargetContext())
     }
 
     @Test

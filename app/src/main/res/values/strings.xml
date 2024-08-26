@@ -41,6 +41,29 @@
     <string name="ambient_intelligence_menu_title">Ambient Intelligence</string>
     <string name="park_here_title">Park Here</string>
     <string name="permission_alert">Writing and Location Services Permission required for this app. Do you want to change Permissions?</string>
+    <string name="parcel_status_reset">Reset parcel status</string>
+    <string name="next_parcels_overview">Parcels for current holding point</string>
+    <string name="address">Address</string>
+    <string name="next_parcels">Next parcels for delivery</string>
+
+    <string name="vehicle_status">Vehicle status</string>
+    <string name="door_status">Door status:</string>
+    <string name="open_doors">Open van</string>
+    <string name="close_doors">Close van</string>
+    <string name="logistic_status">Logistic status:</string>
+    <string name="problem_status">Problem status:</string>
+    <string name="test_alert">Start test alert</string>
+    <string name="position">Position:</string>
+    <string name="vehicle_problem_encountered">Vehicle encountered a problem</string>
+    <string name="vehicle_problem_encountered_message">The vehicle has encountered an unsolvable problem!</string>
+    <string name="show_details">Show details</string>
+    <string name="vehicle_problem_heading">Vehicle problem:</string>
+    <string name="problem_message">Problem message</string>
+    <string name="show_on_map">Show on map</string>
+    <string name="set_parking_position">Set new parking position</string>
+    <string name="continue_mission">Continue mission</string>
+    <string name="vehicle_test_problem_message">Es wurde ein kritisches Problem innerhalb des Fahrzeugsystems festgestellt: Einer oder mehrere Sensoren sind verschmutzt und müssen manuell gereinigt werden.</string>
+
 
 
     <!-- SPECIFIC VALUES -->
@@ -63,6 +86,7 @@
     <string name="deliveries_dialog_message">Where do you want to move the undone parcel?</string>
     <string name="parking_area_confirmation">Please adjust or directly confirm with Parking Button</string>
     <string name="select_next_parking_area">Do you want to select this as next parking location and show Route?</string>
+    <string name="parcel_status_reset_successful">Parcel status reset was successfull</string>
 
     <!-- ERROR HANDLING -->
     <string name="error_parcel_loading">Loading parcel failed</string>
@@ -80,6 +104,8 @@
     <string name="error_set_next_parking_location">Set next parking location failed</string>
     <string name="error_no_parcel_available">No parcel information available</string>
     <string name="error_courier_information_loading">Loading courier information failed</string>
+    <string name="error_current_van_location_loading">Loading current van location falied</string>
+    <string name="error_request_parcel_state_reset">Parcel state reset request failed</string>
     <string name="ambient_intelligence_activation_failed">Activation of the Ambient Intelligence Mode failed</string>
     <string name="ambient_intelligence_deactivation_failed">Deactivation of the Ambient Intelligence Mode failed</string>
     <string name="time_dependent_darkmode_activation_failed">Activation of the Time dependent Darkmode failed</string>

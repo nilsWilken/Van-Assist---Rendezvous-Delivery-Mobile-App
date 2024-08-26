@@ -186,38 +186,40 @@
                     android:id="@+id/lenghtLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintLeft_toLeftOf="parent"
 
-                    app:layout_constraintRight_toLeftOf="@+id/widthLabel"
-                    android:layout_marginEnd="15dp"
+                    android:layout_marginStart="5dp"
 
                     android:layout_marginTop="47dp"
+                    android:layout_marginEnd="40dp"
                     android:paddingBottom="10dp"
+                    android:rotation="25"
                     android:text="25"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:rotation="25"
-                    />
+                    app:layout_constraintEnd_toStartOf="@+id/heightLabel"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/imageView2"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
                     android:id="@+id/widthLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintRight_toRightOf="@id/imageView2"
-
-                    app:layout_constraintLeft_toRightOf="@+id/lenghtLabel"
-                    android:layout_marginStart="15dp"
-
+                    android:layout_marginStart="20dp"
 
                     android:layout_marginTop="47dp"
+
+
+                    android:layout_marginEnd="5dp"
                     android:paddingBottom="10dp"
+                    android:rotation="-25"
                     android:text="25"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:rotation="-25"
-                    />
+                    app:layout_constraintEnd_toStartOf="@+id/heightLabel"
+                    app:layout_constraintLeft_toRightOf="@+id/lenghtLabel"
+                    app:layout_constraintStart_toEndOf="@+id/lenghtLabel"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
                     android:id="@+id/heightLabel"

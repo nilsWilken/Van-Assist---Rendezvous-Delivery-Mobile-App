@@ -1,4 +1,4 @@
-package de.dpd.vanassist.fragment.main
+package de.dpd.vanassist.fragment.main.launchpad
 
 import android.content.Intent
 import android.graphics.PorterDuff
@@ -23,7 +23,9 @@ import java.util.*
 import android.content.DialogInterface
 import android.content.res.Configuration
 import androidx.appcompat.app.AlertDialog
-import android.util.Log
+import de.dpd.vanassist.comboxExampleUI.BleFragment
+import de.dpd.vanassist.config.FragmentTag
+import de.dpd.vanassist.fragment.auth.LogoutDialogFragment
 import de.dpd.vanassist.util.language.LanguageManager
 
 
@@ -42,7 +44,7 @@ class SettingsFragment : Fragment() {
 
         (activity as AppCompatActivity).supportActionBar?.title = "Settings"
 
-        val appLocale = Configuration(context!!.getResources().getConfiguration()).locale.toString()
+        val appLocale = Configuration(requireContext().getResources().getConfiguration()).locale.toString()
         val currentPos = LanguageManager.getPositionByCountryCode(appLocale)
         this.currentLanguage = currentPos
 
@@ -50,7 +52,7 @@ class SettingsFragment : Fragment() {
 
 
         this.countrySpinner = v.spinner
-        countryAdapter = CountryAdapter(context!!, countryList)
+        countryAdapter = CountryAdapter(requireContext(), countryList)
         this.countrySpinner.adapter = countryAdapter
         this.countrySpinner.setSelection(currentPos)
         this.countrySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener{
@@ -66,16 +68,21 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        setButtonEffect(v.themeButton)
-        setButtonEffect(v.helperLabelsButton)
+//        setButtonEffect(v.themeButton)
+//        setButtonEffect(v.helperLabelsButton)
         setButtonEffect(v.privacyButton)
+        setButtonEffect(v.parcelResetButton)
         setButtonEffect(v.logoutButton)
         val courier = CourierRepository.shared.getCourier()
         v.usernameButton.text = courier!!.firstName!!.trim() + " " + courier.lastName!!.trim()
 
-        val api = VanAssistAPIController(activity!! as AppCompatActivity)
+        val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
 
-        v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked = CourierRepository.shared.getCourier()!!.ambientIntelligenceMode
+        v.parcelResetButton.setOnClickListener {
+            api.requestParcelStateReset()
+        }
+
+/*        v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked = CourierRepository.shared.getCourier()!!.ambientIntelligenceMode
 
         v.intelligenceModeSettingsButton.setOnClickListener {
             v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked = !v.intelligenceModeSettingsContainer.intelligenceModeSettingsSwitch.isChecked
@@ -84,18 +91,18 @@ class SettingsFragment : Fragment() {
             } else {
                 api.disableAmbientIntelligenceMode()
             }
-        }
+        }*/
 
-        val themeValue = CourierRepository.shared.getCourier()?.darkMode
+/*        val themeValue = CourierRepository.shared.getCourier()?.darkMode
         if (themeValue != null) {
             v.themeButtonContainer.themeSwitch.isChecked = themeValue
         }
 
         v.themeButton.setOnClickListener {
             setDarkMode(themeValue!!, v)
-        }
+        }*/
 
-        v.helperLabelsButton.setOnClickListener {
+ /*       v.helperLabelsButton.setOnClickListener {
             v.helperLabelsButtonContainer.helperLabelsSwitch.isChecked = !v.helperLabelsButtonContainer.helperLabelsSwitch.isChecked
         }
         val labelValue = CourierRepository.shared.getCourier()?.helpMode
@@ -111,7 +118,7 @@ class SettingsFragment : Fragment() {
                 val api = VanAssistAPIController(activity!! as AppCompatActivity)
                 api.disableHelpMode()
             }
-        }
+        }*/
 
         v.privacyButton.setOnClickListener {
             val i = Intent(Intent.ACTION_VIEW, Uri.parse(Path.PRIVACY))
@@ -120,11 +127,20 @@ class SettingsFragment : Fragment() {
 
         v.logoutButton.setOnClickListener{
             val confirmDialog = LogoutDialogFragment()
-            confirmDialog.show(activity?.supportFragmentManager, "confirm")
+            confirmDialog.show(activity?.supportFragmentManager!!, "confirm")
         }
 
         v.goto_launchpad_from_settings.setOnClickListener { view ->
             activity?.onBackPressed()
+        }
+
+        v.settings_bluetoothOverview.setOnClickListener {
+            activity
+                ?.supportFragmentManager
+                ?.beginTransaction()
+                ?.replace(R.id.map_activity, BleFragment(), FragmentTag.BLUETOOTH_OVERVIEW)
+                ?.addToBackStack(FragmentTag.BLUETOOTH_OVERVIEW)
+                ?.commit()
         }
 
         return v
@@ -150,11 +166,11 @@ class SettingsFragment : Fragment() {
 
 
     private fun refreshActivity() {
-        activity!!.recreate()
+        requireActivity().recreate()
     }
 
 
-    private fun setDarkMode(darkMode: Boolean, v : View){
+ /*   private fun setDarkMode(darkMode: Boolean, v : View){
         val builder1 = AlertDialog.Builder(context!!)
         builder1.setTitle(getString(R.string.dark_mode_alert_title))
         builder1.setMessage(getString(R.string.dark_mode_alert_message))
@@ -192,13 +208,13 @@ class SettingsFragment : Fragment() {
 
         val alert = builder1.create()
         alert.show()
-    }
+    }*/
 
 
     /* Set language code */
     fun setLocale(locale: Locale) {
 
-        val builder1 = AlertDialog.Builder(context!!)
+        val builder1 = AlertDialog.Builder(requireContext())
         builder1.setTitle(getString(R.string.language_alert_title))
         builder1.setMessage(getString(R.string.language_alert_message))
         builder1.setCancelable(true)
@@ -209,11 +225,11 @@ class SettingsFragment : Fragment() {
                 dialog.cancel()
                 val languageCode = locale.toString()
                 /* Change locally */
-                LanguageManager.setLocale(locale, context!!)
+                LanguageManager.setLocale(locale, requireContext())
                 CourierRepository.shared.updateLanguageCode(languageCode)
 
                 /* Change remote (async) */
-                val api = VanAssistAPIController(activity!! as AppCompatActivity)
+                val api = VanAssistAPIController(requireActivity() as AppCompatActivity, requireContext())
                 api.changeLanguage(locale.toString())
                 refreshActivity()
             })
