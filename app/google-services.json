@@ -1,9 +1,9 @@
 {
   "project_info": {
-    "project_number": "563249291763",
-    "firebase_url": "https://vanassist-12590.firebaseio.com",
-    "project_id": "vanassist-12590",
-    "storage_bucket": "vanassist-12590.appspot.com"
+    "project_number": "",
+    "firebase_url": "",
+    "project_id": "",
+    "storage_bucket": ""
   },
   "client": [
     {
@@ -15,20 +15,20 @@
       },
       "oauth_client": [
         {
-          "client_id": "563249291763-8q0ie3li331nd7mjbd38ml2nfdmdfr35.apps.googleusercontent.com",
+          "client_id": "",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyA9ZRGJdEmpvSOOCGZj__DyYULwme58bUg"
+          "current_key": ""
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "563249291763-8q0ie3li331nd7mjbd38ml2nfdmdfr35.apps.googleusercontent.com",
+              "client_id": "",
               "client_type": 3
             }
           ]
